@@ -7,7 +7,7 @@ export default async function GameRoomPage({
 
   return (
     <div>
-      <h1>{room}</h1>
+      <h1>Game room: {room}</h1>
     </div>
   );
 }
