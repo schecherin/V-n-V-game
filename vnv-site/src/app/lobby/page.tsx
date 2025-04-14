@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
-import RoomLobby from "@/components/menu/lobby";
-import UserButton from "@/components/ui/user-button";
+import RoomLobby from "@/components/menu/lobby-menu";
+import UserButton from "@/components/user-button";
 import { useRouter } from "next/navigation";
 
 export default function LobbyPage() {
