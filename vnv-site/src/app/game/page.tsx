@@ -1,10 +1,6 @@
-import JoinGameForm from "@/components/forms/join-game-form";
+'use client';
+import CardReveal from "@/components/game/card-reveal";
 
-export default function GameHomePage() {
-  return (
-    <div>
-      <h1>Game Home Page</h1>
-      <JoinGameForm />
-    </div>
-  );
+export default function GamePage() {
+  return <CardReveal />;
 }

@@ -1,8 +1,11 @@
 'use client';
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
+
 
 export default function RoomLobby() {
+  const router = useRouter();
   const [roomName, setRoomName] = useState("Virtue-Valley");
   const [outreachPhase, setOutreachPhase] = useState(false);
   const players = ["Player 1", "Player 2", "Player 3"];
@@ -73,7 +76,10 @@ export default function RoomLobby() {
       </div>
 
       {/* Start game */}
-      <button className="w-full border py-2 rounded hover:bg-black hover:text-white transition">
+      <button 
+        onClick={() => router.push("/game")}
+        className="w-full border py-2 rounded hover:bg-black hover:text-white transition"
+      >
         Start game
       </button>
     </div>
