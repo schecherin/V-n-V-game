@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 
 export default function RoomLobby() {
   const router = useRouter();
-  const [roomName, setRoomName] = useState("Virtue-Valley");
+  const [roomName, setRoomName] = useState("Vice & Virtue");
   const [outreachPhase, setOutreachPhase] = useState(false);
   const players = ["Player 1", "Player 2", "Player 3"];
 
@@ -77,7 +77,7 @@ export default function RoomLobby() {
 
       {/* Start game */}
       <button 
-        onClick={() => router.push("/game")}
+        onClick={() => router.push("/game/reveal")}
         className="w-full border py-2 rounded hover:bg-black hover:text-white transition"
       >
         Start game
