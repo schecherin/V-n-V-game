@@ -18,7 +18,7 @@ export default function MainMenu() {
         </button>
         <button
           className="w-full py-3 bg-gray-200 border border-black text-black text-lg rounded"
-          onClick={() => router.push("/lobby")}
+          onClick={() => router.push("/game/lobby")}
         >
           Create room
         </button>
