@@ -124,6 +124,7 @@ export default function GamePlayPage() {
       case "consultation":
         return (
           <ConsultationPhase
+            players={players}
             player={players.find((p) => p.id === currentPlayerId)}
             setGamePhase={setGamePhase}
           />
