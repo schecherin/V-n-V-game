@@ -13,6 +13,7 @@ const ConsultationPhase = ({ player, players, setGamePhase }: ConsultationPhaseP
   const [vote, setVote] = useState<string | null>(null);
   const [voteSubmitted, setVoteSubmitted] = useState<boolean>(false);
   return (
+    <>
     voting ? (<div>
     <div className="flex flex-col items-center justify-center gap-4">
       <h2 className="text-xl font-semibold mb-2">Cast Your Vote</h2>
@@ -52,10 +53,11 @@ const ConsultationPhase = ({ player, players, setGamePhase }: ConsultationPhaseP
     <div className="flex flex-col items-center justify-center gap-2">
       <h2>Consultation Phase</h2>
       <Button className="bg-green-700 text-white" onClick={() => setVoting(true)}>Vote</Button>
-      <Button onClick={() => setGamePhase("reflection")}>Go to next phase</Button>
-      <Button className="bg-red-700 text-white" onClick={() => setGamePhase("ended")}>End game</Button>
     </div>
     )
+      <Button onClick={() => setGamePhase("reflection")}>Go to next phase</Button>
+      <Button className="bg-red-700 text-white" onClick={() => setGamePhase("ended")}>End game</Button>
+    </>
   );
 };
 
