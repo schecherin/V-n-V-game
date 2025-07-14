@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { X, Palette, ShieldQuestion, Link2 as LinkIcon, LogOut, Info } from 'lucide-react';
-import Button from '../ui/Button';
+import Button from '@/components/ui/Button';
 import { UserGameData } from '@/lib/mockData';
 
 interface SideMenuProps {

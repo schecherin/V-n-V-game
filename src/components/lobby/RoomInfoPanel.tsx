@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Copy, Share2 } from 'lucide-react';
-import Button from '../ui/Button';
+import Button from '@/components/ui/Button';
 
 interface RoomInfoPanelProps {
   roomName: string;
