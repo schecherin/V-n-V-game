@@ -9,8 +9,8 @@ interface SwitchProps {
 
 const Switch: React.FC<SwitchProps> = ({ id, checked, onChange, label }) => {
   return (
-    <div className="flex items-center justify-between my-3 py-2 border-b border-[var(--color-border-gold)]/30 last:border-b-0">
-      <label htmlFor={id} className="text-sm text-[var(--color-text-brown-dark)] font-medium select-none pr-2">
+    <div className="flex items-center justify-between my-3 py-2 border-b border-gold/30 last:border-b-0">
+      <label htmlFor={id} className="text-sm text-brown-dark font-medium select-none pr-2">
         {label}
       </label>
       <button
@@ -20,8 +20,8 @@ const Switch: React.FC<SwitchProps> = ({ id, checked, onChange, label }) => {
         onClick={() => onChange(!checked)}
         id={id}
         className={`${
-          checked ? 'bg-[var(--color-accent-gold)]' : 'bg-[var(--color-text-brown-medium)]/50'
-        } relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-[var(--color-accent-gold)] focus:ring-offset-2 ring-offset-[var(--color-bg-cream-light)]`}
+          checked ? 'bg-accent-gold' : 'bg-brown-medium/50'
+        } relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-accent-gold focus:ring-offset-2 ring-offset-bg-cream-light`}
       >
         <span
           aria-hidden="true"

@@ -22,10 +22,7 @@ const BottomNavBar: React.FC<BottomNavBarProps> = ({ onToggleChat, onTogglePlaye
 
   return (
     <nav 
-      className={`fixed bottom-0 left-0 right-0 z-30 flex justify-around 
-                 bg-[var(--color-text-brown-dark)] 
-                 border-t-2 border-[var(--color-border-gold)]/50 
-                 shadow-[0_-2px_5px_-1px_rgba(0,0,0,0.05)] h-16`}
+      className="fixed bottom-0 left-0 right-0 z-30 flex items-center justify-between px-4 py-2 bg-brown-dark border-t-2 border-gold/50 shadow-lg"
     >
       <button onClick={onTogglePlayers} className={`${baseClass} group ${activeView === 'players' && !chatOpen ? activeTextClass : inactiveTextClass}`}>
         <Users size={22} className={`${activeView === 'players' && !chatOpen ? activeIconColor : iconColor} group-hover:text-[var(--color-accent-gold)] transition-colors`} />

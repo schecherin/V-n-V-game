@@ -92,10 +92,10 @@ export default function CardReveal() {
   };
 
   return (
-    <div style={colorThemeStyle} className="flex flex-col items-center justify-center min-h-screen bg-[var(--color-bg-cream)] text-[var(--color-text-brown-dark)] p-4 overflow-hidden font-sans">
+    <div style={colorThemeStyle} className="flex flex-col items-center justify-center min-h-screen bg-cream text-brown-dark p-4 overflow-hidden font-sans">
       <div id="message-box" className="hidden fixed top-5 left-1/2 -translate-x-1/2 bg-red-600 text-white p-3 rounded-md shadow-lg transition-opacity duration-300 z-50"></div>
 
-      <h2 className="text-3xl sm:text-4xl font-bold text-[var(--color-text-brown-dark)] mb-8 text-center">
+      <h2 className="text-3xl sm:text-4xl font-bold text-brown-dark mb-8 text-center">
         Your Role is Revealed...
       </h2>
 
@@ -113,7 +113,7 @@ export default function CardReveal() {
           
           {/* Card Back */}
           <div
-            className="absolute inset-0 rounded-xl overflow-hidden shadow-2xl border-2 border-[var(--color-border-gold)] bg-[var(--color-text-brown-medium)]"
+            className="absolute inset-0 rounded-xl overflow-hidden shadow-2xl border-2 border-accent-gold bg-brown-medium"
             style={{
               transform: 'rotateY(180deg)',
               backfaceVisibility: 'hidden',
@@ -129,7 +129,7 @@ export default function CardReveal() {
 
           {/* Card Front - Image covers the whole front */}
           <div
-            className="absolute inset-0 rounded-xl overflow-hidden shadow-2xl border-2 border-[var(--color-accent-gold)] bg-[var(--color-bg-cream-light)]"
+            className="absolute inset-0 rounded-xl overflow-hidden shadow-2xl border-2 border-accent-gold bg-cream-light"
             style={{
               transform: 'rotateY(0deg)',
               backfaceVisibility: 'hidden',
@@ -149,17 +149,17 @@ export default function CardReveal() {
       <motion.div
         initial={{ opacity: 0, y: 50 }}
         animate={infoControls}
-        className="w-full max-w-md p-6 bg-[var(--color-bg-cream-light)] rounded-xl shadow-2xl text-center mb-8 border border-[var(--color-border-gold)]"
+        className="w-full max-w-md p-6 bg-cream-light rounded-xl shadow-2xl text-center mb-8 border border-gold"
       >
-        <p className="text-2xl font-bold mb-2 text-[var(--color-accent-gold)]">{roleName}</p>
-        <p className="text-md text-[var(--color-text-brown-dark)] leading-relaxed">{roleDescription}</p>
+        <p className="text-2xl font-bold mb-2 text-accent-gold">{roleName}</p>
+        <p className="text-md text-brown-dark leading-relaxed">{roleDescription}</p>
       </motion.div>
 
       {/* Continue Button */}
       <motion.button
         initial={{ opacity: 0, y: 20 }}
         animate={buttonControls}
-        className="px-8 py-3 bg-[var(--color-accent-green)] hover:opacity-90 text-white font-semibold rounded-lg shadow-xl transition-all duration-200 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-[var(--color-accent-gold)] focus:ring-opacity-75 disabled:opacity-60 disabled:cursor-not-allowed disabled:transform-none"
+        className="px-8 py-3 bg-accent-green hover:opacity-90 text-white font-semibold rounded-lg shadow-xl transition-all duration-200 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-accent-gold focus:ring-opacity-75 disabled:opacity-60 disabled:cursor-not-allowed disabled:transform-none"
         onClick={handleConfirm}
         disabled={!isAnimationComplete || !gameId}
       >

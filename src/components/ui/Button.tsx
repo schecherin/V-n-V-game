@@ -1,14 +1,14 @@
 import React from 'react';
 
 const variantsConfig = {
-    default: "bg-[var(--color-accent-gold)] text-[var(--color-text-brown-dark)] hover:bg-[var(--color-border-gold)] shadow-md",
+    default: "bg-accent-gold text-brown-dark hover:bg-gold shadow-md",
     destructive: "bg-red-600 text-[var(--color-bg-cream)] hover:bg-red-700 shadow",
-    outline: "border border-[var(--color-border-gold)] text-[var(--color-border-gold)] hover:bg-[var(--color-border-gold)] hover:text-[var(--color-text-brown-dark)]",
-    secondary: "bg-[var(--color-text-brown-dark)] text-[var(--color-bg-cream)] hover:bg-[var(--color-text-brown-medium)]",
-    ghost: "hover:bg-[var(--color-border-gold)]/20 text-[var(--color-text-brown-medium)] hover:text-[var(--color-text-brown-dark)]",
+    outline: "border border-gold text-gold hover:bg-gold hover:text-brown-dark",
+    secondary: "bg-brown-dark text-cream hover:bg-brown-medium",
+    ghost: "hover:bg-gold/20 text-brown-medium hover:text-brown-dark",
     link: "underline-offset-4 hover:underline text-[var(--color-accent-gold)]",
-    cream: "bg-[var(--color-bg-cream-light)] text-[var(--color-text-brown-dark)] border border-[var(--color-border-gold)]/50 hover:bg-[var(--color-bg-cream)] hover:border-[var(--color-border-gold)] shadow-sm",
-    creamOutlineGold: "bg-[var(--color-bg-cream-light)] text-[var(--color-text-brown-dark)] border-2 border-[var(--color-accent-gold)] hover:bg-[var(--color-bg-cream)] hover:border-[var(--color-border-gold)] shadow-sm",
+    cream: "bg-cream-light text-brown-dark border border-gold/50 hover:bg-cream hover:border-gold shadow-sm",
+    creamOutlineGold: "bg-cream-light text-brown-dark border-2 border-accent-gold hover:bg-cream hover:border-gold shadow-sm",
 };
 
 const sizesConfig = {

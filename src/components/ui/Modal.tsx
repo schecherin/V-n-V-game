@@ -14,18 +14,18 @@ const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, children }) => {
 
     return (
         <div 
-            className="fixed inset-0 z-[60] bg-[var(--color-text-brown-dark)]/70 flex items-center justify-center p-4"
+            className="fixed inset-0 z-[60] bg-brown-dark/70 flex items-center justify-center p-4"
             onClick={onClose}
         >
             <div 
-                className="bg-[var(--color-bg-cream)] p-5 rounded-lg shadow-xl w-full max-w-sm relative text-center"
+                className="bg-cream p-5 rounded-lg shadow-xl w-full max-w-sm relative text-center"
                 onClick={(e: React.MouseEvent) => e.stopPropagation()}
             >
-                <h3 className="text-lg font-semibold text-[var(--color-text-brown-dark)] mb-4">{title}</h3>
-                <div className="text-sm text-[var(--color-text-brown-medium)] mb-6">
+                <h3 className="text-lg font-semibold text-brown-dark mb-4">{title}</h3>
+                <div className="text-sm text-brown-medium mb-6">
                     {children}
                 </div>
-                <Button variant="ghost" size="icon" onClick={onClose} className="absolute top-2 right-2 text-[var(--color-text-brown-medium)] hover:bg-[var(--color-border-gold)]/20">
+                <Button variant="ghost" size="icon" onClick={onClose} className="absolute top-2 right-2 text-brown-medium hover:bg-gold/20">
                     <X size={20}/>
                 </Button>
             </div>

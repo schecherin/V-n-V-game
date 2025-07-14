@@ -29,8 +29,8 @@ const RoomInfoPanel: React.FC<RoomInfoPanelProps> = ({ roomName }) => {
   };
 
   return (
-    <div className="p-4 bg-[var(--color-bg-cream)] border-b-2 border-[var(--color-border-gold)]/50 flex flex-col items-center">
-      <h2 className="text-xl font-semibold text-[var(--color-text-brown-dark)] text-center mb-4">"{roomName}"</h2>
+    <div className="p-4 bg-cream border-b-2 border-gold/50 flex flex-col items-center">
+      <h2 className="text-xl font-semibold text-brown-dark text-center mb-4">"{roomName}"</h2>
       <div className="flex flex-col space-y-3 w-full max-w-xs">
         <Button id="button-name" onClick={() => handleCopy(roomName, 'name')} variant="creamOutlineGold" size="default" className="w-full text-sm font-semibold">
           <Copy size={16} className="mr-2" /> Copy Name
