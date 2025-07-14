@@ -15,6 +15,7 @@ interface MinigameCoreProps {
   currentPlayerId: string; // ID of the player viewing the minigame
   onGuess: (targetPlayerId: string, guessedRole: string) => void; // Callback when a guess is made
   maxGuesses?: number;
+  setGamePhase: (phase: "minigame" | "reflection" | "outreach" | "consultation" | "ended") => void;
 }
 
 // Sample roles for guessing - with bakend, these must be more dynamic
@@ -25,6 +26,7 @@ export default function MinigameCore({
   currentPlayerId,
   onGuess,
   maxGuesses = 10,
+  setGamePhase,
 }: MinigameCoreProps) {
   const [selectedPlayer, setSelectedPlayer] = useState<Player | null>(null);
   const [guessedRole, setGuessedRole] = useState<string>('');

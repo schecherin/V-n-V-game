@@ -13,6 +13,7 @@ export interface GamePlayer {
   avatar?: string;
   isTargetable?: boolean;
   role?: string; // For backend to know, not shown to others unless revealed
+  points: number;
 }
 
 export default function GamePlayPage() {
@@ -28,30 +29,35 @@ export default function GamePlayPage() {
       name: "Alice",
       avatar: "https://placehold.co/100x100/E63946/white?text=A",
       role: "Murder",
+      points: 0,
     },
     {
       id: "2",
       name: "Bob",
       avatar: "https://placehold.co/100x100/F4A261/white?text=B",
       role: "Empathy",
+      points: 0,
     },
     {
       id: "3",
       name: "Charlie",
       avatar: "https://placehold.co/100x100/2A9D8F/white?text=C",
       role: "Justice",
+      points: 0,
     },
     {
       id: "4",
       name: "David",
       avatar: "https://placehold.co/100x100/264653/white?text=D",
       role: "Torment",
+      points: 0,
     },
     {
       id: "5",
       name: "Eve",
       avatar: "https://placehold.co/100x100/E9C46A/white?text=E",
       role: "Virtue Seeker",
+      points: 0,
     },
   ]);
 
@@ -96,21 +102,24 @@ export default function GamePlayPage() {
             players={players}
             currentPlayerId={currentPlayerId}
             onGuess={handleMinigameGuess}
-            maxGuesses={3} // Example: allow 3 guesses in this minigame instance
+            maxGuesses={3}
+            setGamePhase={setGamePhase}
           />
         );
       case "reflection":
         return (
           <ReflectionPhase
-            players={players}
-            currentPlayerId={currentPlayerId}
+            player={players.find((p) => p.id === currentPlayerId)}
+            setGamePhase={setGamePhase}
+          />
+        );
           />
         );
       case "consultation":
         return (
           <ConsultationPhase
-            players={players}
-            currentPlayerId={currentPlayerId}
+            player={players.find((p) => p.id === currentPlayerId)}
+            setGamePhase={setGamePhase}
           />
         );
       case "ended":
