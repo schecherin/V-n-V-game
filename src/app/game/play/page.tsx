@@ -3,9 +3,11 @@
 import { useParams, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import MinigameCore from '@/components/game/MinigameCore'; // Adjust path if needed
+import ConsultationPhase from '@/components/game/ConsultationPhase';
+import ReflectionPhase from '@/components/game/ReflectionPhase';
 
 // Mock player data type for the game
-interface GamePlayer {
+export interface GamePlayer {
   id: string;
   name: string;
   avatar?: string;
@@ -69,10 +71,10 @@ export default function GamePlayPage() {
             maxGuesses={3} // Example: allow 3 guesses in this minigame instance
           />
         );
-      // case 'reflection':
-      //   return <ReflectionPhaseComponent players={players} currentPlayerId={currentPlayerId} />;
-      // case 'consultation':
-      //   return <ConsultationPhaseComponent players={players} currentPlayerId={currentPlayerId} />;
+      case 'reflection':
+        return <ReflectionPhase players={players} currentPlayerId={currentPlayerId} />;
+      case 'consultation':
+        return <ConsultationPhase players={players} currentPlayerId={currentPlayerId} />;
       case 'ended':
         return <div className="text-center text-2xl p-10 bg-slate-800 rounded-lg">Game Over!</div>;
       default:
