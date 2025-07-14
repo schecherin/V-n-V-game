@@ -146,7 +146,7 @@ export default function GamePlayPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[rgb(255,255,255)] to-slate-800 text-white p-4 sm:p-8 flex flex-col items-center justify-center font-sans">
+    <div className="min-h-screen p-4 sm:p-8 flex flex-col items-center justify-center font-sans">
       <header className="w-full max-w-4xl mb-8 text-center">
         <h1 className="text-3xl sm:text-4xl font-bold text-slate-900">
           Vices & Virtues
