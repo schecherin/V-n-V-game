@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import Button from '../ui/Button';
 
 interface Player {
   id: string;
@@ -75,7 +76,7 @@ export default function MinigameCore({
   };
 
   return (
-    <div className="p-4 sm:p-6 bg-[rgb(255,255,255)] text-white rounded-xl shadow-2xl w-full max-w-3xl mx-auto border border-slate-700">
+    <div className="p-4 sm:p-6 bg-white text-white rounded-xl shadow-2xl w-full max-w-3xl mx-auto border border-slate-700">
       <h2 className="text-2xl sm:text-3xl font-bold mb-2 text-center text-slate-900">Minigame: Guess Their Roles!</h2>
       <p className="text-center text-slate-400 mb-6">
         You have <span className="font-semibold text-amber-400">{guessesRemaining}</span> {guessesRemaining === 1 ? 'guess' : 'guesses'} remaining.
@@ -154,6 +155,7 @@ export default function MinigameCore({
                 <h3 className="text-lg font-semibold mb-3 text-slate-200 text-center">All Guesses Used</h3>
                 <p className="text-slate-400 text-center">Waiting for the next phase or results.</p>
                 {/* BACKEND INTEGRATION: Could be a button to "Confirm End of Minigame" or automatically proceed */}
+                <Button onClick={() => setGamePhase("outreach")}>Go to next phase</Button>
              </div>
         )}
       </div>
