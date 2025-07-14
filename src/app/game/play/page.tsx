@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import MinigameCore from "@/components/game/MinigameCore"; // Adjust path if needed
 import ConsultationPhase from "@/components/game/ConsultationPhase";
 import ReflectionPhase from "@/components/game/ReflectionPhase";
+import OutreachPhase from "@/components/game/OutreachPhase";
 
 // Mock player data type for the game
 export interface GamePlayer {
@@ -65,8 +66,8 @@ export default function GamePlayPage() {
   // For demo, assume player '1' (Alice) is the current player
   const [currentPlayerId, setCurrentPlayerId] = useState<string>("1");
   const [gamePhase, setGamePhase] = useState<
-    "minigame" | "reflection" | "consultation" | "ended"
-  >("minigame"); // Example phase
+    "minigame" | "reflection" | "outreach" | "consultation" | "ended"
+  >("reflection"); // Example phase
 
   useEffect(() => {
     // BACKEND INTEGRATION:
@@ -113,6 +114,11 @@ export default function GamePlayPage() {
             setGamePhase={setGamePhase}
           />
         );
+      case "outreach":
+        return (
+          <OutreachPhase
+            player={players.find((p) => p.id === currentPlayerId)}
+            setGamePhase={setGamePhase}
           />
         );
       case "consultation":
