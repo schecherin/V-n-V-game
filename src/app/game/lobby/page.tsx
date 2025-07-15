@@ -20,6 +20,7 @@ import ChatPanel from "@/components/lobby/ChatPanel";
 import BottomNavBar from "@/components/lobby/BottomNavBar";
 import SideMenu from "@/components/lobby/SideMenu";
 import Button from "@/components/ui/Button";
+import RolesTest from "@/components/lobby/RolesTest";
 
 export default function LobbyPage(): JSX.Element {
   const [players, setPlayers] = useState<Player[]>(mockPlayers);
@@ -95,6 +96,7 @@ export default function LobbyPage(): JSX.Element {
             <RoomInfoPanel roomName={roomName} />
           </>
         )}
+        <RolesTest />
         {activeMainView === "controls" && (
           <HostControlsPanel
             isHost={isCurrentUserHost}
