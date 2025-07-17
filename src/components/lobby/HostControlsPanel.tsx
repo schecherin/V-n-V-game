@@ -1,7 +1,7 @@
 import React from "react";
 import Button from "@/components/ui/Button";
 import Switch from "../ui/Switch";
-import { GameSwitch } from "@/lib/mockData";
+import { GameSwitch } from "@/types";
 
 interface HostControlsPanelProps {
   isHost: boolean;
