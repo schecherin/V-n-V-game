@@ -217,10 +217,12 @@ export type Database = {
           host_user_id: string | null
           houses_of_worship_vice: number
           houses_of_worship_virtue: number
+          include_outreach_phase: boolean
           last_phase_change_at: string | null
           max_players: number
           max_points_per_day_m: number
           treasurer_player_id: string | null
+          Tutorial: boolean
           updated_at: string | null
         }
         Insert: {
@@ -234,10 +236,12 @@ export type Database = {
           host_user_id?: string | null
           houses_of_worship_vice?: number
           houses_of_worship_virtue?: number
+          include_outreach_phase?: boolean
           last_phase_change_at?: string | null
           max_players?: number
           max_points_per_day_m?: number
           treasurer_player_id?: string | null
+          Tutorial?: boolean
           updated_at?: string | null
         }
         Update: {
@@ -251,10 +255,12 @@ export type Database = {
           host_user_id?: string | null
           houses_of_worship_vice?: number
           houses_of_worship_virtue?: number
+          include_outreach_phase?: boolean
           last_phase_change_at?: string | null
           max_players?: number
           max_points_per_day_m?: number
           treasurer_player_id?: string | null
+          Tutorial?: boolean
           updated_at?: string | null
         }
         Relationships: [
@@ -554,7 +560,7 @@ export type Database = {
           {
             foreignKeyName: "players_game_code_fkey"
             columns: ["game_code"]
-            isOneToOne: true
+            isOneToOne: false
             referencedRelation: "games"
             referencedColumns: ["game_code"]
           },
@@ -1076,6 +1082,7 @@ export type Database = {
         | "Consultation_Elections"
         | "Paused"
         | "Finished"
+        | "Tutorial"
       player_status:
         | "Alive"
         | "Dead"
@@ -1267,6 +1274,7 @@ export const Constants = {
         "Consultation_Elections",
         "Paused",
         "Finished",
+        "Tutorial",
       ],
       player_status: [
         "Alive",

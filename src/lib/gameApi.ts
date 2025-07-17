@@ -177,3 +177,69 @@ export async function getAssignableRoles() {
   if (error) throw error;
   return data;
 }
+
+/**
+ * Get the tutorial status for a game.
+ * @param gameCode The game code.
+ * @returns True if tutorial is enabled, false otherwise.
+ */
+export async function getGameTutorialStatus(
+  gameCode: string
+): Promise<boolean> {
+  const { data, error } = await supabase
+    .from("games")
+    .select("Tutorial")
+    .eq("game_code", gameCode)
+    .single();
+  if (error) throw error;
+  return data?.Tutorial || false;
+}
+
+/**
+ * Set the tutorial status for a game.
+ * @param gameCode The game code.
+ * @param enabled Whether tutorial should be enabled.
+ */
+export async function setGameTutorialStatus(
+  gameCode: string,
+  enabled: boolean
+) {
+  const { error } = await supabase
+    .from("games")
+    .update({ Tutorial: enabled })
+    .eq("game_code", gameCode);
+  if (error) throw error;
+}
+
+/**
+ * Get the include outreach phase status for a game.
+ * @param gameCode The game code.
+ * @returns True if outreach phase is included, false otherwise.
+ */
+export async function getGameIncludeOutreachPhase(
+  gameCode: string
+): Promise<boolean> {
+  const { data, error } = await supabase
+    .from("games")
+    .select("include_outreach_phase")
+    .eq("game_code", gameCode)
+    .single();
+  if (error) throw error;
+  return data?.include_outreach_phase || false;
+}
+
+/**
+ * Set the include outreach phase status for a game.
+ * @param gameCode The game code.
+ * @param enabled Whether outreach phase should be included.
+ */
+export async function setGameIncludeOutreachPhase(
+  gameCode: string,
+  enabled: boolean
+) {
+  const { error } = await supabase
+    .from("games")
+    .update({ include_outreach_phase: enabled })
+    .eq("game_code", gameCode);
+  if (error) throw error;
+}
