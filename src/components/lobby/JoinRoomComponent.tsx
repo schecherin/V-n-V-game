@@ -1,7 +1,5 @@
 "use client";
 import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { supabase } from "@/lib/supabase/client";
 import { useGame } from "@/hooks/useGame";
 
 interface JoinRoomComponentProps {
@@ -9,7 +7,6 @@ interface JoinRoomComponentProps {
 }
 
 export default function JoinRoomComponent({ onBack }: JoinRoomComponentProps) {
-  const router = useRouter();
   const [gameCode, setGameCode] = useState("");
   const [playerName, setPlayerName] = useState("");
   const { joinGame, loading: isLoading, error } = useGame("");
