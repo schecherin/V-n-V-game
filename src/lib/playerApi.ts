@@ -1,6 +1,11 @@
 import { supabase } from "@/lib/supabase/client";
 import { Player, PlayerData } from "@/types";
 
+/**
+ * Fetch a player by their unique playerId.
+ * @param playerId The unique player ID.
+ * @returns The Player object.
+ */
 export async function getPlayerById(playerId: string) {
   const playerQuery = supabase
     .from("players")
@@ -14,6 +19,11 @@ export async function getPlayerById(playerId: string) {
   return player;
 }
 
+/**
+ * Fetch all players in a game by game code.
+ * @param gameId The game code.
+ * @returns An array of Player objects.
+ */
 export async function getPlayersByGameCode(gameId: string) {
   const playersQuery = supabase
     .from("players")
@@ -26,6 +36,12 @@ export async function getPlayersByGameCode(gameId: string) {
   return players;
 }
 
+/**
+ * Fetch a player by name in a specific game.
+ * @param gameId The game code.
+ * @param playerName The player's name.
+ * @returns The player object or null if not found.
+ */
 export async function getPlayerByNameInGame(
   gameId: string,
   playerName: string
@@ -42,6 +58,11 @@ export async function getPlayerByNameInGame(
   return null;
 }
 
+/**
+ * Create a new player with the provided data.
+ * @param playerData The data for the new player.
+ * @returns The created Player object.
+ */
 export async function createPlayer(playerData: PlayerData) {
   const { data, error } = await supabase
     .from("players")
@@ -52,6 +73,12 @@ export async function createPlayer(playerData: PlayerData) {
   return data;
 }
 
+/**
+ * Assign a role name to a player.
+ * @param playerId The player's ID.
+ * @param roleName The role name to assign.
+ * @returns True if successful.
+ */
 export async function assignRoleNameToPlayer(
   playerId: string,
   roleName: string

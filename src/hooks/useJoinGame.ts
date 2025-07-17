@@ -5,12 +5,22 @@ import { getPlayerByNameInGame, createPlayer } from "@/lib/playerApi";
 import { getCurrentUser, signInAnonymously } from "@/lib/authApi";
 import { Game } from "@/types";
 
+/**
+ * React hook to join an existing game as a player.
+ * @returns { game, loading, error, joinGame }
+ */
 export function useJoinGame() {
   const [game, setGame] = useState<Game | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<any>(null);
   const router = useRouter();
 
+  /**
+   * Join a game by code and player name.
+   * @param gameCode The code of the game to join.
+   * @param playerName The name of the player joining.
+   * @returns The joined game and player objects.
+   */
   const joinGame = useCallback(
     async (gameCode: string, playerName: string) => {
       setLoading(true);

@@ -1,6 +1,11 @@
 import { supabase } from "@/lib/supabase/client";
 import { Game, GameData, GamePhase } from "@/types";
 
+/**
+ * Fetch a game by its unique game_id.
+ * @param gameId The unique game_id of the game.
+ * @returns The Game object.
+ */
 export async function getGameById(gameId: string) {
   const gameQuery = supabase
     .from("games")
@@ -14,6 +19,11 @@ export async function getGameById(gameId: string) {
   return game;
 }
 
+/**
+ * Fetch a game by its game_code.
+ * @param gameCode The code of the game.
+ * @returns The Game object.
+ */
 export async function getGameByCode(gameCode: string) {
   const { data, error } = await supabase
     .from("games")
@@ -25,6 +35,12 @@ export async function getGameByCode(gameCode: string) {
   return data as Game;
 }
 
+/**
+ * Join a game as a player by game code and player name.
+ * @param gameCode The code of the game to join.
+ * @param name The name of the player joining.
+ * @returns The created player object.
+ */
 export async function joinGame(gameCode: string, name: string) {
   const {
     data: { user },
@@ -55,6 +71,10 @@ export async function joinGame(gameCode: string, name: string) {
   return player;
 }
 
+/**
+ * Generate a random 6-character game code.
+ * @returns A unique game code string.
+ */
 export async function generateGameCode() {
   const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
   let code = "";
@@ -64,6 +84,11 @@ export async function generateGameCode() {
   return code;
 }
 
+/**
+ * Check if a game code is unique (not already used).
+ * @param gameCode The game code to check.
+ * @returns True if unique, false otherwise.
+ */
 export async function checkGameCodeUnique(gameCode: string) {
   const { data: existingGame, error: checkError } = await supabase
     .from("games")
@@ -79,6 +104,11 @@ export async function checkGameCodeUnique(gameCode: string) {
   }
 }
 
+/**
+ * Create a new game with the provided data.
+ * @param gameData The data for the new game.
+ * @returns The created Game object.
+ */
 export async function createGame(gameData: GameData) {
   const { data, error } = await supabase
     .from("games")
@@ -89,6 +119,12 @@ export async function createGame(gameData: GameData) {
   return data;
 }
 
+/**
+ * Fetch a game by code and phase.
+ * @param gameCode The code of the game.
+ * @param phase The phase to match.
+ * @returns The Game object.
+ */
 export async function getGameByCodeAndPhase(
   gameCode: string,
   phase: GamePhase
@@ -103,6 +139,11 @@ export async function getGameByCodeAndPhase(
   return data;
 }
 
+/**
+ * Update the player count for a game.
+ * @param gameId The game code.
+ * @param newCount The new player count.
+ */
 export async function updateGamePlayerCount(gameId: string, newCount: number) {
   const { error } = await supabase
     .from("games")

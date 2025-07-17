@@ -7,6 +7,10 @@ import {
 } from "@/lib/gameApi";
 import { createPlayer } from "@/lib/playerApi";
 
+/**
+ * React hook to create a new game and host player.
+ * @returns { create, loading, error, game, player }
+ */
 export function useCreateGame() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string>("");
@@ -14,6 +18,12 @@ export function useCreateGame() {
   const [player, setPlayer] = useState<any>(null);
   const router = useRouter();
 
+  /**
+   * Create a new game and host player.
+   * @param playerName The name of the host player.
+   * @param maxPlayers The maximum number of players.
+   * @returns The created game and player objects.
+   */
   const create = useCallback(
     async (playerName: string, maxPlayers: number) => {
       setLoading(true);
