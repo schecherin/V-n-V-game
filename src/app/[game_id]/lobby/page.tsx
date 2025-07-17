@@ -62,7 +62,7 @@ export default function LobbyPage(): JSX.Element {
   };
   const gameId = "TODO: GET GAME ID HERE";
   const handleStartGame = (): void => {
-    router.push(`game/${gameId}`);
+    router.push(`game/${gameId}/play`);
   };
   const canStartGame: boolean =
     isCurrentUserHost && players.some((p) => p.isReady);

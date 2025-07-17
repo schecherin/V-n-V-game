@@ -2,95 +2,40 @@
 
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import MinigameCore from "@/components/game/MinigameCore"; // Adjust path if needed
+import MinigameCore from "@/components/game/MinigameCore";
 import ConsultationPhase from "@/components/game/ConsultationPhase";
 import ReflectionPhase from "@/components/game/ReflectionPhase";
 import OutreachPhase from "@/components/game/OutreachPhase";
 import CardReveal from "@/components/game/CardReveal";
 import { useGame } from "@/hooks/useGame";
-
-// Mock player data type for the game
-export interface GamePlayer {
-  id: string;
-  name: string;
-  avatar?: string;
-  isTargetable?: boolean;
-  role?: string; // For backend to know, not shown to others unless revealed
-  points: number;
-}
-
-interface GameState {}
-
-interface GamePlayPageProps {}
+import { GamePhase, Player } from "@/types";
+import { getPlayersByGameId } from "@/lib/playerApi";
 
 export default function GamePlayPage() {
   const params = useParams();
   const router = useRouter();
-  const gameId: string = "1"; //params.gameId as string;
+  const gameId: string = params.game_id as string;
 
-  // State for game players
-  // BACKEND INTEGRATION: Fetch from backend, update via WebSockets
+  // Use the useGame hook
   const { game, loading, error } = useGame(gameId);
-  const [players, setPlayers] = useState<GamePlayer[]>([
-    {
-      id: "1",
-      name: "Alice",
-      avatar: "https://placehold.co/100x100/E63946/white?text=A",
-      role: "Murder",
-      points: 0,
-    },
-    {
-      id: "2",
-      name: "Bob",
-      avatar: "https://placehold.co/100x100/F4A261/white?text=B",
-      role: "Empathy",
-      points: 0,
-    },
-    {
-      id: "3",
-      name: "Charlie",
-      avatar: "https://placehold.co/100x100/2A9D8F/white?text=C",
-      role: "Justice",
-      points: 0,
-    },
-    {
-      id: "4",
-      name: "David",
-      avatar: "https://placehold.co/100x100/264653/white?text=D",
-      role: "Torment",
-      points: 0,
-    },
-    {
-      id: "5",
-      name: "Eve",
-      avatar: "https://placehold.co/100x100/E9C46A/white?text=E",
-      role: "Virtue Seeker",
-      points: 0,
-    },
-  ]);
 
-  // Current player - normally from auth context
-  // For demo, assume player '1' (Alice) is the current player
-  const [currentPlayerId, setCurrentPlayerId] = useState<string>("1");
-  const [gamePhase, setGamePhase] = useState<
-    "reveal" | "minigame" | "reflection" | "outreach" | "consultation" | "ended"
-  >("reveal"); // Example phase
+  const [players, setPlayers] = useState<Player[]>([]);
 
   useEffect(() => {
-    // BACKEND INTEGRATION:
-    // 1. Fetch current game state for gameId (players, current phase...).
-    // 2. Establish Socket connection
-    // console.log(`Fetching game data for game: ${gameId}`);
-    // If players list needs to be dynamic (e.g. based on who was in lobby):
-    // const fetchGameData = async () => {
-    //   // const response = await fetch(`/api/game/${gameId}/state`);
-    //   // const data = await response.json();
-    //   // setPlayers(data.players);
-    //   // setCurrentPlayerId(data.currentPlayerId); // From session/auth
-    //   // setGamePhase(data.currentPhase);
-    // };
-    // fetchGameData();
+    getPlayersByGameId(gameId).then(setPlayers);
   }, [gameId]);
+
+  // Current player - normally from auth context
+  const [currentPlayerId, setCurrentPlayerId] = useState<string>("1");
+  const [gamePhase, setGamePhase] = useState<GamePhase | undefined>(
+    game?.current_phase
+  );
+
+  useEffect(() => {
+    if (game?.current_phase) {
+      setGamePhase(game.current_phase);
+    }
+  }, [game?.current_phase]);
 
   const handleMinigameGuess = (targetPlayerId: string, guessedRole: string) => {
     console.log(
@@ -104,9 +49,15 @@ export default function GamePlayPage() {
 
   const renderGameContent = () => {
     switch (gamePhase) {
-      case "reveal":
-        return <CardReveal roleName="" setGamePhase={setGamePhase} />;
-      case "minigame":
+      case "Lobby":
+        return (
+          <CardReveal
+            roleName=""
+            roleDescription=""
+            setGamePhase={setGamePhase}
+          />
+        );
+      case "Reflection_MiniGame":
         return (
           <MinigameCore
             players={players}
@@ -116,29 +67,32 @@ export default function GamePlayPage() {
             setGamePhase={setGamePhase}
           />
         );
-      case "reflection":
+      case "Reflection_RoleActions":
         return (
           <ReflectionPhase
-            player={players.find((p) => p.id === currentPlayerId)}
+            player={players.find((p) => p.player_id === currentPlayerId)}
             setGamePhase={setGamePhase}
           />
         );
-      case "outreach":
+      case "Outreach":
         return (
           <OutreachPhase
-            player={players.find((p) => p.id === currentPlayerId)}
+            player={players.find((p) => p.player_id === currentPlayerId)}
             setGamePhase={setGamePhase}
           />
         );
-      case "consultation":
+      case "Consultation_Discussion":
+      case "Consultation_Elections":
+      case "Consultation_TreasurerActions":
+      case "Consultation_Voting_Prison":
         return (
           <ConsultationPhase
             players={players}
-            player={players.find((p) => p.id === currentPlayerId)}
+            player={players.find((p) => p.player_id === currentPlayerId)}
             setGamePhase={setGamePhase}
           />
         );
-      case "ended":
+      case "Finished":
         return (
           <div className="text-center text-2xl p-10 bg-slate-800 rounded-lg">
             Game Over!
@@ -153,10 +107,18 @@ export default function GamePlayPage() {
     }
   };
 
-  if (!gameId) {
+  if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-gray-900 text-white">
         Loading game...
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-red-100 text-red-700">
+        Error loading game: {error.toString()}
       </div>
     );
   }
@@ -172,7 +134,7 @@ export default function GamePlayPage() {
           <span className="font-semibold text-amber-400">{gameId}</span> -
           Phase:{" "}
           <span className="font-semibold text-green-400">
-            {gamePhase.toUpperCase()}
+            {gamePhase?.toUpperCase()}
           </span>
         </p>
       </header>
