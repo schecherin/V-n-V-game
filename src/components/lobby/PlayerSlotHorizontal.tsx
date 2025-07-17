@@ -34,7 +34,7 @@ const PlayerSlotHorizontal: React.FC<PlayerSlotHorizontalProps> = ({
           className={`w-14 h-14 rounded-full border-2 border-gold/50 flex items-center justify-center ${avatarBgColor} ${avatarTextColor} text-xl font-semibold overflow-hidden`}
           aria-label={`Avatar for ${player.player_name}`}
         >
-          P{player.player_id}
+          {player.player_name.charAt(0)}
         </div>
 
         {!player.is_guest && (

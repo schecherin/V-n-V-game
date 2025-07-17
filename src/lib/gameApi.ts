@@ -10,7 +10,7 @@ export async function getGameById(gameId: string) {
   const gameQuery = supabase
     .from("games")
     .select("*")
-    .eq("game_id", gameId)
+    .eq("game_code", gameId)
     .single();
 
   const { data, error } = await gameQuery;
@@ -50,7 +50,7 @@ export async function joinGame(gameCode: string, name: string) {
 
   const { data: game, error: roomError } = await supabase
     .from("games")
-    .select("game_id")
+    .select("game_code")
     .eq("game_code", gameCode)
     .single();
   if (roomError) throw roomError;

@@ -42,6 +42,21 @@ export default function LobbyPage(): JSX.Element {
     useState<boolean>(false);
 
   const { game, loading, error } = useGame(gameId);
+  // Subscribe to real-time updates for this game
+  useEffect(() => {
+    // Dynamically import to avoid SSR issues
+    let unsubscribe: (() => void) | undefined;
+    import("@/lib/gameSubscriptions").then(({ subscribeToGameUpdates }) => {
+      unsubscribe = subscribeToGameUpdates(gameId, (payload: any) => {
+        // Optionally update game state if needed
+        // For now, just refresh the player list on game update
+        getPlayersByGameCode(gameId).then(setPlayers);
+      });
+    });
+    return () => {
+      if (unsubscribe) unsubscribe();
+    };
+  }, [gameId]);
 
   useEffect(() => {
     getPlayersByGameCode(gameId).then(setPlayers);
