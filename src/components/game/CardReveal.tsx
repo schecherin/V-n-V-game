@@ -1,5 +1,6 @@
 "use client";
 
+import { GamePhase } from "@/types";
 import { motion, useAnimation, AnimationControls } from "framer-motion";
 import { useRouter, useParams } from "next/navigation";
 import React, { useEffect, useState } from "react"; // Added React for CSSProperties
@@ -7,9 +8,7 @@ import React, { useEffect, useState } from "react"; // Added React for CSSProper
 interface CardRevealProps {
   roleName: string;
   roleDescription: string;
-  setGamePhase: (
-    phase: "minigame" | "reflection" | "outreach" | "consultation" | "ended",
-  ) => void;
+  setGamePhase: (phase: GamePhase) => void;
 }
 
 export default function CardReveal({
@@ -90,7 +89,7 @@ export default function CardReveal({
       router.push("/");
       return;
     }
-    setGamePhase("minigame");
+    setGamePhase("Reflection_MiniGame");
   };
 
   return (

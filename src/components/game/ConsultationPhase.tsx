@@ -1,13 +1,11 @@
 import React, { useState } from "react";
-import { GamePlayer } from "@/app/[game_id]/play/page";
 import Button from "../ui/Button";
+import { GamePhase, Player } from "@/types";
 
 interface ConsultationPhaseProps {
-  player?: GamePlayer;
-  players: GamePlayer[];
-  setGamePhase: (
-    phase: "minigame" | "reflection" | "outreach" | "consultation" | "ended"
-  ) => void;
+  player?: Player;
+  players: Player[];
+  setGamePhase: (phase: GamePhase) => void;
 }
 
 const ConsultationPhase = ({
@@ -41,8 +39,8 @@ const ConsultationPhase = ({
                 -- Choose a player --
               </option>
               {players.map((p) => (
-                <option key={p.id} value={p.id}>
-                  {p.name}
+                <option key={p.player_id} value={p.player_id}>
+                  {p.player_name}
                 </option>
               ))}
             </select>
@@ -70,12 +68,12 @@ const ConsultationPhase = ({
         </Button>
       </div>
       )
-      <Button onClick={() => setGamePhase("reflection")}>
+      <Button onClick={() => setGamePhase("Reflection_RoleActions")}>
         Go to next phase
       </Button>
       <Button
         className="bg-red-700 text-white"
-        onClick={() => setGamePhase("ended")}
+        onClick={() => setGamePhase("Finished")}
       >
         End game
       </Button>
