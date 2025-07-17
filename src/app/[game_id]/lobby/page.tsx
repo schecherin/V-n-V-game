@@ -50,18 +50,19 @@ export default function LobbyPage(): JSX.Element {
     if (player.id === CURRENT_USER_ID) {
       setPlayers((prevPlayers) =>
         prevPlayers.map((p) =>
-          p.id === player.id ? { ...p, isReady: !p.isReady } : p,
-        ),
+          p.id === player.id ? { ...p, isReady: !p.isReady } : p
+        )
       );
     }
   };
   const handlePhaseChange = (id: string, value: boolean): void => {
     setPhaseSwitches((prev) =>
-      prev.map((ps) => (ps.id === id ? { ...ps, checked: value } : ps)),
+      prev.map((ps) => (ps.id === id ? { ...ps, checked: value } : ps))
     );
   };
+  const gameId = "TODO: GET GAME ID HERE";
   const handleStartGame = (): void => {
-    router.push("/game/reveal");
+    router.push(`game/${gameId}/play`);
   };
   const canStartGame: boolean =
     isCurrentUserHost && players.some((p) => p.isReady);

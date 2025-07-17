@@ -1,10 +1,21 @@
-'use client';
+"use client";
 
-import { motion, useAnimation, AnimationControls } from 'framer-motion';
+import { GamePhase } from "@/types";
+import { motion, useAnimation, AnimationControls } from "framer-motion";
 import { useRouter, useParams } from "next/navigation";
-import React, { useEffect, useState } from 'react'; // Added React for CSSProperties
+import React, { useEffect, useState } from "react"; // Added React for CSSProperties
 
-export default function CardReveal() {
+interface CardRevealProps {
+  roleName: string;
+  roleDescription: string;
+  setGamePhase: (phase: GamePhase) => void;
+}
+
+export default function CardReveal({
+  roleName,
+  roleDescription,
+  setGamePhase,
+}: CardRevealProps) {
   const cardControls: AnimationControls = useAnimation();
   const infoControls: AnimationControls = useAnimation();
   const buttonControls: AnimationControls = useAnimation();
@@ -12,50 +23,40 @@ export default function CardReveal() {
   const params = useParams();
 
   let gameIdFromParams: string | null = null;
-  if (typeof params.gameId === 'string') {
+  if (typeof params.gameId === "string") {
     gameIdFromParams = params.gameId;
-  } else if (Array.isArray(params.gameId) && params.gameId.length > 0 && typeof params.gameId[0] === 'string') {
+  } else if (
+    Array.isArray(params.gameId) &&
+    params.gameId.length > 0 &&
+    typeof params.gameId[0] === "string"
+  ) {
     gameIdFromParams = params.gameId[0];
   }
   const gameId = gameIdFromParams || "1";
 
-  const [roleName, setRoleName] = useState("Role");
-  const [roleDescription, setRoleDescription] = useState("Description");
   const [cardFrontImage, setCardFrontImage] = useState("/card-image.png");
   const [isAnimationComplete, setIsAnimationComplete] = useState(false);
-
-  // Color theme from lobby
-  const colorThemeStyle: React.CSSProperties = {
-    '--color-bg-cream': '#F5F5DC',
-    '--color-bg-cream-light': '#FAF0E6',
-    '--color-border-gold': '#B89B72',
-    '--color-text-brown-dark': '#4A3B31',
-    '--color-text-brown-medium': '#795548',
-    '--color-accent-gold': '#DAA520',
-    '--color-accent-green': '#556B2F',
-  };
 
   useEffect(() => {
     const animateScene = async () => {
       await cardControls.start({
         y: 0,
-        rotateY: 360 * 3 + 180, 
+        rotateY: 360 * 3 + 180,
         opacity: 1,
         transition: {
           y: { duration: 1.1, ease: "easeOut" },
           rotateY: { duration: 1.1, ease: "linear" },
-          opacity: { duration: 0.2, ease: "easeIn" }
-        }
+          opacity: { duration: 0.2, ease: "easeIn" },
+        },
       });
 
-  
       await cardControls.start({
         y: [0, -20, 0],
-        rotateY: 360 * 4, 
+        rotateY: 360 * 4,
         transition: {
           y: { duration: 0.6, ease: "easeInOut", times: [0, 0.5, 1] },
-          rotateY: { duration: 0.6, ease: "linear" }
-        }
+          rotateY: { duration: 0.6, ease: "linear" },
+        },
       });
 
       setIsAnimationComplete(true);
@@ -63,37 +64,40 @@ export default function CardReveal() {
       infoControls.start({
         opacity: 1,
         y: 0,
-        transition: { duration: 0.5, ease: "easeOut", delay: 0.2 }
+        transition: { duration: 0.5, ease: "easeOut", delay: 0.2 },
       });
 
       buttonControls.start({
         opacity: 1,
         y: 0,
-        transition: { duration: 0.5, ease: "easeOut", delay: 0.4 }
+        transition: { duration: 0.5, ease: "easeOut", delay: 0.4 },
       });
     };
 
     animateScene();
-
   }, [cardControls, infoControls, buttonControls, gameId]);
 
-  const handleConfirm = () => {  //we will use this for specific lobbies
+  const handleConfirm = () => {
+    //we will use this for specific lobbies
     if (!gameId) {
-      const messageBox = document.getElementById('message-box');
+      const messageBox = document.getElementById("message-box");
       if (messageBox) {
-          messageBox.textContent = "Error: Game ID is missing.";
-          messageBox.classList.remove('hidden');
-          setTimeout(() => messageBox.classList.add('hidden'), 3000);
+        messageBox.textContent = "Error: Game ID is missing.";
+        messageBox.classList.remove("hidden");
+        setTimeout(() => messageBox.classList.add("hidden"), 3000);
       }
       router.push("/");
       return;
     }
-    router.push(`/game/play`); //add the lobby number between these
+    setGamePhase("Reflection_MiniGame");
   };
 
   return (
-    <div style={colorThemeStyle} className="flex flex-col items-center justify-center min-h-screen bg-cream text-brown-dark p-4 overflow-hidden font-sans">
-      <div id="message-box" className="hidden fixed top-5 left-1/2 -translate-x-1/2 bg-red-600 text-white p-3 rounded-md shadow-lg transition-opacity duration-300 z-50"></div>
+    <div className="flex flex-col items-center justify-center min-h-screen bg-cream text-brown-dark p-4 overflow-hidden font-sans">
+      <div
+        id="message-box"
+        className="hidden fixed top-5 left-1/2 -translate-x-1/2 bg-red-600 text-white p-3 rounded-md shadow-lg transition-opacity duration-300 z-50"
+      ></div>
 
       <h2 className="text-3xl sm:text-4xl font-bold text-brown-dark mb-8 text-center">
         Your Role is Revealed...
@@ -104,20 +108,22 @@ export default function CardReveal() {
         initial={{ y: -800, rotateY: 0, opacity: 0 }}
         animate={cardControls}
         style={{
-          transformStyle: 'preserve-3d',
-          perspective: '1000px'
+          transformStyle: "preserve-3d",
+          perspective: "1000px",
         }}
         className="w-72 h-[26rem] md:w-80 md:h-[28rem] relative cursor-pointer mb-8"
       >
-        <div className="w-full h-full relative" style={{ transformStyle: 'preserve-3d' }}>
-          
+        <div
+          className="w-full h-full relative"
+          style={{ transformStyle: "preserve-3d" }}
+        >
           {/* Card Back */}
           <div
             className="absolute inset-0 rounded-xl overflow-hidden shadow-2xl border-2 border-accent-gold bg-brown-medium"
             style={{
-              transform: 'rotateY(180deg)',
-              backfaceVisibility: 'hidden',
-              WebkitBackfaceVisibility: 'hidden'
+              transform: "rotateY(180deg)",
+              backfaceVisibility: "hidden",
+              WebkitBackfaceVisibility: "hidden",
             }}
           >
             <img
@@ -131,9 +137,9 @@ export default function CardReveal() {
           <div
             className="absolute inset-0 rounded-xl overflow-hidden shadow-2xl border-2 border-accent-gold bg-cream-light"
             style={{
-              transform: 'rotateY(0deg)',
-              backfaceVisibility: 'hidden',
-              WebkitBackfaceVisibility: 'hidden',
+              transform: "rotateY(0deg)",
+              backfaceVisibility: "hidden",
+              WebkitBackfaceVisibility: "hidden",
             }}
           >
             <img
@@ -152,7 +158,9 @@ export default function CardReveal() {
         className="w-full max-w-md p-6 bg-cream-light rounded-xl shadow-2xl text-center mb-8 border border-gold"
       >
         <p className="text-2xl font-bold mb-2 text-accent-gold">{roleName}</p>
-        <p className="text-md text-brown-dark leading-relaxed">{roleDescription}</p>
+        <p className="text-md text-brown-dark leading-relaxed">
+          {roleDescription}
+        </p>
       </motion.div>
 
       {/* Continue Button */}
