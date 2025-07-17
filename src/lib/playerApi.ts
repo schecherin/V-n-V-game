@@ -1,5 +1,5 @@
 import { supabase } from "./supabase/client";
-import { Player } from "@/types";
+import { Player, PlayerData } from "@/types";
 
 export async function getPlayerById(playerId: string) {
   const playerQuery = supabase

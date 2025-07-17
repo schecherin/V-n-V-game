@@ -1,9 +1,5 @@
 import { supabase } from "./supabase/client";
-import { Game } from "@/types";
-
-export interface GameData {
-  game_code: string;
-}
+import { Game, GameData } from "@/types";
 
 export async function getGameById(gameId: string) {
   const gameQuery = supabase
