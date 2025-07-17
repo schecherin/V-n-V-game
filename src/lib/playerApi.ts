@@ -1,57 +1,27 @@
 import { supabase } from "./supabase/client";
+import { Player } from "@/types";
 
 export async function getPlayerById(playerId: string) {
-  const { data: player, error } = await supabase
+  const playerQuery = supabase
     .from("players")
     .select("*")
     .eq("id", playerId)
     .single();
+
+  const { data, error } = await playerQuery;
   if (error) throw error;
+  const player: Player = data;
   return player;
 }
 
-export async function joinGame(gameCode: string, name: string) {
-  const {
-    data: { user },
-    error,
-  } = await supabase.auth.getUser();
-  if (!user) throw new Error("Not authenticated");
-
-  const { data: game, error: roomError } = await supabase
-    .from("games")
-    .select("game_id")
-    .eq("game_code", gameCode)
-    .single();
-  if (roomError) throw roomError;
-
-  const { data: player, error: playerError } = await supabase
+export async function getPlayersByGameId(gameId: string) {
+  const playersQuery = supabase
     .from("players")
-    .insert([
-      {
-        game_id: game.game_id,
-        user_id: user.id,
-        player_name: name,
-        state: "Alive",
-      },
-    ])
-    .single();
-  if (playerError) throw playerError;
+    .select("*")
+    .eq("game_id", gameId);
 
-  return player;
-}
-
-export async function createGame(gameCode: string) {
-  const {
-    data: { user },
-    error,
-  } = await supabase.auth.getUser();
-  if (!user) throw new Error("Not authenticated");
-
-  const { data: game, error: gameError } = await supabase
-    .from("games")
-    .insert([{ game_code: gameCode }])
-    .single();
-  if (gameError) throw gameError;
-
-  return game;
+  const { data, error } = await playersQuery;
+  if (error) throw error;
+  const players: Player[] = data;
+  return players;
 }
