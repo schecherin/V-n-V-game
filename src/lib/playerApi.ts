@@ -90,3 +90,20 @@ export async function assignRoleNameToPlayer(
   if (error) throw error;
   return true;
 }
+
+/**
+ * Check if the current player is the host of the game.
+ * @param game The game object.
+ * @param players Array of Player objects.
+ * @param currentPlayerId The current player's ID.
+ * @returns True if the current player is the host, false otherwise.
+ */
+export function isCurrentUserHost(
+  game: any,
+  players: any[],
+  currentPlayerId: string | null
+): boolean {
+  if (!game || !players || !currentPlayerId) return false;
+  const player = players.find((p) => p.player_id === currentPlayerId);
+  return player && player.user_id === game.host_user_id;
+}

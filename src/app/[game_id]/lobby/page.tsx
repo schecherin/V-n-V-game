@@ -21,7 +21,7 @@ import SideMenu from "@/components/lobby/SideMenu";
 import Button from "@/components/ui/Button";
 import { useParams, useSearchParams } from "next/navigation";
 import { useGame } from "@/hooks/useGame";
-import { getPlayersByGameCode } from "@/lib/playerApi";
+import { getPlayersByGameCode, isCurrentUserHost } from "@/lib/playerApi";
 import { Player } from "@/types";
 
 export default function LobbyPage(): JSX.Element {
@@ -42,21 +42,6 @@ export default function LobbyPage(): JSX.Element {
     useState<boolean>(false);
 
   const { game, loading, error } = useGame(gameId);
-  // Subscribe to real-time updates for this game
-  useEffect(() => {
-    // Dynamically import to avoid SSR issues
-    let unsubscribe: (() => void) | undefined;
-    import("@/lib/gameSubscriptions").then(({ subscribeToGameUpdates }) => {
-      unsubscribe = subscribeToGameUpdates(gameId, (payload: any) => {
-        // Optionally update game state if needed
-        // For now, just refresh the player list on game update
-        getPlayersByGameCode(gameId).then(setPlayers);
-      });
-    });
-    return () => {
-      if (unsubscribe) unsubscribe();
-    };
-  }, [gameId]);
 
   useEffect(() => {
     getPlayersByGameCode(gameId).then(setPlayers);
@@ -70,9 +55,7 @@ export default function LobbyPage(): JSX.Element {
     { id: "consultation", label: "Consultation Phase", checked: false },
   ]);
 
-  const isCurrentUserHost: boolean = !players.find(
-    (p) => p.player_id === playerId
-  )?.is_guest;
+  const currentUserIsHost: boolean = isCurrentUserHost(game, players, playerId);
 
   const handlePlayerClick = (player: Player): void => {
     console.log("Player clicked:", player);
@@ -85,7 +68,7 @@ export default function LobbyPage(): JSX.Element {
   const handleStartGame = (): void => {
     router.push(`/${gameId}/play`);
   };
-  const canStartGame: boolean = isCurrentUserHost;
+  const canStartGame: boolean = currentUserIsHost;
 
   const handleLeaveGame = (): void => {
     setShowLeaveConfirmModal(false);
@@ -116,9 +99,9 @@ export default function LobbyPage(): JSX.Element {
             <RoomInfoPanel roomName={roomName} />
           </>
         )}
-        {activeMainView === "controls" && (
+        {activeMainView === "controls" && currentUserIsHost && (
           <HostControlsPanel
-            isHost={isCurrentUserHost}
+            isHost={currentUserIsHost}
             onStartGame={handleStartGame}
             canStartGame={canStartGame}
             phaseSwitches={phaseSwitches}
@@ -141,6 +124,7 @@ export default function LobbyPage(): JSX.Element {
         }}
         activeView={activeMainView}
         chatOpen={isChatOpen}
+        showControls={currentUserIsHost}
       />
 
       <ChatPanel isOpen={isChatOpen} onClose={() => setIsChatOpen(false)} />
