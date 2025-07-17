@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
-import { getGameById } from "@/lib/gameApi";
-import { Game } from "@/types";
+import { getGameByCode, getAssignableRoles } from "@/lib/gameApi";
+import { Game, Player } from "@/types";
 
 export function useGame(gameId: string) {
   const [game, setGame] = useState<Game | null>(null);
@@ -9,7 +9,7 @@ export function useGame(gameId: string) {
 
   useEffect(() => {
     setLoading(true);
-    getGameById(gameId)
+    getGameByCode(gameId)
       .then(setGame)
       .catch(setError)
       .finally(() => setLoading(false));

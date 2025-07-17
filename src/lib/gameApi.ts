@@ -43,8 +43,8 @@ export async function joinGame(gameCode: string, name: string) {
     .from("players")
     .insert([
       {
-        game_id: game.game_id,
         user_id: user.id,
+        game_code: gameCode,
         player_name: name,
         state: "Alive",
       },
@@ -107,6 +107,6 @@ export async function updateGamePlayerCount(gameId: string, newCount: number) {
   const { error } = await supabase
     .from("games")
     .update({ current_player_count: newCount })
-    .eq("game_id", gameId);
+    .eq("game_code", gameId);
   if (error) throw error;
 }

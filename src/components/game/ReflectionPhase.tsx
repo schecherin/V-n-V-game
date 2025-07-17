@@ -23,7 +23,7 @@ const ReflectionPhase = ({ player, setGamePhase }: ReflectionPhaseProps) => {
   }, [timer, confirmed]);
 
   // Placeholder: determine if current player has a role
-  const hasRole = player?.current_role_id !== undefined; // Replace with real logic
+  const hasRole = player?.current_role_name !== undefined; // Replace with real logic
 
   // Placeholder: role action button
   const handleRoleAction = () => {

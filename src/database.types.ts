@@ -64,13 +64,6 @@ export type Database = {
             referencedColumns: ["player_id"]
           },
           {
-            foreignKeyName: "chat_messages_game_id_fkey"
-            columns: ["game_id"]
-            isOneToOne: false
-            referencedRelation: "games"
-            referencedColumns: ["game_id"]
-          },
-          {
             foreignKeyName: "chat_messages_sender_player_id_fkey"
             columns: ["sender_player_id"]
             isOneToOne: false
@@ -88,8 +81,8 @@ export type Database = {
           event_id: string
           event_phase: Database["public"]["Enums"]["game_phase"] | null
           event_type: string
-          game_id: string
-          role_involved_id: string | null
+          game_code: string
+          role_involved_name: string | null
           target_player_id: string | null
         }
         Insert: {
@@ -100,8 +93,8 @@ export type Database = {
           event_id?: string
           event_phase?: Database["public"]["Enums"]["game_phase"] | null
           event_type: string
-          game_id: string
-          role_involved_id?: string | null
+          game_code: string
+          role_involved_name?: string | null
           target_player_id?: string | null
         }
         Update: {
@@ -112,8 +105,8 @@ export type Database = {
           event_id?: string
           event_phase?: Database["public"]["Enums"]["game_phase"] | null
           event_type?: string
-          game_id?: string
-          role_involved_id?: string | null
+          game_code?: string
+          role_involved_name?: string | null
           target_player_id?: string | null
         }
         Relationships: [
@@ -125,18 +118,18 @@ export type Database = {
             referencedColumns: ["player_id"]
           },
           {
-            foreignKeyName: "game_events_game_id_fkey"
-            columns: ["game_id"]
+            foreignKeyName: "game_events_game_code_fkey"
+            columns: ["game_code"]
             isOneToOne: false
             referencedRelation: "games"
-            referencedColumns: ["game_id"]
+            referencedColumns: ["game_code"]
           },
           {
-            foreignKeyName: "game_events_role_involved_id_fkey"
-            columns: ["role_involved_id"]
+            foreignKeyName: "game_events_role_involved_name_fkey"
+            columns: ["role_involved_name"]
             isOneToOne: false
             referencedRelation: "roles"
-            referencedColumns: ["role_id"]
+            referencedColumns: ["role_name"]
           },
           {
             foreignKeyName: "game_events_target_player_id_fkey"
@@ -151,8 +144,8 @@ export type Database = {
         Row: {
           created_at: string | null
           day_number: number
-          election_target_role_id: string | null
-          game_id: string
+          election_target_role_name: string | null
+          game_code: string
           is_chairman_double_vote: boolean | null
           vote_id: string
           voted_player_id: string
@@ -162,8 +155,8 @@ export type Database = {
         Insert: {
           created_at?: string | null
           day_number: number
-          election_target_role_id?: string | null
-          game_id: string
+          election_target_role_name?: string | null
+          game_code: string
           is_chairman_double_vote?: boolean | null
           vote_id?: string
           voted_player_id: string
@@ -173,8 +166,8 @@ export type Database = {
         Update: {
           created_at?: string | null
           day_number?: number
-          election_target_role_id?: string | null
-          game_id?: string
+          election_target_role_name?: string | null
+          game_code?: string
           is_chairman_double_vote?: boolean | null
           vote_id?: string
           voted_player_id?: string
@@ -183,18 +176,18 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "game_votes_election_target_role_id_fkey"
-            columns: ["election_target_role_id"]
+            foreignKeyName: "game_votes_election_target_role_name_fkey"
+            columns: ["election_target_role_name"]
             isOneToOne: false
             referencedRelation: "roles"
-            referencedColumns: ["role_id"]
+            referencedColumns: ["role_name"]
           },
           {
-            foreignKeyName: "game_votes_game_id_fkey"
-            columns: ["game_id"]
+            foreignKeyName: "game_votes_game_code_fkey"
+            columns: ["game_code"]
             isOneToOne: false
             referencedRelation: "games"
-            referencedColumns: ["game_id"]
+            referencedColumns: ["game_code"]
           },
           {
             foreignKeyName: "game_votes_voted_player_id_fkey"
@@ -220,7 +213,6 @@ export type Database = {
           current_phase: Database["public"]["Enums"]["game_phase"]
           current_player_count: number
           game_code: string
-          game_id: string
           game_status: Database["public"]["Enums"]["game_phase"]
           group_points_pool: number
           host_user_id: string | null
@@ -239,7 +231,6 @@ export type Database = {
           current_phase?: Database["public"]["Enums"]["game_phase"]
           current_player_count?: number
           game_code: string
-          game_id?: string
           game_status?: Database["public"]["Enums"]["game_phase"]
           group_points_pool?: number
           host_user_id?: string | null
@@ -258,7 +249,6 @@ export type Database = {
           current_phase?: Database["public"]["Enums"]["game_phase"]
           current_player_count?: number
           game_code?: string
-          game_id?: string
           game_status?: Database["public"]["Enums"]["game_phase"]
           group_points_pool?: number
           host_user_id?: string | null
@@ -290,14 +280,14 @@ export type Database = {
       player_actions: {
         Row: {
           acting_player_id: string
-          acting_role_id: string
+          acting_role_name: string
           action_details: Json | null
           action_id: string
           action_successful: boolean | null
           action_type: Database["public"]["Enums"]["ability_effect_type"]
           created_at: string | null
           day_number: number
-          game_id: string
+          game_code: string
           points_spent: number
           secondary_target_id: string | null
           target_player_id: string | null
@@ -305,14 +295,14 @@ export type Database = {
         }
         Insert: {
           acting_player_id: string
-          acting_role_id: string
+          acting_role_name: string
           action_details?: Json | null
           action_id?: string
           action_successful?: boolean | null
           action_type: Database["public"]["Enums"]["ability_effect_type"]
           created_at?: string | null
           day_number: number
-          game_id: string
+          game_code: string
           points_spent: number
           secondary_target_id?: string | null
           target_player_id?: string | null
@@ -320,14 +310,14 @@ export type Database = {
         }
         Update: {
           acting_player_id?: string
-          acting_role_id?: string
+          acting_role_name?: string
           action_details?: Json | null
           action_id?: string
           action_successful?: boolean | null
           action_type?: Database["public"]["Enums"]["ability_effect_type"]
           created_at?: string | null
           day_number?: number
-          game_id?: string
+          game_code?: string
           points_spent?: number
           secondary_target_id?: string | null
           target_player_id?: string | null
@@ -342,18 +332,18 @@ export type Database = {
             referencedColumns: ["player_id"]
           },
           {
-            foreignKeyName: "player_actions_acting_role_id_fkey"
-            columns: ["acting_role_id"]
+            foreignKeyName: "player_actions_acting_role_name_fkey"
+            columns: ["acting_role_name"]
             isOneToOne: false
             referencedRelation: "roles"
-            referencedColumns: ["role_id"]
+            referencedColumns: ["role_name"]
           },
           {
-            foreignKeyName: "player_actions_game_id_fkey"
-            columns: ["game_id"]
+            foreignKeyName: "player_actions_game_code_fkey"
+            columns: ["game_code"]
             isOneToOne: false
             referencedRelation: "games"
-            referencedColumns: ["game_id"]
+            referencedColumns: ["game_code"]
           },
           {
             foreignKeyName: "player_actions_secondary_target_id_fkey"
@@ -380,9 +370,9 @@ export type Database = {
           effect_type: Database["public"]["Enums"]["ability_effect_type"]
           effect_value: string | null
           expires_at_day: number
-          game_id: string
+          game_code: string
           source_player_id: string | null
-          source_role_id: string | null
+          source_role_name: string | null
           target_player_id: string
         }
         Insert: {
@@ -393,9 +383,9 @@ export type Database = {
           effect_type: Database["public"]["Enums"]["ability_effect_type"]
           effect_value?: string | null
           expires_at_day: number
-          game_id: string
+          game_code: string
           source_player_id?: string | null
-          source_role_id?: string | null
+          source_role_name?: string | null
           target_player_id: string
         }
         Update: {
@@ -406,18 +396,18 @@ export type Database = {
           effect_type?: Database["public"]["Enums"]["ability_effect_type"]
           effect_value?: string | null
           expires_at_day?: number
-          game_id?: string
+          game_code?: string
           source_player_id?: string | null
-          source_role_id?: string | null
+          source_role_name?: string | null
           target_player_id?: string
         }
         Relationships: [
           {
-            foreignKeyName: "player_active_effects_game_id_fkey"
-            columns: ["game_id"]
+            foreignKeyName: "player_active_effects_game_code_fkey"
+            columns: ["game_code"]
             isOneToOne: false
             referencedRelation: "games"
-            referencedColumns: ["game_id"]
+            referencedColumns: ["game_code"]
           },
           {
             foreignKeyName: "player_active_effects_source_player_id_fkey"
@@ -427,11 +417,11 @@ export type Database = {
             referencedColumns: ["player_id"]
           },
           {
-            foreignKeyName: "player_active_effects_source_role_id_fkey"
-            columns: ["source_role_id"]
+            foreignKeyName: "player_active_effects_source_role_name_fkey"
+            columns: ["source_role_name"]
             isOneToOne: false
             referencedRelation: "roles"
-            referencedColumns: ["role_id"]
+            referencedColumns: ["role_name"]
           },
           {
             foreignKeyName: "player_active_effects_target_player_id_fkey"
@@ -447,7 +437,7 @@ export type Database = {
           created_at: string | null
           day_number: number
           expires_at_day: number
-          game_id: string
+          game_code: string
           protected_player_id: string
           protection_id: string
           protection_type: string
@@ -457,7 +447,7 @@ export type Database = {
           created_at?: string | null
           day_number: number
           expires_at_day: number
-          game_id: string
+          game_code: string
           protected_player_id: string
           protection_id?: string
           protection_type?: string
@@ -467,7 +457,7 @@ export type Database = {
           created_at?: string | null
           day_number?: number
           expires_at_day?: number
-          game_id?: string
+          game_code?: string
           protected_player_id?: string
           protection_id?: string
           protection_type?: string
@@ -475,11 +465,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "player_protections_game_id_fkey"
-            columns: ["game_id"]
+            foreignKeyName: "player_protections_game_code_fkey"
+            columns: ["game_code"]
             isOneToOne: false
             referencedRelation: "games"
-            referencedColumns: ["game_id"]
+            referencedColumns: ["game_code"]
           },
           {
             foreignKeyName: "player_protections_protected_player_id_fkey"
@@ -500,14 +490,14 @@ export type Database = {
       players: {
         Row: {
           conversion_history: Json | null
-          current_role_id: string | null
+          current_role_name: string | null
           current_y_value: number | null
           effective_identity_player_id: string | null
-          game_id: string
+          game_code: string | null
           is_guest: boolean | null
           joined_at: string | null
           last_mini_game_rank: number | null
-          original_role_id: string | null
+          original_role_name: string | null
           personal_points: number
           player_id: string
           player_name: string
@@ -517,14 +507,14 @@ export type Database = {
         }
         Insert: {
           conversion_history?: Json | null
-          current_role_id?: string | null
+          current_role_name?: string | null
           current_y_value?: number | null
           effective_identity_player_id?: string | null
-          game_id: string
+          game_code?: string | null
           is_guest?: boolean | null
           joined_at?: string | null
           last_mini_game_rank?: number | null
-          original_role_id?: string | null
+          original_role_name?: string | null
           personal_points?: number
           player_id?: string
           player_name: string
@@ -534,14 +524,14 @@ export type Database = {
         }
         Update: {
           conversion_history?: Json | null
-          current_role_id?: string | null
+          current_role_name?: string | null
           current_y_value?: number | null
           effective_identity_player_id?: string | null
-          game_id?: string
+          game_code?: string | null
           is_guest?: boolean | null
           joined_at?: string | null
           last_mini_game_rank?: number | null
-          original_role_id?: string | null
+          original_role_name?: string | null
           personal_points?: number
           player_id?: string
           player_name?: string
@@ -551,11 +541,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "players_current_role_id_fkey"
-            columns: ["current_role_id"]
+            foreignKeyName: "players_current_role_name_fkey"
+            columns: ["current_role_name"]
             isOneToOne: false
             referencedRelation: "roles"
-            referencedColumns: ["role_id"]
+            referencedColumns: ["role_name"]
           },
           {
             foreignKeyName: "players_effective_identity_player_id_fkey"
@@ -565,18 +555,18 @@ export type Database = {
             referencedColumns: ["player_id"]
           },
           {
-            foreignKeyName: "players_game_id_fkey"
-            columns: ["game_id"]
-            isOneToOne: false
+            foreignKeyName: "players_game_code_fkey"
+            columns: ["game_code"]
+            isOneToOne: true
             referencedRelation: "games"
-            referencedColumns: ["game_id"]
+            referencedColumns: ["game_code"]
           },
           {
-            foreignKeyName: "players_original_role_id_fkey"
-            columns: ["original_role_id"]
+            foreignKeyName: "players_original_role_name_fkey"
+            columns: ["original_role_name"]
             isOneToOne: false
             referencedRelation: "roles"
-            referencedColumns: ["role_id"]
+            referencedColumns: ["role_name"]
           },
           {
             foreignKeyName: "players_role_inherited_from_fkey"
@@ -591,40 +581,40 @@ export type Database = {
         Row: {
           created_at: string | null
           day_number: number
-          game_id: string
+          game_code: string
           guess_id: string
           guessed_player_id: string
-          guessed_role_id: string
+          guessed_role_name: string
           guessing_player_id: string
           is_correct: boolean | null
         }
         Insert: {
           created_at?: string | null
           day_number: number
-          game_id: string
+          game_code: string
           guess_id?: string
           guessed_player_id: string
-          guessed_role_id: string
+          guessed_role_name: string
           guessing_player_id: string
           is_correct?: boolean | null
         }
         Update: {
           created_at?: string | null
           day_number?: number
-          game_id?: string
+          game_code?: string
           guess_id?: string
           guessed_player_id?: string
-          guessed_role_id?: string
+          guessed_role_name?: string
           guessing_player_id?: string
           is_correct?: boolean | null
         }
         Relationships: [
           {
-            foreignKeyName: "reflection_phase_guesses_game_id_fkey"
-            columns: ["game_id"]
+            foreignKeyName: "reflection_phase_guesses_game_code_fkey"
+            columns: ["game_code"]
             isOneToOne: false
             referencedRelation: "games"
-            referencedColumns: ["game_id"]
+            referencedColumns: ["game_code"]
           },
           {
             foreignKeyName: "reflection_phase_guesses_guessed_player_id_fkey"
@@ -634,11 +624,11 @@ export type Database = {
             referencedColumns: ["player_id"]
           },
           {
-            foreignKeyName: "reflection_phase_guesses_guessed_role_id_fkey"
-            columns: ["guessed_role_id"]
+            foreignKeyName: "reflection_phase_guesses_guessed_role_name_fkey"
+            columns: ["guessed_role_name"]
             isOneToOne: false
             referencedRelation: "roles"
-            referencedColumns: ["role_id"]
+            referencedColumns: ["role_name"]
           },
           {
             foreignKeyName: "reflection_phase_guesses_guessing_player_id_fkey"
@@ -656,11 +646,11 @@ export type Database = {
           converter_role_id: string
           created_at: string | null
           day_number: number
-          game_id: string
+          game_code: string
           new_faction: Database["public"]["Enums"]["role_faction"]
-          new_role_id: string
+          new_role_name: string
           original_faction: Database["public"]["Enums"]["role_faction"]
-          original_role_id: string
+          original_role_name: string
           points_spent: number
           target_player_id: string
         }
@@ -670,11 +660,11 @@ export type Database = {
           converter_role_id: string
           created_at?: string | null
           day_number: number
-          game_id: string
+          game_code: string
           new_faction: Database["public"]["Enums"]["role_faction"]
-          new_role_id: string
+          new_role_name: string
           original_faction: Database["public"]["Enums"]["role_faction"]
-          original_role_id: string
+          original_role_name: string
           points_spent: number
           target_player_id: string
         }
@@ -684,11 +674,11 @@ export type Database = {
           converter_role_id?: string
           created_at?: string | null
           day_number?: number
-          game_id?: string
+          game_code?: string
           new_faction?: Database["public"]["Enums"]["role_faction"]
-          new_role_id?: string
+          new_role_name?: string
           original_faction?: Database["public"]["Enums"]["role_faction"]
-          original_role_id?: string
+          original_role_name?: string
           points_spent?: number
           target_player_id?: string
         }
@@ -701,32 +691,25 @@ export type Database = {
             referencedColumns: ["player_id"]
           },
           {
-            foreignKeyName: "role_conversions_converter_role_id_fkey"
-            columns: ["converter_role_id"]
-            isOneToOne: false
-            referencedRelation: "roles"
-            referencedColumns: ["role_id"]
-          },
-          {
-            foreignKeyName: "role_conversions_game_id_fkey"
-            columns: ["game_id"]
+            foreignKeyName: "role_conversions_game_code_fkey"
+            columns: ["game_code"]
             isOneToOne: false
             referencedRelation: "games"
-            referencedColumns: ["game_id"]
+            referencedColumns: ["game_code"]
           },
           {
-            foreignKeyName: "role_conversions_new_role_id_fkey"
-            columns: ["new_role_id"]
+            foreignKeyName: "role_conversions_new_role_name_fkey"
+            columns: ["new_role_name"]
             isOneToOne: false
             referencedRelation: "roles"
-            referencedColumns: ["role_id"]
+            referencedColumns: ["role_name"]
           },
           {
-            foreignKeyName: "role_conversions_original_role_id_fkey"
-            columns: ["original_role_id"]
+            foreignKeyName: "role_conversions_original_role_name_fkey"
+            columns: ["original_role_name"]
             isOneToOne: false
             referencedRelation: "roles"
-            referencedColumns: ["role_id"]
+            referencedColumns: ["role_name"]
           },
           {
             foreignKeyName: "role_conversions_target_player_id_fkey"
@@ -743,33 +726,33 @@ export type Database = {
           created_at: string | null
           day_number: number
           deceased_player_id: string
-          deceased_role_id: string
-          game_id: string
+          deceased_role_name: string
+          game_code: string
           inheritance_id: string
           inheritor_player_id: string
-          original_inheritor_role_id: string
+          original_inheritor_role_name: string
         }
         Insert: {
           choice_made_at?: string | null
           created_at?: string | null
           day_number: number
           deceased_player_id: string
-          deceased_role_id: string
-          game_id: string
+          deceased_role_name: string
+          game_code: string
           inheritance_id?: string
           inheritor_player_id: string
-          original_inheritor_role_id: string
+          original_inheritor_role_name: string
         }
         Update: {
           choice_made_at?: string | null
           created_at?: string | null
           day_number?: number
           deceased_player_id?: string
-          deceased_role_id?: string
-          game_id?: string
+          deceased_role_name?: string
+          game_code?: string
           inheritance_id?: string
           inheritor_player_id?: string
-          original_inheritor_role_id?: string
+          original_inheritor_role_name?: string
         }
         Relationships: [
           {
@@ -780,18 +763,18 @@ export type Database = {
             referencedColumns: ["player_id"]
           },
           {
-            foreignKeyName: "role_inheritance_choices_deceased_role_id_fkey"
-            columns: ["deceased_role_id"]
+            foreignKeyName: "role_inheritance_choices_deceased_role_name_fkey"
+            columns: ["deceased_role_name"]
             isOneToOne: false
             referencedRelation: "roles"
-            referencedColumns: ["role_id"]
+            referencedColumns: ["role_name"]
           },
           {
-            foreignKeyName: "role_inheritance_choices_game_id_fkey"
-            columns: ["game_id"]
+            foreignKeyName: "role_inheritance_choices_game_code_fkey"
+            columns: ["game_code"]
             isOneToOne: false
             referencedRelation: "games"
-            referencedColumns: ["game_id"]
+            referencedColumns: ["game_code"]
           },
           {
             foreignKeyName: "role_inheritance_choices_inheritor_player_id_fkey"
@@ -801,11 +784,11 @@ export type Database = {
             referencedColumns: ["player_id"]
           },
           {
-            foreignKeyName: "role_inheritance_choices_original_inheritor_role_id_fkey"
-            columns: ["original_inheritor_role_id"]
+            foreignKeyName: "role_inheritance_choices_original_inheritor_role_name_fkey"
+            columns: ["original_inheritor_role_name"]
             isOneToOne: false
             referencedRelation: "roles"
-            referencedColumns: ["role_id"]
+            referencedColumns: ["role_name"]
           },
         ]
       }
@@ -825,9 +808,9 @@ export type Database = {
           faction: Database["public"]["Enums"]["role_faction"]
           max_uses_per_day: number | null
           max_uses_per_game: number | null
-          role_id: string
           role_name: string
           tier: Database["public"]["Enums"]["role_tier"]
+          unique: boolean
         }
         Insert: {
           ability_cost_formula?: string | null
@@ -844,9 +827,9 @@ export type Database = {
           faction: Database["public"]["Enums"]["role_faction"]
           max_uses_per_day?: number | null
           max_uses_per_game?: number | null
-          role_id?: string
           role_name: string
           tier: Database["public"]["Enums"]["role_tier"]
+          unique?: boolean
         }
         Update: {
           ability_cost_formula?: string | null
@@ -863,9 +846,9 @@ export type Database = {
           faction?: Database["public"]["Enums"]["role_faction"]
           max_uses_per_day?: number | null
           max_uses_per_game?: number | null
-          role_id?: string
           role_name?: string
           tier?: Database["public"]["Enums"]["role_tier"]
+          unique?: boolean
         }
         Relationships: []
       }
@@ -876,7 +859,7 @@ export type Database = {
           announcement_id: string
           created_at: string | null
           day_number: number
-          game_id: string
+          game_code: string
           is_truthful: boolean
           secretary_player_id: string
           voting_phase: Database["public"]["Enums"]["game_phase"]
@@ -887,7 +870,7 @@ export type Database = {
           announcement_id?: string
           created_at?: string | null
           day_number: number
-          game_id: string
+          game_code: string
           is_truthful: boolean
           secretary_player_id: string
           voting_phase: Database["public"]["Enums"]["game_phase"]
@@ -898,18 +881,18 @@ export type Database = {
           announcement_id?: string
           created_at?: string | null
           day_number?: number
-          game_id?: string
+          game_code?: string
           is_truthful?: boolean
           secretary_player_id?: string
           voting_phase?: Database["public"]["Enums"]["game_phase"]
         }
         Relationships: [
           {
-            foreignKeyName: "secretary_vote_announcements_game_id_fkey"
-            columns: ["game_id"]
+            foreignKeyName: "secretary_vote_announcements_game_code_fkey"
+            columns: ["game_code"]
             isOneToOne: false
             referencedRelation: "games"
-            referencedColumns: ["game_id"]
+            referencedColumns: ["game_code"]
           },
           {
             foreignKeyName: "secretary_vote_announcements_secretary_player_id_fkey"
@@ -926,7 +909,7 @@ export type Database = {
           created_at: string | null
           day_number: number
           details: string | null
-          game_id: string
+          game_code: string
           points_spent: number
           target_player_id: string | null
           transaction_id: string
@@ -937,7 +920,7 @@ export type Database = {
           created_at?: string | null
           day_number: number
           details?: string | null
-          game_id: string
+          game_code: string
           points_spent: number
           target_player_id?: string | null
           transaction_id?: string
@@ -948,7 +931,7 @@ export type Database = {
           created_at?: string | null
           day_number?: number
           details?: string | null
-          game_id?: string
+          game_code?: string
           points_spent?: number
           target_player_id?: string | null
           transaction_id?: string
@@ -956,11 +939,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "treasury_transactions_game_id_fkey"
-            columns: ["game_id"]
+            foreignKeyName: "treasury_transactions_game_code_fkey"
+            columns: ["game_code"]
             isOneToOne: false
             referencedRelation: "games"
-            referencedColumns: ["game_id"]
+            referencedColumns: ["game_code"]
           },
           {
             foreignKeyName: "treasury_transactions_target_player_id_fkey"
@@ -982,7 +965,7 @@ export type Database = {
         Row: {
           created_at: string | null
           day_number: number
-          game_id: string
+          game_code: string
           guessed_voter_id: string
           imprisoned_player_id: string
           is_correct: boolean
@@ -992,7 +975,7 @@ export type Database = {
         Insert: {
           created_at?: string | null
           day_number: number
-          game_id: string
+          game_code: string
           guessed_voter_id: string
           imprisoned_player_id: string
           is_correct: boolean
@@ -1002,7 +985,7 @@ export type Database = {
         Update: {
           created_at?: string | null
           day_number?: number
-          game_id?: string
+          game_code?: string
           guessed_voter_id?: string
           imprisoned_player_id?: string
           is_correct?: boolean
@@ -1011,11 +994,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "vengeance_guesses_game_id_fkey"
-            columns: ["game_id"]
+            foreignKeyName: "vengeance_guesses_game_code_fkey"
+            columns: ["game_code"]
             isOneToOne: false
             referencedRelation: "games"
-            referencedColumns: ["game_id"]
+            referencedColumns: ["game_code"]
           },
           {
             foreignKeyName: "vengeance_guesses_guessed_voter_id_fkey"

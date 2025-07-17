@@ -14,11 +14,11 @@ export async function getPlayerById(playerId: string) {
   return player;
 }
 
-export async function getPlayersByGameId(gameId: string) {
+export async function getPlayersByGameCode(gameId: string) {
   const playersQuery = supabase
     .from("players")
     .select("*")
-    .eq("game_id", gameId);
+    .eq("game_code", gameId);
 
   const { data, error } = await playersQuery;
   if (error) throw error;
@@ -33,7 +33,7 @@ export async function getPlayerByNameInGame(
   const { data, error } = await supabase
     .from("players")
     .select("player_name")
-    .eq("game_id", gameId)
+    .eq("game_code", gameId)
     .eq("player_name", playerName)
     .single();
   if (data) return data;

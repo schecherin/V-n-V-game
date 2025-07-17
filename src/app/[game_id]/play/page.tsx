@@ -9,12 +9,13 @@ import OutreachPhase from "@/components/game/OutreachPhase";
 import CardReveal from "@/components/game/CardReveal";
 import { useGame } from "@/hooks/useGame";
 import { GamePhase, Player } from "@/types";
-import { getPlayersByGameId } from "@/lib/playerApi";
+import { getPlayersByGameCode } from "@/lib/playerApi";
 
 export default function GamePlayPage() {
   const params = useParams();
   const router = useRouter();
   const gameId: string = params.game_id as string;
+  const playerId: string = params.player_id as string;
 
   // Use the useGame hook
   const { game, loading, error } = useGame(gameId);
@@ -22,11 +23,11 @@ export default function GamePlayPage() {
   const [players, setPlayers] = useState<Player[]>([]);
 
   useEffect(() => {
-    getPlayersByGameId(gameId).then(setPlayers);
+    getPlayersByGameCode(gameId).then(setPlayers);
   }, [gameId]);
 
   // Current player - normally from auth context
-  const [currentPlayerId, setCurrentPlayerId] = useState<string>("1");
+  const [currentPlayerId, setCurrentPlayerId] = useState<string>(playerId);
   const [gamePhase, setGamePhase] = useState<GamePhase | undefined>(
     game?.current_phase
   );

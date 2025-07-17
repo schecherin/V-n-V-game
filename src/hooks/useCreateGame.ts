@@ -43,7 +43,6 @@ export function useCreateGame() {
 
         // Create host player
         const player = await createPlayer({
-          game_id: game.game_id,
           user_id: null, // No auth needed
           player_name: playerName.trim(),
           is_guest: true,
