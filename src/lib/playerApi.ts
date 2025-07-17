@@ -51,3 +51,15 @@ export async function createPlayer(playerData: PlayerData) {
   if (error) throw error;
   return data;
 }
+
+export async function assignRoleNameToPlayer(
+  playerId: string,
+  roleName: string
+) {
+  const { error } = await supabase
+    .from("players")
+    .update({ current_role_name: roleName })
+    .eq("player_id", playerId);
+  if (error) throw error;
+  return true;
+}

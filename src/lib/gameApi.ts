@@ -110,3 +110,12 @@ export async function updateGamePlayerCount(gameId: string, newCount: number) {
     .eq("game_code", gameId);
   if (error) throw error;
 }
+
+export async function getAssignableRoles() {
+  const { data, error } = await supabase
+    .from("roles")
+    .select("*")
+    .eq("can_be_assigned_randomly", true);
+  if (error) throw error;
+  return data;
+}
