@@ -1,5 +1,5 @@
 import { supabase } from "@/lib/supabase/client";
-import { Game, GameData } from "@/types";
+import { Game, GameData, GamePhase } from "@/types";
 
 export async function getGameById(gameId: string) {
   const gameQuery = supabase
@@ -87,4 +87,26 @@ export async function createGame(gameData: GameData) {
     .single();
   if (error) throw error;
   return data;
+}
+
+export async function getGameByCodeAndPhase(
+  gameCode: string,
+  phase: GamePhase
+) {
+  const { data, error } = await supabase
+    .from("games")
+    .select("*")
+    .eq("game_code", gameCode)
+    .eq("current_phase", phase)
+    .single();
+  if (error || !data) throw error || new Error("Game not found");
+  return data;
+}
+
+export async function updateGamePlayerCount(gameId: string, newCount: number) {
+  const { error } = await supabase
+    .from("games")
+    .update({ current_player_count: newCount })
+    .eq("game_id", gameId);
+  if (error) throw error;
 }

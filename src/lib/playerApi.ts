@@ -26,7 +26,23 @@ export async function getPlayersByGameId(gameId: string) {
   return players;
 }
 
-export async function createPlayer(playerData: any) {
+export async function getPlayerByNameInGame(
+  gameId: string,
+  playerName: string
+) {
+  const { data, error } = await supabase
+    .from("players")
+    .select("player_name")
+    .eq("game_id", gameId)
+    .eq("player_name", playerName)
+    .single();
+  if (data) return data;
+  if (error && error.code === "PGRST116") return null; // Not found
+  if (error) throw error;
+  return null;
+}
+
+export async function createPlayer(playerData: PlayerData) {
   const { data, error } = await supabase
     .from("players")
     .insert(playerData)
