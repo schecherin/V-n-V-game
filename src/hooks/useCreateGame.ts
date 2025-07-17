@@ -53,7 +53,7 @@ export function useCreateGame() {
         setPlayer(player);
 
         // Navigate to game lobby
-        router.push(`/game/${gameCode}/lobby?playerId=${player.player_id}`);
+        router.push(`/${gameCode}/lobby?playerId=${player.player_id}`);
         setLoading(false);
         return { game, player };
       } catch (err: any) {

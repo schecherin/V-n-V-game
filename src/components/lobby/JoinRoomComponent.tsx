@@ -1,6 +1,6 @@
 "use client";
 import { useState } from "react";
-import { useGame } from "@/hooks/useGame";
+import { useJoinGame } from "@/hooks/useJoinGame";
 
 interface JoinRoomComponentProps {
   onBack: () => void;
@@ -9,7 +9,7 @@ interface JoinRoomComponentProps {
 export default function JoinRoomComponent({ onBack }: JoinRoomComponentProps) {
   const [gameCode, setGameCode] = useState("");
   const [playerName, setPlayerName] = useState("");
-  const { joinGame, loading: isLoading, error } = useGame("");
+  const { joinGame, loading: isLoading, error } = useJoinGame();
 
   const handleJoinRoom = async () => {
     if (!gameCode.trim() || !playerName.trim()) {

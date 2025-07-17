@@ -5,7 +5,7 @@ export async function getGameById(gameId: string) {
   const gameQuery = supabase
     .from("games")
     .select("*")
-    .eq("id", gameId)
+    .eq("game_id", gameId)
     .single();
 
   const { data, error } = await gameQuery;
