@@ -1,6 +1,6 @@
 "use client";
 
-import { useParams, useRouter } from "next/navigation";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import MinigameCore from "@/components/game/MinigameCore";
 import ConsultationPhase from "@/components/game/ConsultationPhase";
@@ -10,33 +10,68 @@ import CardReveal from "@/components/game/CardReveal";
 import { useGame } from "@/hooks/useGame";
 import { GamePhase, Player } from "@/types";
 import { getPlayersByGameCode } from "@/lib/playerApi";
+import { updateGamePhase } from "@/lib/gameApi";
+import { subscribeToGameUpdates } from "@/lib/gameSubscriptions";
 
 export default function GamePlayPage() {
   const params = useParams();
   const router = useRouter();
+  const searchParams = useSearchParams();
+
   const gameId: string = params.game_id as string;
-  const playerId: string = params.player_id as string;
+  const playerId: string | null = searchParams.get("playerId");
 
   // Use the useGame hook
-  const { game, loading, error } = useGame(gameId);
+  const { game, loading, error, assignRoles } = useGame(gameId);
 
   const [players, setPlayers] = useState<Player[]>([]);
-
-  useEffect(() => {
-    getPlayersByGameCode(gameId).then(setPlayers);
-  }, [gameId]);
-
-  // Current player - normally from auth context
-  const [currentPlayerId, setCurrentPlayerId] = useState<string>(playerId);
+  const [currentPlayerId, setCurrentPlayerId] = useState<string | null>(
+    playerId
+  );
   const [gamePhase, setGamePhase] = useState<GamePhase | undefined>(
     game?.current_phase
   );
+
+  useEffect(() => {
+    getPlayersByGameCode(gameId).then((fetchedPlayers) => {
+      setPlayers(fetchedPlayers);
+      assignRoles(fetchedPlayers); // Only called once after fetching players
+    });
+  }, [gameId]);
 
   useEffect(() => {
     if (game?.current_phase) {
       setGamePhase(game.current_phase);
     }
   }, [game?.current_phase]);
+
+  // Subscribe to real-time updates for this game
+  useEffect(() => {
+    const unsubscribe = subscribeToGameUpdates(gameId, (payload) => {
+      if (payload.new && payload.new.current_phase) {
+        setGamePhase(payload.new.current_phase);
+      }
+    });
+    return unsubscribe;
+  }, [gameId]);
+
+  // Helper to check if current player is host
+  const isCurrentUserHost =
+    game &&
+    players.find((p) => p.player_id === currentPlayerId)?.user_id ===
+      game.host_user_id;
+
+  // Helper to sync phase changes to backend (host only)
+  const handleSetGamePhase = async (newPhase: GamePhase) => {
+    setGamePhase(newPhase);
+    if (!isCurrentUserHost) return;
+    try {
+      await updateGamePhase(gameId, newPhase);
+    } catch (err) {
+      // Optionally show a toast or fallback UI
+      console.error("Failed to update game phase:", err);
+    }
+  };
 
   const handleMinigameGuess = (targetPlayerId: string, guessedRole: string) => {
     console.log(
@@ -55,31 +90,35 @@ export default function GamePlayPage() {
           <CardReveal
             roleName=""
             roleDescription=""
-            setGamePhase={setGamePhase}
+            setGamePhase={handleSetGamePhase}
           />
         );
       case "Reflection_MiniGame":
         return (
           <MinigameCore
             players={players}
-            currentPlayerId={currentPlayerId}
+            currentPlayerId={currentPlayerId ?? ""}
             onGuess={handleMinigameGuess}
             maxGuesses={3}
-            setGamePhase={setGamePhase}
+            setGamePhase={handleSetGamePhase}
           />
         );
       case "Reflection_RoleActions":
         return (
           <ReflectionPhase
-            player={players.find((p) => p.player_id === currentPlayerId)}
-            setGamePhase={setGamePhase}
+            player={players.find(
+              (p) => p.player_id === (currentPlayerId ?? "")
+            )}
+            setGamePhase={handleSetGamePhase}
           />
         );
       case "Outreach":
         return (
           <OutreachPhase
-            player={players.find((p) => p.player_id === currentPlayerId)}
-            setGamePhase={setGamePhase}
+            player={players.find(
+              (p) => p.player_id === (currentPlayerId ?? "")
+            )}
+            setGamePhase={handleSetGamePhase}
           />
         );
       case "Consultation_Discussion":
@@ -89,8 +128,10 @@ export default function GamePlayPage() {
         return (
           <ConsultationPhase
             players={players}
-            player={players.find((p) => p.player_id === currentPlayerId)}
-            setGamePhase={setGamePhase}
+            player={players.find(
+              (p) => p.player_id === (currentPlayerId ?? "")
+            )}
+            setGamePhase={handleSetGamePhase}
           />
         );
       case "Finished":

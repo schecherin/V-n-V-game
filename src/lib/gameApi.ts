@@ -152,6 +152,23 @@ export async function updateGamePlayerCount(gameId: string, newCount: number) {
   if (error) throw error;
 }
 
+/**
+ * Update the current phase of a game.
+ * @param gameCode The game code.
+ * @param newPhase The new phase to set.
+ */
+export async function updateGamePhase(gameCode: string, newPhase: GamePhase) {
+  const { error } = await supabase
+    .from("games")
+    .update({ current_phase: newPhase })
+    .eq("game_code", gameCode);
+  if (error) throw error;
+}
+
+/**
+ * Fetch all roles that can be assigned randomly.
+ * @returns An array of assignable roles.
+ */
 export async function getAssignableRoles() {
   const { data, error } = await supabase
     .from("roles")
