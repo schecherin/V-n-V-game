@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
 import { getGameById } from "../lib/gameApi";
-import { Database, Tables, Enums } from "../database.types";
+import { Game } from "@/types";
 
 export function useGame(gameId: string) {
-  const [game, setGame] = useState<Tables<"games"> | null>(null);
+  const [game, setGame] = useState<Game | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<any>(null);
 
@@ -17,4 +17,3 @@ export function useGame(gameId: string) {
 
   return { game, loading, error };
 }
-

@@ -1,4 +1,4 @@
-import { supabase } from "./supabase/client";
+import { supabase } from "@/lib/supabase/client";
 import { Game, GameData } from "@/types";
 
 export async function getGameById(gameId: string) {
@@ -12,6 +12,17 @@ export async function getGameById(gameId: string) {
   if (error) throw error;
   const game: Game = data;
   return game;
+}
+
+export async function getGameByCode(gameCode: string) {
+  const { data, error } = await supabase
+    .from("games")
+    .select("*")
+    .eq("game_code", gameCode)
+    .single();
+
+  if (error) throw error;
+  return data as Game;
 }
 
 export async function joinGame(gameCode: string, name: string) {
@@ -44,17 +55,36 @@ export async function joinGame(gameCode: string, name: string) {
   return player;
 }
 
+export async function generateGameCode() {
+  const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+  let code = "";
+  for (let i = 0; i < 6; i++) {
+    code += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return code;
+}
+
+export async function checkGameCodeUnique(gameCode: string) {
+  const { data: existingGame, error: checkError } = await supabase
+    .from("games")
+    .select("game_code")
+    .eq("game_code", gameCode)
+    .single();
+  if (checkError && checkError.code === "PGRST116") {
+    return true; // Unique
+  } else if (!checkError) {
+    return false; // Not unique
+  } else {
+    throw checkError;
+  }
+}
+
 export async function createGame(gameData: GameData) {
-  const {
-    data: { user },
-    error,
-  } = await supabase.auth.getUser();
-  if (!user) throw new Error("Not authenticated");
-
-  const gameQuery = supabase.from("games").insert([gameData]).select().single();
-
-  const { data, error: gameError } = await gameQuery;
-  if (gameError) throw gameError;
-  const game: Game = data;
-  return game;
+  const { data, error } = await supabase
+    .from("games")
+    .insert(gameData)
+    .select()
+    .single();
+  if (error) throw error;
+  return data;
 }

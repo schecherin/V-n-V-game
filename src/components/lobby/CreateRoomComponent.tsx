@@ -1,111 +1,27 @@
-'use client';
+"use client";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { supabase } from "@/lib/supabase/client";
+import { useCreateGame } from "@/hooks/useCreateGame";
 
 interface CreateRoomComponentProps {
   onBack: () => void;
 }
 
-export default function CreateRoomComponent({ onBack }: CreateRoomComponentProps) {
+export default function CreateRoomComponent({
+  onBack,
+}: CreateRoomComponentProps) {
   const router = useRouter();
   const [playerName, setPlayerName] = useState("");
   const [maxPlayers, setMaxPlayers] = useState(10);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState("");
-
-  const generateGameCode = () => {
-    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-    let code = '';
-    for (let i = 0; i < 6; i++) {
-      code += chars.charAt(Math.floor(Math.random() * chars.length));
-    }
-    return code;
-  };
+  const { create, loading: isLoading, error } = useCreateGame();
 
   const handleCreateRoom = async () => {
     if (!playerName.trim()) {
-      setError("Please enter your name");
+      // setError is now managed by the hook, but we can still show a local error
+      alert("Please enter your name");
       return;
     }
-
-    setIsLoading(true);
-    setError("");
-
-    try {
-      // Generate unique game code
-      let gameCode = generateGameCode();
-      let isUnique = false;
-      
-      while (!isUnique) {
-        const { data: existingGame, error: checkError } = await supabase
-          .from('games')
-          .select('game_code')
-          .eq('game_code', gameCode)
-          .single();
-
-        if (checkError && checkError.code === 'PGRST116') {
-          // No game found with this code, so it's unique
-          isUnique = true;
-        } else if (!checkError) {
-          // Game found, generate new code
-          gameCode = generateGameCode();
-        } else {
-          throw checkError;
-        }
-      }
-
-      // Create the game without auth
-      const { data: game, error: gameError } = await supabase
-        .from('games')
-        .insert({
-          game_code: gameCode,
-          max_players: maxPlayers,
-          current_player_count: 1,
-          current_phase: 'Lobby',
-          current_day: 0,
-          game_status: 'Lobby',
-          host_user_id: null // No auth needed
-        })
-        .select()
-        .single();
-
-      if (gameError) {
-        console.error("Game creation error:", gameError);
-        setError("Failed to create game: " + gameError.message);
-        setIsLoading(false);
-        return;
-      }
-
-      // Create host player without auth
-      const { data: player, error: playerError } = await supabase
-        .from('players')
-        .insert({
-          game_id: game.game_id,
-          user_id: null, // No auth needed
-          player_name: playerName.trim(),
-          is_guest: true,
-          status: 'Alive',
-          personal_points: 0.00
-        })
-        .select()
-        .single();
-
-      if (playerError) {
-        console.error("Player creation error:", playerError);
-        setError("Failed to create player: " + playerError.message);
-        setIsLoading(false);
-        return;
-      }
-
-      // Navigate to game lobby
-      router.push(`/game/lobby?gameId=${game.game_id}&playerId=${player.player_id}&gameCode=${gameCode}`);
-    } catch (err) {
-      console.error("Create room error:", err);
-      setError("An unexpected error occurred");
-    } finally {
-      setIsLoading(false);
-    }
+    await create(playerName, maxPlayers);
   };
 
   return (
@@ -157,7 +73,7 @@ export default function CreateRoomComponent({ onBack }: CreateRoomComponentProps
         >
           {isLoading ? "Creating..." : "Create Game"}
         </button>
-        
+
         <button
           onClick={onBack}
           className="w-full py-3 bg-gray-200 border border-gray-300 text-gray-700 rounded hover:bg-gray-300 transition"

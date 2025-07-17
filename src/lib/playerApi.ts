@@ -1,4 +1,4 @@
-import { supabase } from "./supabase/client";
+import { supabase } from "@/lib/supabase/client";
 import { Player, PlayerData } from "@/types";
 
 export async function getPlayerById(playerId: string) {
@@ -24,4 +24,14 @@ export async function getPlayersByGameId(gameId: string) {
   if (error) throw error;
   const players: Player[] = data;
   return players;
+}
+
+export async function createPlayer(playerData: any) {
+  const { data, error } = await supabase
+    .from("players")
+    .insert(playerData)
+    .select()
+    .single();
+  if (error) throw error;
+  return data;
 }
