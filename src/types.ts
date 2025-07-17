@@ -11,3 +11,12 @@ export type Game = Tables<"games">;
 
 export type GameData = Database["public"]["Tables"]["games"]["Insert"];
 export type PlayerData = Database["public"]["Tables"]["players"]["Insert"];
+
+/**
+ * Represents a toggleable game switch (e.g., for host controls UI)
+ */
+export interface GameSwitch {
+  id: string;
+  label: string;
+  checked: boolean;
+}
