@@ -7,6 +7,7 @@ import ConsultationPhase from "@/components/game/ConsultationPhase";
 import ReflectionPhase from "@/components/game/ReflectionPhase";
 import OutreachPhase from "@/components/game/OutreachPhase";
 import CardReveal from "@/components/game/CardReveal";
+import Tutorial from "@/components/game/Tutorial";
 import { useGame } from "@/hooks/useGame";
 import { GamePhase, Player } from "@/types";
 import { getPlayersByGameCode } from "@/lib/playerApi";
@@ -90,6 +91,17 @@ export default function GamePlayPage() {
           <CardReveal
             roleName=""
             roleDescription=""
+            setGamePhase={handleSetGamePhase}
+          />
+        );
+      case "Tutorial":
+        return (
+          <Tutorial
+            player={players.find(
+              (p) => p.player_id === (currentPlayerId ?? "")
+            )}
+            game={game}
+            players={players}
             setGamePhase={handleSetGamePhase}
           />
         );
