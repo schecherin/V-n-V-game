@@ -6,6 +6,8 @@ import MinigameCore from "@/components/game/MinigameCore"; // Adjust path if nee
 import ConsultationPhase from "@/components/game/ConsultationPhase";
 import ReflectionPhase from "@/components/game/ReflectionPhase";
 import OutreachPhase from "@/components/game/OutreachPhase";
+import CardReveal from "@/components/game/CardReveal";
+import { useGame } from "@/hooks/useGame";
 
 // Mock player data type for the game
 export interface GamePlayer {
@@ -17,13 +19,18 @@ export interface GamePlayer {
   points: number;
 }
 
+interface GameState {}
+
+interface GamePlayPageProps {}
+
 export default function GamePlayPage() {
   const params = useParams();
   const router = useRouter();
-  const gameId = 1; //params.gameId as string;
+  const gameId: string = "1"; //params.gameId as string;
 
   // State for game players
   // BACKEND INTEGRATION: Fetch from backend, update via WebSockets
+  const { game, loading, error } = useGame(gameId);
   const [players, setPlayers] = useState<GamePlayer[]>([
     {
       id: "1",
@@ -66,8 +73,8 @@ export default function GamePlayPage() {
   // For demo, assume player '1' (Alice) is the current player
   const [currentPlayerId, setCurrentPlayerId] = useState<string>("1");
   const [gamePhase, setGamePhase] = useState<
-    "minigame" | "reflection" | "outreach" | "consultation" | "ended"
-  >("reflection"); // Example phase
+    "reveal" | "minigame" | "reflection" | "outreach" | "consultation" | "ended"
+  >("reveal"); // Example phase
 
   useEffect(() => {
     // BACKEND INTEGRATION:
@@ -87,7 +94,7 @@ export default function GamePlayPage() {
 
   const handleMinigameGuess = (targetPlayerId: string, guessedRole: string) => {
     console.log(
-      `Player ${currentPlayerId} guessed ${targetPlayerId} is ${guessedRole}`
+      `Player ${currentPlayerId} guessed ${targetPlayerId} is ${guessedRole}`,
     );
     // BACKEND INTEGRATION:
     // 1. Send this guess to the backend.
@@ -97,6 +104,8 @@ export default function GamePlayPage() {
 
   const renderGameContent = () => {
     switch (gamePhase) {
+      case "reveal":
+        return <CardReveal roleName="" setGamePhase={setGamePhase} />;
       case "minigame":
         return (
           <MinigameCore
