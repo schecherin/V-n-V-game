@@ -1,8 +1,9 @@
-import { useEffect, useState } from 'react';
-import { getGameById } from '../lib/gameApi';
+import { useEffect, useState } from "react";
+import { getGameById } from "../lib/gameApi";
+import { Database, Tables, Enums } from "../database.types";
 
 export function useGame(gameId: string) {
-  const [game, setGame] = useState<any>(null);
+  const [game, setGame] = useState<Tables<"games"> | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<any>(null);
 
@@ -16,3 +17,4 @@ export function useGame(gameId: string) {
 
   return { game, loading, error };
 }
+

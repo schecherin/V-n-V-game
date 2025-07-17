@@ -1,22 +1,29 @@
-import { supabase } from './supabase/client';
+import { supabase } from "./supabase/client";
+import { QueryData } from "@supabase/supabase-js";
 
 export async function getGameById(gameId: string) {
-  const { data, error } = await supabase
-    .from('games')
-    .select('*')
-    .eq('id', gameId)
+  const gameQuery = supabase
+    .from("games")
+    .select("*")
+    .eq("id", gameId)
     .single();
+  type Game = QueryData<typeof gameQuery>;
+
+  const { data, error } = await gameQuery;
   if (error) throw error;
-  return data;
+  const game: Game = data;
+  return game;
 }
 
-export async function createGame(gameData: any) {
-  const { data, error } = await supabase
-    .from('games')
-    .insert([gameData])
-    .single();
-  if (error) throw error;
-  return data;
+interface GameData {
+  game_code: string;
 }
+export async function createGame(gameData: GameData) {
+  const gameQuery = supabase.from("games").insert([gameData]).select().single();
+  type Game = QueryData<typeof gameQuery>;
 
-// Add more functions as needed
+  const { data, error } = await gameQuery;
+  if (error) throw error;
+  const game: Game = data;
+  return game;
+}
