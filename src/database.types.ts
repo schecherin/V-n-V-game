@@ -213,7 +213,6 @@ export type Database = {
           current_phase: Database["public"]["Enums"]["game_phase"]
           current_player_count: number
           game_code: string
-          game_status: Database["public"]["Enums"]["game_phase"]
           group_points_pool: number
           host_user_id: string | null
           houses_of_worship_vice: number
@@ -231,7 +230,6 @@ export type Database = {
           current_phase?: Database["public"]["Enums"]["game_phase"]
           current_player_count?: number
           game_code: string
-          game_status?: Database["public"]["Enums"]["game_phase"]
           group_points_pool?: number
           host_user_id?: string | null
           houses_of_worship_vice?: number
@@ -249,7 +247,6 @@ export type Database = {
           current_phase?: Database["public"]["Enums"]["game_phase"]
           current_player_count?: number
           game_code?: string
-          game_status?: Database["public"]["Enums"]["game_phase"]
           group_points_pool?: number
           host_user_id?: string | null
           houses_of_worship_vice?: number
