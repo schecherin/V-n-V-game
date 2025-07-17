@@ -94,7 +94,7 @@ export default function GamePlayPage() {
 
   const handleMinigameGuess = (targetPlayerId: string, guessedRole: string) => {
     console.log(
-      `Player ${currentPlayerId} guessed ${targetPlayerId} is ${guessedRole}`,
+      `Player ${currentPlayerId} guessed ${targetPlayerId} is ${guessedRole}`
     );
     // BACKEND INTEGRATION:
     // 1. Send this guess to the backend.
