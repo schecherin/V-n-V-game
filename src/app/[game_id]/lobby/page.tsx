@@ -20,10 +20,14 @@ import Button from "@/components/ui/Button";
 import { useParams, useSearchParams } from "next/navigation";
 import { useGame } from "@/hooks/useGame";
 import { getPlayersByGameCode, isCurrentUserHost } from "@/lib/playerApi";
-import { subscribeToPlayerUpdates } from "@/lib/gameSubscriptions";
+import {
+  subscribeToPlayerUpdates,
+  subscribeToGameUpdates,
+} from "@/lib/gameSubscriptions";
 import {
   setGameIncludeOutreachPhase,
   setGameTutorialStatus,
+  updateGamePhase,
 } from "@/lib/gameApi";
 import { Player, GameSwitch } from "@/types";
 
@@ -43,8 +47,10 @@ export default function LobbyPage(): JSX.Element {
     useState<boolean>(false);
   const [showRoleExplanationModal, setShowRoleExplanationModal] =
     useState<boolean>(false);
+  const [shouldRedirect, setShouldRedirect] = useState<boolean>(false);
 
   const { game, loading, error } = useGame(gameId);
+  const router = useRouter();
 
   useEffect(() => {
     getPlayersByGameCode(gameId).then(setPlayers);
@@ -59,7 +65,27 @@ export default function LobbyPage(): JSX.Element {
     return unsubscribe;
   }, [gameId]);
 
-  const router = useRouter();
+  // Subscribe to real-time game updates to redirect when phase changes
+  useEffect(() => {
+    const unsubscribe = subscribeToGameUpdates(gameId, (payload) => {
+      if (
+        payload.new &&
+        payload.new.current_phase &&
+        payload.new.current_phase !== "Lobby"
+      ) {
+        // Set flag to redirect instead of calling router directly
+        setShouldRedirect(true);
+      }
+    });
+    return unsubscribe;
+  }, [gameId]);
+
+  // Handle redirect when phase changes
+  useEffect(() => {
+    if (shouldRedirect && playerId) {
+      router.push(`/${gameId}/play?playerId=${playerId}`);
+    }
+  }, [shouldRedirect, gameId, playerId, router]);
 
   const [gameSwitches, setGameSwitches] = useState<GameSwitch[]>([
     { id: "outreach", label: "Outreach Phase", checked: true },
@@ -89,8 +115,8 @@ export default function LobbyPage(): JSX.Element {
       );
       await setGameTutorialStatus(gameId, tutorialSwitch?.checked || false);
 
-      // Navigate to the play page
-      router.push(`/${gameId}/play`);
+      // Set the game phase to RoleReveal
+      await updateGamePhase(gameId, "RoleReveal");
     } catch (error) {
       console.error("Failed to update game settings:", error);
       // Optionally show an error message to the user

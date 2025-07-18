@@ -39,7 +39,6 @@ export function subscribeToPlayerUpdates(
   gameCode: string,
   onUpdate: (payload: any) => void
 ) {
-  console.log("Creating player subscription for game:", gameCode);
   const channel = supabase
     .channel(`players-${gameCode}`)
     .on(
@@ -51,22 +50,12 @@ export function subscribeToPlayerUpdates(
         filter: `game_code=eq.${gameCode}`,
       },
       (payload) => {
-        console.log("Player subscription payload:", payload);
         onUpdate(payload);
       }
     )
-    .on("system", { event: "disconnect" }, () => {
-      console.log("Player subscription disconnected");
-    })
-    .on("system", { event: "reconnect" }, () => {
-      console.log("Player subscription reconnected");
-    })
-    .subscribe((status) => {
-      console.log("Player subscription status:", status);
-    });
+    .subscribe();
 
   return () => {
-    console.log("Removing player subscription for game:", gameCode);
     supabase.removeChannel(channel);
   };
 }
