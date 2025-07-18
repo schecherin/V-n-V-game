@@ -15,9 +15,10 @@ export async function getCurrentUser() {
 
 /**
  * Sign in anonymously using Supabase auth.
- * @returns Throws if sign-in fails.
+ * @returns The user object after signing in.
  */
 export async function signInAnonymously() {
-  const { error } = await supabase.auth.signInAnonymously();
+  const { data, error } = await supabase.auth.signInAnonymously();
   if (error) throw error;
+  return data.user;
 }

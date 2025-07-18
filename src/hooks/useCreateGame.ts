@@ -6,6 +6,7 @@ import {
   createGame,
 } from "@/lib/gameApi";
 import { createPlayer } from "@/lib/playerApi";
+import { signInAnonymously } from "@/lib/authApi";
 
 /**
  * React hook to create a new game and host player.
@@ -29,6 +30,13 @@ export function useCreateGame() {
       setLoading(true);
       setError("");
       try {
+        // Sign in anonymously to get a user ID
+        const user = await signInAnonymously();
+
+        if (!user) {
+          throw new Error("Failed to create anonymous user");
+        }
+
         // Generate unique game code
         let gameCode = await generateGameCode();
         let isUnique = false;
@@ -46,16 +54,16 @@ export function useCreateGame() {
           current_player_count: 1,
           current_phase: "Lobby",
           current_day: 0,
-          game_status: "Lobby",
-          host_user_id: null, // No auth needed
+          host_user_id: user.id, // Use the anonymous user ID
         });
         setGame(game);
 
         // Create host player
         const player = await createPlayer({
-          user_id: null, // No auth needed
+          game_code: gameCode,
+          user_id: user.id, // Use the anonymous user ID
           player_name: playerName.trim(),
-          is_guest: true,
+          is_guest: false,
           status: "Alive",
           personal_points: 0.0,
         });
