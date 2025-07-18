@@ -99,6 +99,19 @@ export default function GamePlayPage() {
             players={players}
           />
         );
+      case "RoleReveal":
+        return (
+          <CardReveal
+            roleName=""
+            roleDescription=""
+            setGamePhase={handleSetGamePhase}
+            player={players.find(
+              (p) => p.player_id === (currentPlayerId ?? "")
+            )}
+            game={game}
+            players={players}
+          />
+        );
       case "Tutorial":
         return (
           <Tutorial

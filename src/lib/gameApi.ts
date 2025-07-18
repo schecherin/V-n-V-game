@@ -170,11 +170,17 @@ export async function updateGamePhase(gameCode: string, newPhase: GamePhase) {
  * @returns An array of assignable roles.
  */
 export async function getAssignableRoles() {
+  // check for assignable roles
   const { data, error } = await supabase
     .from("roles")
-    .select("*")
+    .select()
     .eq("can_be_assigned_randomly", true);
-  if (error) throw error;
+
+  if (error) {
+    console.error("Error fetching assignable roles:", error);
+    throw error;
+  }
+
   return data;
 }
 
