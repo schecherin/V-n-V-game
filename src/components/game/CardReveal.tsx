@@ -1,6 +1,8 @@
 "use client";
 
-import { GamePhase } from "@/types";
+import { GamePhase, Player } from "@/types";
+import { isCurrentUserHost } from "@/lib/playerApi";
+import { getGameTutorialStatus } from "@/lib/gameApi";
 import { motion, useAnimation, AnimationControls } from "framer-motion";
 import { useRouter, useParams } from "next/navigation";
 import React, { useEffect, useState } from "react"; // Added React for CSSProperties
@@ -9,12 +11,18 @@ interface CardRevealProps {
   roleName: string;
   roleDescription: string;
   setGamePhase: (phase: GamePhase) => void;
+  player: Player | undefined;
+  game: any;
+  players: Player[];
 }
 
 export default function CardReveal({
   roleName,
   roleDescription,
   setGamePhase,
+  player,
+  game,
+  players,
 }: CardRevealProps) {
   const cardControls: AnimationControls = useAnimation();
   const infoControls: AnimationControls = useAnimation();
@@ -36,6 +44,12 @@ export default function CardReveal({
 
   const [cardFrontImage, setCardFrontImage] = useState("/card-image.png");
   const [isAnimationComplete, setIsAnimationComplete] = useState(false);
+
+  const currentPlayerIsHost = isCurrentUserHost(
+    game,
+    players,
+    player?.player_id || null
+  );
 
   useEffect(() => {
     const animateScene = async () => {
@@ -77,7 +91,7 @@ export default function CardReveal({
     animateScene();
   }, [cardControls, infoControls, buttonControls, gameId]);
 
-  const handleConfirm = () => {
+  const handleConfirm = async () => {
     //we will use this for specific lobbies
     if (!gameId) {
       const messageBox = document.getElementById("message-box");
@@ -89,7 +103,21 @@ export default function CardReveal({
       router.push("/");
       return;
     }
-    setGamePhase("Reflection_MiniGame");
+
+    try {
+      // Check if tutorial is enabled
+      const tutorialEnabled = await getGameTutorialStatus(gameId);
+
+      if (tutorialEnabled) {
+        setGamePhase("Tutorial");
+      } else {
+        setGamePhase("Reflection_MiniGame");
+      }
+    } catch (error) {
+      console.error("Failed to check tutorial status:", error);
+      // Fallback to Reflection_MiniGame if there's an error
+      setGamePhase("Reflection_MiniGame");
+    }
   };
 
   return (
@@ -164,15 +192,25 @@ export default function CardReveal({
       </motion.div>
 
       {/* Continue Button */}
-      <motion.button
-        initial={{ opacity: 0, y: 20 }}
-        animate={buttonControls}
-        className="px-8 py-3 bg-accent-green hover:opacity-90 text-white font-semibold rounded-lg shadow-xl transition-all duration-200 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-accent-gold focus:ring-opacity-75 disabled:opacity-60 disabled:cursor-not-allowed disabled:transform-none"
-        onClick={handleConfirm}
-        disabled={!isAnimationComplete || !gameId}
-      >
-        Continue
-      </motion.button>
+      {currentPlayerIsHost ? (
+        <motion.button
+          initial={{ opacity: 0, y: 20 }}
+          animate={buttonControls}
+          className="px-8 py-3 bg-accent-green hover:opacity-90 text-white font-semibold rounded-lg shadow-xl transition-all duration-200 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-accent-gold focus:ring-opacity-75 disabled:opacity-60 disabled:cursor-not-allowed disabled:transform-none"
+          onClick={handleConfirm}
+          disabled={!isAnimationComplete || !gameId}
+        >
+          Continue
+        </motion.button>
+      ) : (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={buttonControls}
+          className="text-brown-medium italic text-lg"
+        >
+          Waiting for the host to continue...
+        </motion.div>
+      )}
     </div>
   );
 }

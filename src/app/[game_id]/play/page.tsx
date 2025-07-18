@@ -92,6 +92,11 @@ export default function GamePlayPage() {
             roleName=""
             roleDescription=""
             setGamePhase={handleSetGamePhase}
+            player={players.find(
+              (p) => p.player_id === (currentPlayerId ?? "")
+            )}
+            game={game}
+            players={players}
           />
         );
       case "Tutorial":
