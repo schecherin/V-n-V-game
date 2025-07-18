@@ -23,7 +23,7 @@ const Tutorial: React.FC<TutorialProps> = ({
   );
 
   const handleContinue = () => {
-    setGamePhase("Consultation_Discussion");
+    setGamePhase("Reflection_MiniGame");
   };
 
   return (

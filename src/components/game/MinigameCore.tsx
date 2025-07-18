@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import Button from "../ui/Button";
 import { GamePhase, Player } from "@/types";
+import { getGameIncludeOutreachPhase } from "@/lib/gameApi";
 
 interface MinigameCoreProps {
   players: Player[];
@@ -10,6 +11,8 @@ interface MinigameCoreProps {
   onGuess: (targetPlayerId: string, guessedRole: string) => void; // Callback when a guess is made
   maxGuesses?: number;
   setGamePhase: (phase: GamePhase) => void;
+  isCurrentUserHost: boolean;
+  gameId: string;
 }
 
 // Sample roles for guessing - with bakend, these must be more dynamic
@@ -34,11 +37,14 @@ export default function MinigameCore({
   onGuess,
   maxGuesses = 10,
   setGamePhase,
+  isCurrentUserHost,
+  gameId,
 }: MinigameCoreProps) {
   const [selectedPlayer, setSelectedPlayer] = useState<Player | null>(null);
   const [guessedRole, setGuessedRole] = useState<string>("");
   const [guessesMade, setGuessesMade] = useState<Record<string, string>>({}); // { playerId: guessedRole }
   const [feedback, setFeedback] = useState<string>(""); // Feedback on guess
+  const [loadingNextPhase, setLoadingNextPhase] = useState(false);
 
   const availablePlayers = players.filter(
     (p) =>
@@ -90,6 +96,23 @@ export default function MinigameCore({
       );
       setSelectedPlayer(null);
       setGuessedRole("");
+    }
+  };
+
+  const handleNextPhase = async () => {
+    setLoadingNextPhase(true);
+    try {
+      const outreachEnabled = await getGameIncludeOutreachPhase(gameId);
+      if (outreachEnabled) {
+        setGamePhase("Outreach");
+      } else {
+        setGamePhase("Consultation_Discussion");
+      }
+    } catch (err) {
+      // fallback: go to outreach
+      setGamePhase("Outreach");
+    } finally {
+      setLoadingNextPhase(false);
     }
   };
 
@@ -228,10 +251,12 @@ export default function MinigameCore({
             <p className="text-slate-400 text-center">
               Waiting for the next phase or results.
             </p>
-            {/* BACKEND INTEGRATION: Could be a button to "Confirm End of Minigame" or automatically proceed */}
-            <Button onClick={() => setGamePhase("Outreach")}>
-              Go to next phase
-            </Button>
+            {/* Only host can see the button */}
+            {isCurrentUserHost && (
+              <Button onClick={handleNextPhase} disabled={loadingNextPhase}>
+                {loadingNextPhase ? "Loading..." : "Go to next phase"}
+              </Button>
+            )}
           </div>
         )}
       </div>
