@@ -30,17 +30,7 @@ export default function CardReveal({
   const router = useRouter();
   const params = useParams();
 
-  let gameIdFromParams: string | null = null;
-  if (typeof params.gameId === "string") {
-    gameIdFromParams = params.gameId;
-  } else if (
-    Array.isArray(params.gameId) &&
-    params.gameId.length > 0 &&
-    typeof params.gameId[0] === "string"
-  ) {
-    gameIdFromParams = params.gameId[0];
-  }
-  const gameId = gameIdFromParams || "1";
+  const gameId: string = params.game_id as string;
 
   const [cardFrontImage, setCardFrontImage] = useState("/card-image.png");
   const [isAnimationComplete, setIsAnimationComplete] = useState(false);
