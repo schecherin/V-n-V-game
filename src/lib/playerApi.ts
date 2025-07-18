@@ -81,14 +81,26 @@ export async function createPlayer(playerData: PlayerData) {
  */
 export async function assignRoleNameToPlayer(
   playerId: string,
-  roleName: string
+  roleName: string,
+  setOriginal: boolean = false
 ) {
-  const { error } = await supabase
-    .from("players")
-    .update({ current_role_name: roleName })
-    .eq("player_id", playerId);
-  if (error) throw error;
-  return true;
+  // If original_role_name is null, set both current_role_name and original_role_name
+  if (setOriginal) {
+    const { error } = await supabase
+      .from("players")
+      .update({ current_role_name: roleName, original_role_name: roleName })
+      .eq("player_id", playerId);
+    if (error) throw error;
+    return true;
+  } else {
+    // Otherwise, only update current_role_name
+    const { error } = await supabase
+      .from("players")
+      .update({ current_role_name: roleName })
+      .eq("player_id", playerId);
+    if (error) throw error;
+    return true;
+  }
 }
 
 /**
@@ -106,4 +118,59 @@ export function isCurrentUserHost(
   if (!game || !players || !currentPlayerId) return false;
   const player = players.find((p) => p.player_id === currentPlayerId);
   return player && player.user_id === game.host_user_id;
+}
+
+/**
+ * Check if a player currently has a specific role.
+ * @param playerId The player's ID.
+ * @param roleName The role name to check.
+ * @returns Promise<boolean> true if the player has the role, false otherwise.
+ */
+export async function playerHasRole(
+  playerId: string,
+  roleName: string
+): Promise<boolean> {
+  const { data, error } = await supabase
+    .from("players")
+    .select("current_role_name")
+    .eq("player_id", playerId)
+    .single();
+  if (error) throw error;
+  return data?.current_role_name === roleName;
+}
+
+/**
+ * Fetch a player's current personal_points.
+ * @param playerId The player's ID.
+ * @returns The player's current points (number).
+ */
+export async function fetchPlayerPoints(playerId: string): Promise<number> {
+  const { data, error } = await supabase
+    .from("players")
+    .select("personal_points")
+    .eq("player_id", playerId)
+    .single();
+  if (error) throw error;
+  return data?.personal_points || 0;
+}
+
+/**
+ * Update a player's minigame points and rank.
+ * @param playerId The player's ID.
+ * @param points The points to set.
+ * @param rank The rank to set.
+ */
+export async function updatePlayerMinigamePointsAndRank(
+  playerId: string,
+  points: number,
+  rank: number
+) {
+  const currentPoints = await fetchPlayerPoints(playerId);
+  const newPoints = currentPoints + points;
+  const { error } = await supabase
+    .from("players")
+    .update({ personal_points: newPoints, last_mini_game_rank: rank })
+    .eq("player_id", playerId);
+  if (error) throw error;
+  return true;
 }

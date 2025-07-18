@@ -51,7 +51,7 @@ export function useGame(gameId: string) {
     ) {
       const player = shuffledPlayers[i];
       const role = shuffledUniqueRoles[i].role_name;
-      await assignRoleNameToPlayer(player.player_id, role);
+      await assignRoleNameToPlayer(player.player_id, role, true);
     }
     // Assign non-unique roles to remaining players, cycling if needed
     for (let i = shuffledUniqueRoles.length; i < shuffledPlayers.length; i++) {
@@ -61,7 +61,7 @@ export function useGame(gameId: string) {
         ];
       const player = shuffledPlayers[i];
       const role = nonUniqueRole.role_name;
-      await assignRoleNameToPlayer(player.player_id, role);
+      await assignRoleNameToPlayer(player.player_id, role, true);
     }
     return;
   };

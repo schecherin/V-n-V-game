@@ -1,8 +1,8 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Button from "../ui/Button";
-import { GamePhase, Player } from "@/types";
+import { GamePhase, Player, Role } from "@/types";
 import { getGameIncludeOutreachPhase } from "@/lib/gameApi";
 
 interface MinigameCoreProps {
@@ -13,23 +13,8 @@ interface MinigameCoreProps {
   setGamePhase: (phase: GamePhase) => void;
   isCurrentUserHost: boolean;
   gameId: string;
+  roles: Role[];
 }
-
-// Sample roles for guessing - with bakend, these must be more dynamic
-const POSSIBLE_ROLES = [
-  "Murder",
-  "Empathy",
-  "Intoxication",
-  "Justice",
-  "Envy",
-  "Torment",
-  "Certainty",
-  "Vengeance",
-  "Sacrifice",
-  "Truthfulness",
-  "Vice Worshipper",
-  "Virtue Seeker",
-];
 
 export default function MinigameCore({
   players,
@@ -39,6 +24,7 @@ export default function MinigameCore({
   setGamePhase,
   isCurrentUserHost,
   gameId,
+  roles,
 }: MinigameCoreProps) {
   const [selectedPlayer, setSelectedPlayer] = useState<Player | null>(null);
   const [guessedRole, setGuessedRole] = useState<string>("");
@@ -47,10 +33,7 @@ export default function MinigameCore({
   const [loadingNextPhase, setLoadingNextPhase] = useState(false);
 
   const availablePlayers = players.filter(
-    (p) =>
-      p.player_id !== currentPlayerId &&
-      (p.isTargetable === undefined || p.isTargetable === true) &&
-      p.status !== "Dead"
+    (p) => p.player_id !== currentPlayerId && p.status !== "Dead"
   );
 
   const guessesRemaining = maxGuesses - Object.keys(guessesMade).length;
@@ -102,15 +85,9 @@ export default function MinigameCore({
   const handleNextPhase = async () => {
     setLoadingNextPhase(true);
     try {
-      const outreachEnabled = await getGameIncludeOutreachPhase(gameId);
-      if (outreachEnabled) {
-        setGamePhase("Outreach");
-      } else {
-        setGamePhase("Consultation_Discussion");
-      }
+      setGamePhase("Reflection_MiniGame_Result");
     } catch (err) {
-      // fallback: go to outreach
-      setGamePhase("Outreach");
+      console.log(err);
     } finally {
       setLoadingNextPhase(false);
     }
@@ -227,9 +204,9 @@ export default function MinigameCore({
                   <option value="" disabled>
                     -- Select a Role --
                   </option>
-                  {POSSIBLE_ROLES.map((role) => (
-                    <option key={role} value={role}>
-                      {role}
+                  {roles.map((role: any) => (
+                    <option key={role.role_name} value={role.role_name}>
+                      {role.role_name}
                     </option>
                   ))}
                 </select>

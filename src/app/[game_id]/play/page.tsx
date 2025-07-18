@@ -9,10 +9,17 @@ import OutreachPhase from "@/components/game/OutreachPhase";
 import CardReveal from "@/components/game/CardReveal";
 import Tutorial from "@/components/game/Tutorial";
 import { useGame } from "@/hooks/useGame";
-import { GamePhase, Player } from "@/types";
+import { GamePhase, Player, Role } from "@/types";
 import { getPlayersByGameCode } from "@/lib/playerApi";
-import { updateGamePhase } from "@/lib/gameApi";
+import {
+  updateGamePhase,
+  getAssignableRoles,
+  insertReflectionPhaseGuess,
+  calculateAndAssignMinigameResults,
+  MinigameResult,
+} from "@/lib/gameApi";
 import { subscribeToGameUpdates } from "@/lib/gameSubscriptions";
+import MinigameResults from "@/components/game/MinigameResults";
 
 export default function GamePlayPage() {
   const params = useParams();
@@ -22,31 +29,35 @@ export default function GamePlayPage() {
   const gameId: string = params.game_id as string;
   const playerId: string | null = searchParams.get("playerId");
 
-  // Use the useGame hook
+  // Game state and hooks
   const { game, loading, error, assignRoles } = useGame(gameId);
-
   const [players, setPlayers] = useState<Player[]>([]);
-  const [currentPlayerId, setCurrentPlayerId] = useState<string | null>(
-    playerId
-  );
+  const [currentPlayerId] = useState<string | null>(playerId);
   const [gamePhase, setGamePhase] = useState<GamePhase | undefined>(
     game?.current_phase
   );
+  const [roles, setRoles] = useState<Role[]>([]);
+  const [minigameResult, setMinigameResult] = useState<MinigameResult>();
 
+  // Fetch players and assign roles on mount
   useEffect(() => {
     getPlayersByGameCode(gameId).then((fetchedPlayers) => {
+      assignRoles(fetchedPlayers);
       setPlayers(fetchedPlayers);
-      assignRoles(fetchedPlayers); // Only called once after fetching players
     });
-  }, [gameId]);
+  }, [gameId, assignRoles]);
 
+  // Update phase from game state
   useEffect(() => {
-    if (game?.current_phase) {
-      setGamePhase(game.current_phase);
-    }
+    if (game?.current_phase) setGamePhase(game.current_phase);
   }, [game?.current_phase]);
 
-  // Subscribe to real-time updates for this game
+  // Fetch assignable roles
+  useEffect(() => {
+    getAssignableRoles().then(setRoles);
+  }, []);
+
+  // Subscribe to real-time game phase updates
   useEffect(() => {
     const unsubscribe = subscribeToGameUpdates(gameId, (payload) => {
       if (payload.new && payload.new.current_phase) {
@@ -56,58 +67,67 @@ export default function GamePlayPage() {
     return unsubscribe;
   }, [gameId]);
 
-  // Helper to check if current player is host
-  const isCurrentUserHost =
+  // Check if current user is host
+  const isCurrentUserHost = !!(
     game &&
     players.find((p) => p.player_id === currentPlayerId)?.user_id ===
-      game.host_user_id;
+      game.host_user_id
+  );
 
-  // Helper to sync phase changes to backend (host only)
+  // Host-only: update phase in backend
   const handleSetGamePhase = async (newPhase: GamePhase) => {
     setGamePhase(newPhase);
     if (!isCurrentUserHost) return;
     try {
       await updateGamePhase(gameId, newPhase);
     } catch (err) {
-      // Optionally show a toast or fallback UI
       console.error("Failed to update game phase:", err);
     }
   };
 
-  const handleMinigameGuess = (targetPlayerId: string, guessedRole: string) => {
-    console.log(
-      `Player ${currentPlayerId} guessed ${targetPlayerId} is ${guessedRole}`
-    );
-    // BACKEND INTEGRATION:
-    // 1. Send this guess to the backend.
-    // 2. Backend validates, scores, and sends update.
-    // 3. MinigameCore handles local feedback.
+  // Handle minigame guess: insert guess into DB
+  const handleMinigameGuess = async (
+    targetPlayerId: string,
+    guessedRole: string
+  ) => {
+    try {
+      await insertReflectionPhaseGuess({
+        game_code: gameId,
+        day_number: game?.current_day ?? 1,
+        guessed_player_id: targetPlayerId,
+        guessed_role_name: guessedRole,
+        guessing_player_id: currentPlayerId ?? "",
+      });
+    } catch (err) {
+      console.error("Failed to insert minigame guess:", err);
+    }
   };
 
+  const handleMinigameResult = async () => {
+    const results = await calculateAndAssignMinigameResults(gameId, 1);
+    setMinigameResult(results.find((r) => r.playerId === playerId));
+  };
+
+  // Render content based on game phase
   const renderGameContent = () => {
+    const currentPlayer = players.find(
+      (p) => p.player_id === (currentPlayerId ?? "")
+    );
+    const roleName = currentPlayer?.current_role_name || "";
+    const roleDescription =
+      roles.find((r) => r.role_name === roleName)?.description || "";
+
     switch (gamePhase) {
       case "Lobby":
-        return (
-          <CardReveal
-            roleName=""
-            roleDescription=""
-            setGamePhase={handleSetGamePhase}
-            player={players.find(
-              (p) => p.player_id === (currentPlayerId ?? "")
-            )}
-            game={game}
-            players={players}
-          />
-        );
+        router.push(`/${gameId}/lobby?playerId=${playerId}`);
+        return null;
       case "RoleReveal":
         return (
           <CardReveal
-            roleName=""
-            roleDescription=""
+            roleName={roleName}
+            roleDescription={roleDescription}
             setGamePhase={handleSetGamePhase}
-            player={players.find(
-              (p) => p.player_id === (currentPlayerId ?? "")
-            )}
+            player={currentPlayer}
             game={game}
             players={players}
           />
@@ -115,9 +135,7 @@ export default function GamePlayPage() {
       case "Tutorial":
         return (
           <Tutorial
-            player={players.find(
-              (p) => p.player_id === (currentPlayerId ?? "")
-            )}
+            player={currentPlayer}
             game={game}
             players={players}
             setGamePhase={handleSetGamePhase}
@@ -131,23 +149,34 @@ export default function GamePlayPage() {
             onGuess={handleMinigameGuess}
             maxGuesses={3}
             setGamePhase={handleSetGamePhase}
+            isCurrentUserHost={isCurrentUserHost}
+            gameId={gameId}
+            roles={roles}
+          />
+        );
+      case "Reflection_MiniGame_Result":
+        handleMinigameResult();
+        return (
+          <MinigameResults
+            position={minigameResult?.rank}
+            points={minigameResult?.points}
+            correctGuesses={minigameResult?.correctGuesses}
+            isHost={isCurrentUserHost}
+            gameId={gameId}
+            setGamePhase={handleSetGamePhase}
           />
         );
       case "Reflection_RoleActions":
         return (
           <ReflectionPhase
-            player={players.find(
-              (p) => p.player_id === (currentPlayerId ?? "")
-            )}
+            player={currentPlayer}
             setGamePhase={handleSetGamePhase}
           />
         );
       case "Outreach":
         return (
           <OutreachPhase
-            player={players.find(
-              (p) => p.player_id === (currentPlayerId ?? "")
-            )}
+            player={currentPlayer}
             setGamePhase={handleSetGamePhase}
           />
         );
@@ -158,9 +187,7 @@ export default function GamePlayPage() {
         return (
           <ConsultationPhase
             players={players}
-            player={players.find(
-              (p) => p.player_id === (currentPlayerId ?? "")
-            )}
+            player={currentPlayer}
             setGamePhase={handleSetGamePhase}
           />
         );
@@ -210,9 +237,7 @@ export default function GamePlayPage() {
           </span>
         </p>
       </header>
-
       <main className="w-full max-w-3xl">{renderGameContent()}</main>
-
       <button
         onClick={() => router.push(`/game/lobby`)}
         className="mt-8 px-6 py-2 bg-sky-600 hover:bg-sky-500 text-white font-semibold rounded-lg shadow-md transition duration-200"

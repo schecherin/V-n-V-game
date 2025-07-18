@@ -1,5 +1,18 @@
 import { supabase } from "@/lib/supabase/client";
 import { Game, GameData, GamePhase } from "@/types";
+import { playerHasRole } from "./playerApi";
+import {
+  updatePlayerMinigamePointsAndRank,
+  getPlayersByGameCode,
+} from "@/lib/playerApi";
+
+export interface MinigameResult {
+  playerId: string;
+  playerName: string;
+  correctGuesses: number;
+  rank: number;
+  points: number;
+}
 
 /**
  * Fetch a game by its unique game_id.
@@ -248,4 +261,167 @@ export async function setGameIncludeOutreachPhase(
     .update({ include_outreach_phase: enabled })
     .eq("game_code", gameCode);
   if (error) throw error;
+}
+
+/**
+ * Insert a guess into the reflection_phase_guesses table.
+ * Sets is_correct based on whether the guessed player has the guessed role.
+ * @param params Object containing required fields for the guess.
+ * @returns The inserted guess record.
+ */
+export async function insertReflectionPhaseGuess({
+  game_code,
+  day_number,
+  guessed_player_id,
+  guessed_role_name,
+  guessing_player_id,
+}: {
+  game_code: string;
+  day_number: number;
+  guessed_player_id: string;
+  guessed_role_name: string;
+  guessing_player_id: string;
+}) {
+  // Check if the guess is correct
+  let is_correct = false;
+  try {
+    is_correct = await playerHasRole(guessed_player_id, guessed_role_name);
+  } catch (err) {
+    throw err;
+    // If error, default to false
+    //is_correct = false;
+  }
+  const { data, error } = await supabase
+    .from("reflection_phase_guesses")
+    .insert([
+      {
+        game_code,
+        day_number,
+        guessed_player_id,
+        guessed_role_name,
+        guessing_player_id,
+        is_correct,
+      },
+    ])
+    .select()
+    .single();
+  if (error) throw error;
+  return data;
+}
+
+/**
+ * Count correct guesses for each player.
+ * @param guesses Array of guesses with guessing_player_id and is_correct.
+ * @param players Array of players.
+ * @returns Record mapping playerId to number of correct guesses.
+ */
+function countCorrectGuesses(
+  guesses: { guessing_player_id: string; is_correct: boolean }[],
+  players: { player_id: string }[]
+): Record<string, number> {
+  const correctGuessCount: Record<string, number> = {};
+  for (const player of players) {
+    correctGuessCount[player.player_id] = 0;
+  }
+  for (const guess of guesses) {
+    if (guess.is_correct) {
+      correctGuessCount[guess.guessing_player_id] =
+        (correctGuessCount[guess.guessing_player_id] || 0) + 1;
+    }
+  }
+  return correctGuessCount;
+}
+
+/**
+ * Sort, rank, and assign points to results.
+ * @param results Array of MinigameResult (playerId, playerName, correctGuesses)
+ * @returns Array of MinigameResult with rank and points assigned
+ */
+function rankAndAssignPoints(
+  results: Omit<MinigameResult, "rank" | "points">[],
+  m: number
+): MinigameResult[] {
+  // Sort descending by correctGuesses
+  results.sort((a, b) => b.correctGuesses - a.correctGuesses);
+  let points = m;
+  return results.map((r, i) => {
+    const newResult = {
+      ...r,
+      rank: i,
+      points: Math.min(Math.round(0.25 * m), Math.round(points)),
+    };
+    points *= 0.93;
+    return newResult;
+  });
+}
+
+/**
+ * Fetch all reflection phase guesses for a game (and optionally a specific day).
+ * @param gameId The game code.
+ * @param dayNumber The day number to filter by.
+ * @returns Array of guesses.
+ */
+export async function getReflectionPhaseGuesses(
+  gameId: string,
+  dayNumber: number
+) {
+  let query = supabase
+    .from("reflection_phase_guesses")
+    .select("guessing_player_id, is_correct")
+    .eq("game_code", gameId)
+    .eq("day_number", dayNumber);
+  const { data, error } = await query;
+  if (error) throw error;
+  return data as { guessing_player_id: string; is_correct: boolean }[];
+}
+
+export async function getMaxPoints(gameId: string) {
+  const { data, error } = await supabase
+    .from("games")
+    .select("max_points_per_day_m")
+    .eq("game_code", gameId)
+    .single();
+  if (error) throw error;
+  return data;
+}
+
+/**
+ * Calculate minigame results, assign points and rank, and update the database.
+ * @param gameId The game code.
+ * @returns Array of results for each player: { playerId, playerName, correctGuesses, rank, points }
+ */
+export async function calculateAndAssignMinigameResults(
+  gameId: string,
+  dayNumber: number
+): Promise<MinigameResult[]> {
+  // 1. Fetch all players
+  const players = await getPlayersByGameCode(gameId);
+  // 2. Fetch all guesses for the game and day
+  const guesses = await getReflectionPhaseGuesses(gameId, dayNumber);
+
+  // 3. Count correct guesses for each player
+  const correctGuessCount = countCorrectGuesses(
+    guesses,
+    players as { player_id: string }[]
+  );
+
+  // 4. Build results array
+  const baseResults = (players as any[]).map((player) => ({
+    playerId: player.player_id,
+    playerName: player.player_name,
+    correctGuesses: correctGuessCount[player.player_id] || 0,
+  }));
+
+  // 5. Rank and assign points
+  const results = rankAndAssignPoints(
+    baseResults,
+    (await getMaxPoints(gameId)).max_points_per_day_m
+  );
+
+  // 6. Update each player's points and rank in the database
+  for (const r of results) {
+    await updatePlayerMinigamePointsAndRank(r.playerId, r.points, r.rank);
+  }
+
+  return results;
 }

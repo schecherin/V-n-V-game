@@ -1084,6 +1084,7 @@ export type Database = {
         | "Finished"
         | "Tutorial"
         | "RoleReveal"
+        | "Reflection_MiniGame_Result"
       player_status:
         | "Alive"
         | "Dead"
@@ -1277,6 +1278,7 @@ export const Constants = {
         "Finished",
         "Tutorial",
         "RoleReveal",
+        "Reflection_MiniGame_Result",
       ],
       player_status: [
         "Alive",
