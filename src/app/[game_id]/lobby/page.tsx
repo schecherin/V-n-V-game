@@ -20,6 +20,7 @@ import Button from "@/components/ui/Button";
 import { useParams, useSearchParams } from "next/navigation";
 import { useGame } from "@/hooks/useGame";
 import { getPlayersByGameCode, isCurrentUserHost } from "@/lib/playerApi";
+import { subscribeToPlayerUpdates } from "@/lib/gameSubscriptions";
 import {
   setGameIncludeOutreachPhase,
   setGameTutorialStatus,
@@ -47,6 +48,15 @@ export default function LobbyPage(): JSX.Element {
 
   useEffect(() => {
     getPlayersByGameCode(gameId).then(setPlayers);
+  }, [gameId]);
+
+  // Subscribe to real-time player updates
+  useEffect(() => {
+    const unsubscribe = subscribeToPlayerUpdates(gameId, (payload) => {
+      // Refetch players when any player change occurs (INSERT, UPDATE, DELETE)
+      getPlayersByGameCode(gameId).then(setPlayers);
+    });
+    return unsubscribe;
   }, [gameId]);
 
   const router = useRouter();
