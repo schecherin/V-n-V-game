@@ -5,7 +5,7 @@ import { isCurrentUserHost } from "@/lib/playerApi";
 import { getGameTutorialStatus } from "@/lib/gameApi";
 import { motion, useAnimation, AnimationControls } from "framer-motion";
 import { useRouter, useParams } from "next/navigation";
-import React, { useEffect, useState } from "react"; // Added React for CSSProperties
+import React, { useEffect, useState } from "react";
 
 interface CardRevealProps {
   roleName: string;
@@ -15,6 +15,13 @@ interface CardRevealProps {
   game: any;
   players: Player[];
 }
+
+// Helper function to get role image path
+const getRoleImagePath = (roleName: string): string => {
+  // Convert role name to lowercase and replace spaces with hyphens for consistent file naming
+  const formattedRoleName = roleName.toLowerCase().replace(/\s+/g, '-');
+  return `/roles/${formattedRoleName}.png`;
+};
 
 export default function CardReveal({
   roleName,
@@ -34,12 +41,22 @@ export default function CardReveal({
 
   const [cardFrontImage, setCardFrontImage] = useState("/card-image.png");
   const [isAnimationComplete, setIsAnimationComplete] = useState(false);
+  const [imageError, setImageError] = useState(false);
 
   const currentPlayerIsHost = isCurrentUserHost(
     game,
     players,
     player?.player_id || null
   );
+
+  // Set the role-specific image when component mounts or roleName changes
+  useEffect(() => {
+    if (roleName) {
+      const roleImagePath = getRoleImagePath(roleName);
+      setCardFrontImage(roleImagePath);
+      setImageError(false); // Reset error state when new role is set
+    }
+  }, [roleName]);
 
   useEffect(() => {
     const animateScene = async () => {
@@ -110,6 +127,12 @@ export default function CardReveal({
     }
   };
 
+  // Handle image load error
+  const handleImageError = () => {
+    setImageError(true);
+    setCardFrontImage("/card-image.png"); // Fallback to default image
+  };
+
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-cream text-brown-dark p-4 overflow-hidden font-sans">
       <div
@@ -161,10 +184,19 @@ export default function CardReveal({
             }}
           >
             <img
-              src={cardFrontImage} // Ensure this path is correct
+              src={cardFrontImage}
               alt={roleName}
               className="w-full h-full object-cover"
+              onError={handleImageError}
             />
+            {/* Optional: Show role name overlay if image fails to load */}
+            {imageError && (
+              <div className="absolute inset-0 flex items-center justify-center bg-cream-light">
+                <p className="text-2xl font-bold text-brown-dark text-center px-4">
+                  {roleName}
+                </p>
+              </div>
+            )}
           </div>
         </div>
       </motion.div>

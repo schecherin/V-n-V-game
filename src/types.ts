@@ -34,6 +34,20 @@ export type VengeanceGuess = Tables<"vengeance_guesses">;
 export type GameData = Database["public"]["Tables"]["games"]["Insert"];
 export type PlayerData = Database["public"]["Tables"]["players"]["Insert"];
 
+export type RoleActionType = 
+  | 'Kill'
+  | 'RevealVotesOnTarget'
+  | 'Hospitalize'
+  | 'Kill' // Justice kill
+  | 'Protect'
+  | 'SwapIdentity'
+  | 'RevealTierPlayers'
+  | 'MiniGameDisrupt'
+  | 'SacrificeWithTarget'
+  | 'GuessVoterForHospitalization'
+  | 'RevealAllVotesOnImprisoned';
+
+
 /**
  * Represents a toggleable game switch (e.g., for host controls UI)
  */
