@@ -10,7 +10,7 @@ export async function getPlayerById(playerId: string) {
   const playerQuery = supabase
     .from("players")
     .select("*")
-    .eq("id", playerId)
+    .eq("player_id", playerId)
     .single();
 
   const { data, error } = await playerQuery;
@@ -157,7 +157,7 @@ export async function fetchPlayerPoints(playerId: string): Promise<number> {
 /**
  * Update a player's minigame points and rank.
  * @param playerId The player's ID.
- * @param points The points to set.
+ * @param points The points to add (not set).
  * @param rank The rank to set.
  */
 export async function updatePlayerMinigamePointsAndRank(
@@ -165,12 +165,31 @@ export async function updatePlayerMinigamePointsAndRank(
   points: number,
   rank: number
 ) {
-  const currentPoints = await fetchPlayerPoints(playerId);
-  const newPoints = currentPoints + points;
-  const { error } = await supabase
-    .from("players")
-    .update({ personal_points: newPoints, last_mini_game_rank: rank })
-    .eq("player_id", playerId);
-  if (error) throw error;
-  return true;
+  try {
+    // First fetch current points
+    const currentPoints = await fetchPlayerPoints(playerId);
+    const newPoints = currentPoints + points;
+    
+    // Update with new points and rank
+    const { data, error } = await supabase
+      .from("players")
+      .update({ 
+        personal_points: newPoints, 
+        last_mini_game_rank: rank 
+      })
+      .eq("player_id", playerId)
+      .select()
+      .single();
+      
+    if (error) {
+      console.error("Error updating player points:", error);
+      throw error;
+    }
+    
+    console.log(`Updated player ${playerId}: points ${currentPoints} -> ${newPoints}, rank: ${rank}`);
+    return data;
+  } catch (error) {
+    console.error("Failed to update player minigame points and rank:", error);
+    throw error;
+  }
 }

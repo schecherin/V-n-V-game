@@ -15,14 +15,13 @@ import {
   updateGamePhase,
   getAssignableRoles,
   insertReflectionPhaseGuess,
-  calculateAndAssignMinigameResults,
-  MinigameResult,
 } from "@/lib/gameApi";
 import { supabase } from "@/lib/supabase/client";
 import { assignRolesToPlayers } from "@/lib/roleAssign";
 // Import both subscription functions
 import { subscribeToGameUpdates, subscribeToPlayerUpdates } from "@/lib/gameSubscriptions";
 import MinigameResults from "@/components/game/MinigameResults";
+import { calculateMinigameResults, updateMinigameResults, type MinigameResult } from "@/lib/minigameAPI";
 
 export default function GamePlayPage() {
   const params = useParams();
@@ -89,6 +88,7 @@ export default function GamePlayPage() {
     const isHost = !!(game && p && p.user_id === game.host_user_id);
     return { currentPlayer: p, isCurrentUserHost: isHost };
   }, [players, currentPlayerId, game]);
+  
 useEffect(() => {
   const handleRoleAssignment = async () => {
     // Check if roles are already assigned
@@ -167,16 +167,23 @@ useEffect(() => {
 // Add this state near your other useState declarations at the top of the component
 const [resultsCalculated, setResultsCalculated] = useState(false);
 
-// Replace the existing handleMinigameResult function with this:
 const handleMinigameResult = async () => {
   if (!resultsCalculated && gameId && playerId) {
     setResultsCalculated(true);
     try {
-      const results = await calculateAndAssignMinigameResults(gameId, game?.current_day || 1);
+      const results = await calculateMinigameResults(gameId, game?.current_day || 1);
+      
+      // If host, update the database
+      if (isCurrentUserHost) {
+        await updateMinigameResults(gameId, results);
+      }
+      
+      // All players find their own result
       const myResult = results.find((r) => r.playerId === playerId);
       setMinigameResult(myResult);
     } catch (error) {
       console.error("Failed to calculate minigame results:", error);
+      setResultsCalculated(false);
     }
   }
 };
@@ -191,10 +198,10 @@ useEffect(() => {
 
 // Add this useEffect to trigger calculation when entering results phase
 useEffect(() => {
-  if (gamePhase === "Reflection_MiniGame_Result") {
+  if (gamePhase === "Reflection_MiniGame_Result" && isCurrentUserHost && !resultsCalculated) {
     handleMinigameResult();
   }
-}, [gamePhase, resultsCalculated, gameId, playerId]);
+}, [gamePhase, resultsCalculated, gameId, playerId, isCurrentUserHost]);
 
 
 
