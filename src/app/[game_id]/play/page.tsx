@@ -10,7 +10,7 @@ import CardReveal from "@/components/game/CardReveal";
 import Tutorial from "@/components/game/Tutorial";
 import { useGame } from "@/hooks/useGame";
 import { GamePhase, Player, Role } from "@/types";
-import { getPlayersByGameCode } from "@/lib/playerApi";
+import { getPlayersByGameCode, getPlayerById } from "@/lib/playerApi";
 import {
   updateGamePhase,
   getAssignableRoles,
@@ -21,7 +21,7 @@ import { assignRolesToPlayers } from "@/lib/roleAssign";
 // Import both subscription functions
 import { subscribeToGameUpdates, subscribeToPlayerUpdates } from "@/lib/gameSubscriptions";
 import MinigameResults from "@/components/game/MinigameResults";
-import { calculateMinigameResults, updateMinigameResults, type MinigameResult } from "@/lib/minigameAPI";
+import { calculateMinigameResults, fetchMinigameResults, type MinigameResult } from "@/lib/minigameAPI";
 
 export default function GamePlayPage() {
   const params = useParams();
@@ -111,16 +111,12 @@ useEffect(() => {
           setIsAssigningRoles(false);
           return;
         }
-        
-        // Call the edge function
         const result = await assignRolesToPlayers(gameId, user.id);
-
         if (result.success) {
           console.log("Roles assigned successfully:", result.assignments);
           // The real-time subscription should automatically update the UI
         } else {
           console.error("Failed to assign roles:", result.error);
-          // Optionally show an error message to the user
         }
       } catch (error) {
         console.error("Error during role assignment:", error);
@@ -170,24 +166,59 @@ const [resultsCalculated, setResultsCalculated] = useState(false);
 const handleMinigameResult = async () => {
   if (!resultsCalculated && gameId && playerId) {
     setResultsCalculated(true);
+    
     try {
-      const results = await calculateMinigameResults(gameId, game?.current_day || 1);
-      
-      // If host, update the database
       if (isCurrentUserHost) {
-        await updateMinigameResults(gameId, results);
+        // HOST CALCULATES AND UPDATES DATABASE
+        console.log("Host calculating results for everyone...");
+        const results = await calculateMinigameResults(gameId, game?.current_day ?? 0, true);
+        
+        const myResult = results.find(r => r.playerId === playerId);
+        if (myResult) {
+          setMinigameResult(myResult);
+        }
+      } else {
+        // GUESTS: Just poll database for their updated rank/points
+        console.log("Guest waiting for results...");
+        
+        let attempts = 0;
+        const maxAttempts = 30; // 30 seconds max
+        
+        while (attempts < maxAttempts) {
+          // Fetch own player data directly from database
+          const player = await getPlayerById(playerId);
+          
+          // Check if rank has been set (meaning host calculated)
+          if (player.last_mini_game_rank && player.last_mini_game_rank > 0) {
+            // Create result object from player data
+            const myResult: MinigameResult = {
+              playerId: player.player_id,
+              playerName: player.player_name,
+              rank: player.last_mini_game_rank,
+              points: 0, // We don't store points earned separately, could calculate if needed
+              totalPoints: player.personal_points
+            };
+            
+            setMinigameResult(myResult);
+            console.log("Guest found their results:", myResult);
+            break;
+          }
+          // I'm waiting here idk if its the best idea tbh.
+          await new Promise(resolve => setTimeout(resolve, 1000));
+          attempts++;
+        }
+        
+        if (attempts === maxAttempts) {
+          console.error("Timed out waiting for results");
+          setResultsCalculated(false);
+        }
       }
-      
-      // All players find their own result
-      const myResult = results.find((r) => r.playerId === playerId);
-      setMinigameResult(myResult);
     } catch (error) {
-      console.error("Failed to calculate minigame results:", error);
+      console.error("Failed to handle minigame results:", error);
       setResultsCalculated(false);
     }
   }
 };
-
 // Add this useEffect to reset the flag when phase changes
 useEffect(() => {
   if (gamePhase !== "Reflection_MiniGame_Result") {
@@ -198,7 +229,7 @@ useEffect(() => {
 
 // Add this useEffect to trigger calculation when entering results phase
 useEffect(() => {
-  if (gamePhase === "Reflection_MiniGame_Result" && isCurrentUserHost && !resultsCalculated) {
+  if (gamePhase === "Reflection_MiniGame_Result" && !resultsCalculated) {
     handleMinigameResult();
   }
 }, [gamePhase, resultsCalculated, gameId, playerId, isCurrentUserHost]);
@@ -250,14 +281,13 @@ useEffect(() => {
       case "Reflection_MiniGame_Result":
         return (
           <MinigameResults
-            position={minigameResult?.rank}
-            points={minigameResult?.points}
-            correctGuesses={minigameResult?.correctGuesses}
+            position={minigameResult?.rank || 0}
+            points={minigameResult?.totalPoints || 0}
             isHost={isCurrentUserHost}
             gameId={gameId}
             setGamePhase={handleSetGamePhase}
           />
-  );
+        );
       case "Reflection_RoleActions":
         return (
           <ReflectionPhase

@@ -1,78 +1,64 @@
-// lib/minigameApi.ts
 import { supabase } from "@/lib/supabase/client";
 
 export interface MinigameResult {
   playerId: string;
   playerName: string;
-  correctGuesses: number;
   rank: number;
   points: number;
   totalPoints: number;
 }
 
-/**
- * Calculate minigame results using the edge function
- * @param gameCode The game code
- * @param dayNumber The day number
- * @returns Array of minigame results
- */
 export async function calculateMinigameResults(
   gameCode: string,
-  dayNumber: number
+  dayNumber: number,
+  isHost: boolean = false
 ): Promise<MinigameResult[]> {
   try {
-    // Get the current session token
-    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+    const { data: { session } } = await supabase.auth.getSession();
     
-    if (sessionError || !session) {
-      throw new Error('No active session');
+    const headers: any = {};
+    if (isHost && session) {
+      headers.Authorization = `Bearer ${session.access_token}`;
     }
 
-    // Call the edge function
     const { data, error } = await supabase.functions.invoke('calculate-minigame-results', {
       body: {
         gameCode,
-        dayNumber
+        dayNumber,
+        isHost
       },
-      headers: {
-        Authorization: `Bearer ${session.access_token}`
-      }
+      headers
     });
 
-    if (error) {
-      console.error('Edge function error:', error);
-      throw error;
-    }
-
-    if (!data.success) {
-      throw new Error(data.error || 'Failed to calculate results');
-    }
-
+    if (error) throw error;
+    if (!data.success) throw new Error(data.error || 'Failed to calculate results');
+    
     return data.results;
   } catch (error) {
     console.error('Failed to calculate minigame results:', error);
     throw error;
   }
+
 }
-
-export async function updateMinigameResults(
+export async function fetchMinigameResults(
   gameCode: string,
-  results: MinigameResult[]
-): Promise<void> {
-  const { data: { session } } = await supabase.auth.getSession();
+  dayNumber: number,
+  playerId: string
+): Promise<{ results: MinigameResult[], calculated: boolean }> {
+  const { data, error } = await supabase.functions.invoke('calculate-minigame-results', {
+    body: {
+      gameCode,
+      dayNumber,
+      action: 'fetch',
+      playerId 
+    }
+  });
+
+  if (error) throw error;
   
-  if (!session) throw new Error('No active session');
+  return {
+    results: data.results || [],
+    calculated: data.calculated || false
+  };
 
-  // Update each player's points
-  const updates = results.map(result => 
-    supabase
-      .from('players')
-      .update({
-        personal_points: result.totalPoints,
-        last_mini_game_rank: result.rank
-      })
-      .eq('player_id', result.playerId)
-  );
-
-  await Promise.all(updates);
 }
