@@ -85,13 +85,13 @@ export async function joinGame(gameCode: string, name: string) {
 }
 
 /**
- * Generate a random 6-character game code.
+ * Generate a random 5-character game code.
  * @returns A unique game code string.
  */
 export async function generateGameCode() {
-  const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+  const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
   let code = "";
-  for (let i = 0; i < 6; i++) {
+  for (let i = 0; i < 5; i++) {
     code += chars.charAt(Math.floor(Math.random() * chars.length));
   }
   return code;
