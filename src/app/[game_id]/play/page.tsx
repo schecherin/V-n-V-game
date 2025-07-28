@@ -19,9 +19,16 @@ import {
 import { supabase } from "@/lib/supabase/client";
 import { assignRolesToPlayers } from "@/lib/roleAssign";
 // Import both subscription functions
-import { subscribeToGameUpdates, subscribeToPlayerUpdates } from "@/lib/gameSubscriptions";
+import {
+  subscribeToGameUpdates,
+  subscribeToPlayerUpdates,
+} from "@/lib/gameSubscriptions";
 import MinigameResults from "@/components/game/MinigameResults";
-import { calculateMinigameResults, fetchMinigameResults, type MinigameResult } from "@/lib/minigameAPI";
+import {
+  calculateMinigameResults,
+  fetchMinigameResults,
+  type MinigameResult,
+} from "@/lib/minigameAPI";
 
 export default function GamePlayPage() {
   const params = useParams();
@@ -53,7 +60,7 @@ export default function GamePlayPage() {
   // Subscribe to real-time game updates (for phase changes)
   useEffect(() => {
     if (!gameId) return;
-    
+
     // Set initial phase from the game object when it loads
     if (game?.current_phase) {
       setGamePhase(game.current_phase);
@@ -61,7 +68,7 @@ export default function GamePlayPage() {
 
     const unsubscribe = subscribeToGameUpdates(gameId, (payload) => {
       if (payload.new && payload.new.current_phase) {
-        console.log('Game phase changed to:', payload.new.current_phase);
+        console.log("Game phase changed to:", payload.new.current_phase);
         setGamePhase(payload.new.current_phase);
       }
     });
@@ -75,7 +82,7 @@ export default function GamePlayPage() {
 
     const unsubscribe = subscribeToPlayerUpdates(gameId, (payload) => {
       // A player has been inserted, updated, or deleted. Refetch the list for all clients.
-      console.log('Player data changed, refetching players...');
+      console.log("Player data changed, refetching players...");
       getPlayersByGameCode(gameId).then(setPlayers);
     });
 
@@ -88,50 +95,52 @@ export default function GamePlayPage() {
     const isHost = !!(game && p && p.user_id === game.host_user_id);
     return { currentPlayer: p, isCurrentUserHost: isHost };
   }, [players, currentPlayerId, game]);
-  
-useEffect(() => {
-  const handleRoleAssignment = async () => {
-    // Check if roles are already assigned
-    const rolesAreAssigned = players.some(p => p.current_role_name);
-    
-    if (isCurrentUserHost && 
-        game?.current_phase === 'RoleReveal' && 
-        !rolesAreAssigned && 
-        !isAssigningRoles) {
-      
-      setIsAssigningRoles(true);
-      console.log("Host is assigning roles via edge function...");
-      
-      try {
-        // Get the current user's ID (the host)
-        const { data: { user } } = await supabase.auth.getUser();
-        
-        if (!user) {
-          console.error("Host user not authenticated");
-          setIsAssigningRoles(false);
-          return;
-        }
-        const result = await assignRolesToPlayers(gameId, user.id);
-        if (result.success) {
-          console.log("Roles assigned successfully:", result.assignments);
-          // The real-time subscription should automatically update the UI
-        } else {
-          console.error("Failed to assign roles:", result.error);
-        }
-      } catch (error) {
-        console.error("Error during role assignment:", error);
-      } finally {
-        setIsAssigningRoles(false);
-      }
-    }
-  };
-  
-  // Ensure we have the necessary data before trying to assign roles
-  if (game && players.length > 0 && isCurrentUserHost !== undefined) {
-    handleRoleAssignment();
-  }
-}, [game, players, isCurrentUserHost, gameId, isAssigningRoles]);
 
+  useEffect(() => {
+    const handleRoleAssignment = async () => {
+      // Check if roles are already assigned
+      const rolesAreAssigned = players.some((p) => p.current_role_name);
+
+      if (
+        isCurrentUserHost &&
+        game?.current_phase === "RoleReveal" &&
+        !rolesAreAssigned &&
+        !isAssigningRoles
+      ) {
+        setIsAssigningRoles(true);
+        console.log("Host is assigning roles via edge function...");
+
+        try {
+          // Get the current user's ID (the host)
+          const {
+            data: { user },
+          } = await supabase.auth.getUser();
+
+          if (!user) {
+            console.error("Host user not authenticated");
+            setIsAssigningRoles(false);
+            return;
+          }
+          const result = await assignRolesToPlayers(gameId, user.id);
+          if (result.success) {
+            console.log("Roles assigned successfully:", result.assignments);
+            // The real-time subscription should automatically update the UI
+          } else {
+            console.error("Failed to assign roles:", result.error);
+          }
+        } catch (error) {
+          console.error("Error during role assignment:", error);
+        } finally {
+          setIsAssigningRoles(false);
+        }
+      }
+    };
+
+    // Ensure we have the necessary data before trying to assign roles
+    if (game && players.length > 0 && isCurrentUserHost !== undefined) {
+      handleRoleAssignment();
+    }
+  }, [game, players, isCurrentUserHost, gameId, isAssigningRoles]);
 
   const handleSetGamePhase = async (newPhase: GamePhase) => {
     setGamePhase(newPhase);
@@ -160,86 +169,89 @@ useEffect(() => {
       console.error("Failed to insert minigame guess:", err);
     }
   };
-// Add this state near your other useState declarations at the top of the component
-const [resultsCalculated, setResultsCalculated] = useState(false);
+  // Add this state near your other useState declarations at the top of the component
+  const [resultsCalculated, setResultsCalculated] = useState(false);
 
-const handleMinigameResult = async () => {
-  if (!resultsCalculated && gameId && playerId) {
-    setResultsCalculated(true);
-    
-    try {
-      if (isCurrentUserHost) {
-        // HOST CALCULATES AND UPDATES DATABASE
-        console.log("Host calculating results for everyone...");
-        const results = await calculateMinigameResults(gameId, game?.current_day ?? 0, true);
-        
-        const myResult = results.find(r => r.playerId === playerId);
-        if (myResult) {
-          setMinigameResult(myResult);
-        }
-      } else {
-        // GUESTS: Just poll database for their updated rank/points
-        console.log("Guest waiting for results...");
-        
-        let attempts = 0;
-        const maxAttempts = 30; // 30 seconds max
-        
-        while (attempts < maxAttempts) {
-          // Fetch own player data directly from database
-          const player = await getPlayerById(playerId);
-          
-          // Check if rank has been set (meaning host calculated)
-          if (player.last_mini_game_rank && player.last_mini_game_rank > 0) {
-            // Create result object from player data
-            const myResult: MinigameResult = {
-              playerId: player.player_id,
-              playerName: player.player_name,
-              rank: player.last_mini_game_rank,
-              points: 0, // We don't store points earned separately, could calculate if needed
-              totalPoints: player.personal_points
-            };
-            
+  const handleMinigameResult = async () => {
+    if (!resultsCalculated && gameId && playerId) {
+      setResultsCalculated(true);
+
+      try {
+        if (isCurrentUserHost) {
+          // HOST CALCULATES AND UPDATES DATABASE
+          console.log("Host calculating results for everyone...");
+          const results = await calculateMinigameResults(
+            gameId,
+            game?.current_day ?? 0,
+            true
+          );
+
+          const myResult = results.find((r) => r.playerId === playerId);
+          if (myResult) {
             setMinigameResult(myResult);
-            console.log("Guest found their results:", myResult);
-            break;
           }
-          // I'm waiting here idk if its the best idea tbh.
-          await new Promise(resolve => setTimeout(resolve, 1000));
-          attempts++;
+        } else {
+          // GUESTS: Just poll database for their updated rank/points
+          console.log("Guest waiting for results...");
+
+          let attempts = 0;
+          const maxAttempts = 30; // 30 seconds max
+
+          while (attempts < maxAttempts) {
+            // Fetch own player data directly from database
+            const player = await getPlayerById(playerId);
+
+            // Check if rank has been set (meaning host calculated)
+            if (player.last_mini_game_rank && player.last_mini_game_rank > 0) {
+              // Create result object from player data
+              const myResult: MinigameResult = {
+                playerId: player.player_id,
+                playerName: player.player_name,
+                rank: player.last_mini_game_rank,
+                points: 0, // We don't store points earned separately, could calculate if needed
+                totalPoints: player.personal_points,
+              };
+
+              setMinigameResult(myResult);
+              console.log("Guest found their results:", myResult);
+              break;
+            }
+            // I'm waiting here idk if its the best idea tbh.
+            await new Promise((resolve) => setTimeout(resolve, 1000));
+            attempts++;
+          }
+
+          if (attempts === maxAttempts) {
+            console.error("Timed out waiting for results");
+            setResultsCalculated(false);
+          }
         }
-        
-        if (attempts === maxAttempts) {
-          console.error("Timed out waiting for results");
-          setResultsCalculated(false);
-        }
+      } catch (error) {
+        console.error("Failed to handle minigame results:", error);
+        setResultsCalculated(false);
       }
-    } catch (error) {
-      console.error("Failed to handle minigame results:", error);
-      setResultsCalculated(false);
     }
-  }
-};
-// Add this useEffect to reset the flag when phase changes
-useEffect(() => {
-  if (gamePhase !== "Reflection_MiniGame_Result") {
-    setResultsCalculated(false);
-    setMinigameResult(undefined);
-  }
-}, [gamePhase]);
+  };
+  // Add this useEffect to reset the flag when phase changes
+  useEffect(() => {
+    if (gamePhase !== "Reflection_MiniGame_Result") {
+      setResultsCalculated(false);
+      setMinigameResult(undefined);
+    }
+  }, [gamePhase]);
 
-// Add this useEffect to trigger calculation when entering results phase
-useEffect(() => {
-  if (gamePhase === "Reflection_MiniGame_Result" && !resultsCalculated) {
-    handleMinigameResult();
-  }
-}, [gamePhase, resultsCalculated, gameId, playerId, isCurrentUserHost]);
-
-
+  // Add this useEffect to trigger calculation when entering results phase
+  useEffect(() => {
+    if (gamePhase === "Reflection_MiniGame_Result" && !resultsCalculated) {
+      handleMinigameResult();
+    }
+  }, [gamePhase, resultsCalculated, gameId, playerId, isCurrentUserHost]);
 
   const renderGameContent = () => {
     const roleName = currentPlayer?.current_role_name || "Assigning...";
     const roleDescription =
-      roles.find((r) => r.role_name === roleName)?.description || "Please wait while the host starts the game.";
+      roles.find((r) => r.role_name === roleName)?.description ||
+      "Please wait while the host starts the game.";
 
     switch (gamePhase) {
       case "Lobby":
@@ -300,6 +312,7 @@ useEffect(() => {
           <OutreachPhase
             player={currentPlayer}
             setGamePhase={handleSetGamePhase}
+            isCurrentUserHost={isCurrentUserHost}
           />
         );
       case "Consultation_Discussion":
