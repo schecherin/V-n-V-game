@@ -36,8 +36,8 @@ export default function MinigameCore({
     (p) => p.player_id !== currentPlayerId && p.status !== "Dead"
   );
 
-  const guessesRemaining = maxGuesses - Object.keys(guessesMade).length;
-
+  const guessesRemaining =
+    Math.min(maxGuesses, players.length - 1) - Object.keys(guessesMade).length;
   const handlePlayerSelect = (player: Player) => {
     if (guessesMade[player.player_id]) {
       setFeedback(`You have already made a guess for ${player.player_name}.`);
