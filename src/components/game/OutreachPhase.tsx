@@ -5,15 +5,26 @@ import { GamePhase, Player } from "@/types";
 interface OutreachPhaseProps {
   player?: Player;
   setGamePhase: (phase: GamePhase) => void;
+  isCurrentUserHost: boolean;
 }
 
-const OutreachPhase = ({ player, setGamePhase }: OutreachPhaseProps) => {
+const OutreachPhase = ({
+  player,
+  setGamePhase,
+  isCurrentUserHost,
+}: Readonly<OutreachPhaseProps>) => {
   return (
     <div className="flex flex-col items-center justify-center gap-2">
       <h2>Outreach Phase</h2>
-      <Button onClick={() => setGamePhase("Consultation_Discussion")}>
-        Go to next phase
-      </Button>
+      {isCurrentUserHost ? (
+        <Button onClick={() => setGamePhase("Consultation_Discussion")}>
+          Go to next phase
+        </Button>
+      ) : (
+        <div className="text-brown-medium italic text-lg">
+          Waiting for the host to continue...
+        </div>
+      )}
     </div>
   );
 };

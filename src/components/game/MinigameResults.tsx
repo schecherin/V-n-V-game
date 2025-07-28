@@ -29,6 +29,7 @@ const MinigameResults: React.FC<MinigameResultsProps> = ({
         setGamePhase("Consultation_Discussion");
       }
     } catch (err) {
+      console.error("Failed to get game outreach phase:", err);
       // fallback: go to outreach
       setGamePhase("Outreach");
     } finally {
@@ -36,8 +37,11 @@ const MinigameResults: React.FC<MinigameResultsProps> = ({
     }
   };
 
-  // Show loading state while results are being calculated/fetched by parent
-  if (position === undefined || points === undefined) {
+  // Show loading state while results are being calculated
+  if (
+    position === undefined ||
+    points === undefined 
+  ) {
     return (
       <div className="bg-white rounded-xl shadow-2xl p-8 max-w-md mx-auto text-center border border-slate-300">
         <h2 className="text-2xl font-bold mb-4 text-slate-900">
@@ -69,14 +73,15 @@ const MinigameResults: React.FC<MinigameResultsProps> = ({
       <h2 className="text-2xl font-bold mb-6 text-slate-900">
         Minigame Results
       </h2>
-      
+
       <div className="space-y-6">
         <div className="bg-amber-50 rounded-lg p-4 border border-amber-200">
           <span className="text-lg font-semibold text-slate-700">
             Your Position
           </span>
           <div className="text-4xl font-bold text-amber-600 mt-2">
-            {position}{ordinalSuffix}
+            {position}
+            {ordinalSuffix}
           </div>
         </div>
 

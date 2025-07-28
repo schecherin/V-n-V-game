@@ -1,9 +1,8 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import Button from "../ui/Button";
 import { GamePhase, Player, Role } from "@/types";
-import { getGameIncludeOutreachPhase } from "@/lib/gameApi";
 
 interface MinigameCoreProps {
   players: Player[];
@@ -25,7 +24,7 @@ export default function MinigameCore({
   isCurrentUserHost,
   gameId,
   roles,
-}: MinigameCoreProps) {
+}: Readonly<MinigameCoreProps>) {
   const [selectedPlayer, setSelectedPlayer] = useState<Player | null>(null);
   const [guessedRole, setGuessedRole] = useState<string>("");
   const [guessesMade, setGuessesMade] = useState<Record<string, string>>({}); // { playerId: guessedRole }
