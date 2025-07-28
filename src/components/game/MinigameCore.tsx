@@ -2,14 +2,14 @@
 
 import React, { useState } from "react";
 import Button from "../ui/Button";
-import { GamePhase, Player, Role } from "@/types";
+import { Player, Role } from "@/types";
 
 interface MinigameCoreProps {
   players: Player[];
   currentPlayerId: string; // ID of the player viewing the minigame
   onGuess: (targetPlayerId: string, guessedRole: string) => void; // Callback when a guess is made
   maxGuesses?: number;
-  setGamePhase: (phase: GamePhase) => void;
+  onNextPhase: () => void;
   isCurrentUserHost: boolean;
   gameId: string;
   roles: Role[];
@@ -20,7 +20,7 @@ export default function MinigameCore({
   currentPlayerId,
   onGuess,
   maxGuesses = 10,
-  setGamePhase,
+  onNextPhase,
   isCurrentUserHost,
   gameId,
   roles,
@@ -84,7 +84,7 @@ export default function MinigameCore({
   const handleNextPhase = async () => {
     setLoadingNextPhase(true);
     try {
-      setGamePhase("Reflection_MiniGame_Result");
+      onNextPhase();
     } catch (err) {
       console.log(err);
     } finally {

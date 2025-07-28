@@ -1,47 +1,25 @@
-import { getGameIncludeOutreachPhase } from "@/lib/gameApi";
-import { GamePhase } from "@/types";
-import React, { useState } from "react";
+import React from "react";
 
 interface MinigameResultsProps {
   position?: number;
   points?: number;
   isHost: boolean;
   gameId: string;
-  setGamePhase: (phase: GamePhase) => void;
+  onNextPhase: () => void;
 }
 
 const MinigameResults: React.FC<MinigameResultsProps> = ({
   position,
   points,
   isHost,
-  gameId,
-  setGamePhase,
+  onNextPhase,
 }) => {
-  const [loadingNextPhase, setLoadingNextPhase] = useState(false);
-
-  const handleNextPhase = async () => {
-    setLoadingNextPhase(true);
-    try {
-      const outreachEnabled = await getGameIncludeOutreachPhase(gameId);
-      if (outreachEnabled) {
-        setGamePhase("Outreach");
-      } else {
-        setGamePhase("Consultation_Discussion");
-      }
-    } catch (err) {
-      console.error("Failed to get game outreach phase:", err);
-      // fallback: go to outreach
-      setGamePhase("Outreach");
-    } finally {
-      setLoadingNextPhase(false);
-    }
+  const handleNextPhase = () => {
+    onNextPhase();
   };
 
-  // Show loading state while results are being calculated
-  if (
-    position === undefined ||
-    points === undefined 
-  ) {
+  // Show loading state while results are being calculated / fetched by parent
+  if (position === undefined || points === undefined) {
     return (
       <div className="bg-white rounded-xl shadow-2xl p-8 max-w-md mx-auto text-center border border-slate-300">
         <h2 className="text-2xl font-bold mb-4 text-slate-900">
@@ -89,19 +67,16 @@ const MinigameResults: React.FC<MinigameResultsProps> = ({
           <span className="text-lg font-semibold text-slate-700">
             Total Points:
           </span>
-          <div className="text-4xl font-bold text-green-600 mt-2">
-            {points}
-          </div>
+          <div className="text-4xl font-bold text-green-600 mt-2">{points}</div>
         </div>
       </div>
 
       {isHost ? (
-        <button 
-          onClick={handleNextPhase} 
-          disabled={loadingNextPhase}
+        <button
+          onClick={handleNextPhase}
           className="mt-8 w-full px-6 py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
         >
-          {loadingNextPhase ? "Loading..." : "Go to Next Phase"}
+          "Go to Next Phase"
         </button>
       ) : (
         <div className="mt-8 text-brown-medium italic text-lg">

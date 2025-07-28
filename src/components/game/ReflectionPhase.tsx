@@ -1,16 +1,16 @@
 import React, { useState, useEffect } from "react";
 import Button from "@/components/ui/Button";
 import { useRouter } from "next/navigation";
-import { GamePhase, Player } from "@/types";
+import { Player } from "@/types";
 
 interface ReflectionPhaseProps {
   player?: Player;
-  setGamePhase: (phase: GamePhase) => void;
+  onNextPhase: () => void;
 }
 
-const DESCRIPTION = `Tijdens de reflectiefase kunnen spelers hun rol uitvoeren aan het begin, voordat de minigame is begonnen. Dit kan alleen mits de spelers genoeg persoonlijke punten hebben. Zij krijgen allen 15 seconden de tijd om dit te doen. De spelers die geen rol hebben op dit moment, moeten op “confirm” drukken. Hierna start de minigame.`;
+const DESCRIPTION = `Tijdens de reflectiefase kunnen spelers hun rol uitvoeren aan het begin, voordat de minigame is begonnen. Dit kan alleen mits de spelers genoeg persoonlijke punten hebben. Zij krijgen allen 15 seconden de tijd om dit te doen. De spelers die geen rol hebben op dit moment, moeten op "confirm" drukken. Hierna start de minigame.`;
 
-const ReflectionPhase = ({ player, setGamePhase }: ReflectionPhaseProps) => {
+const ReflectionPhase = ({ player, onNextPhase }: ReflectionPhaseProps) => {
   const [timer, setTimer] = useState(15);
   const [confirmed, setConfirmed] = useState(false);
   const router = useRouter();
@@ -65,11 +65,7 @@ const ReflectionPhase = ({ player, setGamePhase }: ReflectionPhaseProps) => {
           Je hebt bevestigd. Wacht op de anderen...
         </div>
       )}
-      {confirmed && (
-        <Button onClick={() => setGamePhase("Reflection_MiniGame")}>
-          Start minigame
-        </Button>
-      )}
+      {confirmed && <Button onClick={onNextPhase}>Start minigame</Button>}
     </div>
   );
 };

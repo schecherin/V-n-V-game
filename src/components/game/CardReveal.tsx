@@ -1,8 +1,7 @@
 "use client";
 
-import { GamePhase, Player } from "@/types";
+import { Player } from "@/types";
 import { isCurrentUserHost } from "@/lib/playerApi";
-import { getGameTutorialStatus } from "@/lib/gameApi";
 import { motion, useAnimation, AnimationControls } from "framer-motion";
 import { useRouter, useParams } from "next/navigation";
 import React, { useEffect, useState } from "react";
@@ -10,27 +9,25 @@ import React, { useEffect, useState } from "react";
 interface CardRevealProps {
   roleName: string;
   roleDescription: string;
-  setGamePhase: (phase: GamePhase) => void;
+  onNextPhase: () => void;
   player: Player | undefined;
   game: any;
-  players: Player[];
 }
 
 // Helper function to get role image path
 const getRoleImagePath = (roleName: string): string => {
   // Convert role name to lowercase and replace spaces with hyphens for consistent file naming
-  const formattedRoleName = roleName.toLowerCase().replace(/\s+/g, '-');
+  const formattedRoleName = roleName.toLowerCase().replace(/\s+/g, "-");
   return `/roles/${formattedRoleName}.png`;
 };
 
 export default function CardReveal({
   roleName,
   roleDescription,
-  setGamePhase,
+  onNextPhase,
   player,
   game,
-  players,
-}: CardRevealProps) {
+}: Readonly<CardRevealProps>) {
   const cardControls: AnimationControls = useAnimation();
   const infoControls: AnimationControls = useAnimation();
   const buttonControls: AnimationControls = useAnimation();
@@ -45,7 +42,6 @@ export default function CardReveal({
 
   const currentPlayerIsHost = isCurrentUserHost(
     game,
-    players,
     player?.player_id || null
   );
 
@@ -111,20 +107,7 @@ export default function CardReveal({
       return;
     }
 
-    try {
-      // Check if tutorial is enabled
-      const tutorialEnabled = await getGameTutorialStatus(gameId);
-
-      if (tutorialEnabled) {
-        setGamePhase("Tutorial");
-      } else {
-        setGamePhase("Reflection_MiniGame");
-      }
-    } catch (error) {
-      console.error("Failed to check tutorial status:", error);
-      // Fallback to Reflection_MiniGame if there's an error
-      setGamePhase("Reflection_MiniGame");
-    }
+    onNextPhase();
   };
 
   // Handle image load error

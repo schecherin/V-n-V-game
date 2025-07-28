@@ -1,17 +1,19 @@
 import React, { useState } from "react";
 import Button from "../ui/Button";
-import { GamePhase, Player } from "@/types";
+import { Player } from "@/types";
 
 interface ConsultationPhaseProps {
   player?: Player;
   players: Player[];
-  setGamePhase: (phase: GamePhase) => void;
+  onNextPhase: () => void;
+  onEndGame: () => void;
 }
 
 const ConsultationPhase = ({
   player,
   players,
-  setGamePhase,
+  onNextPhase,
+  onEndGame,
 }: ConsultationPhaseProps) => {
   const [voting, setVoting] = useState<boolean>(false);
   const [vote, setVote] = useState<string | null>(null);
@@ -68,13 +70,8 @@ const ConsultationPhase = ({
           </Button>
         </div>
       )}
-      <Button onClick={() => setGamePhase("Reflection_RoleActions")}>
-        Go to next phase
-      </Button>
-      <Button
-        className="bg-red-700 text-white"
-        onClick={() => setGamePhase("Finished")}
-      >
+      <Button onClick={onNextPhase}>Go to next phase</Button>
+      <Button className="bg-red-700 text-white" onClick={onEndGame}>
         End game
       </Button>
     </>

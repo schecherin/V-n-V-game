@@ -30,7 +30,6 @@ import {
 import MinigameResults from "@/components/game/MinigameResults";
 import {
   calculateMinigameResults,
-  fetchMinigameResults,
   type MinigameResult,
 } from "@/lib/minigameAPI";
 
@@ -177,65 +176,68 @@ export default function GamePlayPage() {
   const [resultsCalculated, setResultsCalculated] = useState(false);
 
   const handleMinigameResult = async () => {
-    if (!resultsCalculated && gameId && playerId) {
-      setResultsCalculated(true);
+    if (resultsCalculated || !gameId || !playerId) {
+      return;
+    }
 
-      try {
-        if (isUserHost) {
-          // HOST CALCULATES AND UPDATES DATABASE
-          console.log("Host calculating results for everyone...");
-          const results = await calculateMinigameResults(
-            gameId,
-            game?.current_day ?? 0,
-            true
-          );
+    setResultsCalculated(true);
 
-          const myResult = results.find((r) => r.playerId === playerId);
-          if (myResult) {
-            setMinigameResult(myResult);
-          }
-        } else {
-          // GUESTS: Just poll database for their updated rank/points
-          console.log("Guest waiting for results...");
+    try {
+      if (isUserHost) {
+        // HOST CALCULATES AND UPDATES DATABASE
+        console.log("Host calculating results for everyone...");
+        const results = await calculateMinigameResults(
+          gameId,
+          game?.current_day ?? 0,
+          true
+        );
 
-          let attempts = 0;
-          const maxAttempts = 30; // 30 seconds max
-
-          while (attempts < maxAttempts) {
-            // Fetch own player data directly from database
-            const player = await getPlayerById(playerId);
-
-            // Check if rank has been set (meaning host calculated)
-            if (player.last_mini_game_rank && player.last_mini_game_rank > 0) {
-              // Create result object from player data
-              const myResult: MinigameResult = {
-                playerId: player.player_id,
-                playerName: player.player_name,
-                rank: player.last_mini_game_rank,
-                points: 0, // We don't store points earned separately, could calculate if needed
-                totalPoints: player.personal_points,
-              };
-
-              setMinigameResult(myResult);
-              console.log("Guest found their results:", myResult);
-              break;
-            }
-            // I'm waiting here idk if its the best idea tbh.
-            await new Promise((resolve) => setTimeout(resolve, 1000));
-            attempts++;
-          }
-
-          if (attempts === maxAttempts) {
-            console.error("Timed out waiting for results");
-            setResultsCalculated(false);
-          }
+        const myResult = results.find((r) => r.playerId === playerId);
+        if (myResult) {
+          setMinigameResult(myResult);
         }
-      } catch (error) {
-        console.error("Failed to handle minigame results:", error);
-        setResultsCalculated(false);
+      } else {
+        // GUESTS: Just poll database for their updated rank/points
+        console.log("Guest waiting for results...");
+
+        let attempts = 0;
+        const maxAttempts = 30; // 30 seconds max
+
+        while (attempts < maxAttempts) {
+          // Fetch own player data directly from database
+          const player = await getPlayerById(playerId);
+
+          // Check if rank has been set (meaning host calculated)
+          if (player.last_mini_game_rank && player.last_mini_game_rank > 0) {
+            // Create result object from player data
+            const myResult: MinigameResult = {
+              playerId: player.player_id,
+              playerName: player.player_name,
+              rank: player.last_mini_game_rank,
+              points: 0, // We don't store points earned separately, could calculate if needed
+              totalPoints: player.personal_points,
+            };
+
+            setMinigameResult(myResult);
+            console.log("Guest found their results:", myResult);
+            break;
+          }
+          // I'm waiting here idk if its the best idea tbh.
+          await new Promise((resolve) => setTimeout(resolve, 1000));
+          attempts++;
+        }
+
+        if (attempts === maxAttempts) {
+          console.error("Timed out waiting for results");
+          setResultsCalculated(false);
+        }
       }
+    } catch (error) {
+      console.error("Failed to handle minigame results:", error);
+      setResultsCalculated(false);
     }
   };
+
   // Add this useEffect to reset the flag when phase changes
   useEffect(() => {
     if (gamePhase !== "Reflection_MiniGame_Result") {
@@ -266,10 +268,13 @@ export default function GamePlayPage() {
           <CardReveal
             roleName={roleName}
             roleDescription={roleDescription}
-            setGamePhase={handleSetGamePhase}
+            onNextPhase={() =>
+              game?.tutorial
+                ? handleSetGamePhase("Tutorial")
+                : handleSetGamePhase("Reflection_MiniGame")
+            }
             player={currentPlayer}
             game={game}
-            players={players}
           />
         );
       case "Tutorial":
@@ -278,7 +283,7 @@ export default function GamePlayPage() {
             player={currentPlayer}
             game={game}
             players={players}
-            setGamePhase={handleSetGamePhase}
+            onNextPhase={() => handleSetGamePhase("Reflection_MiniGame")}
           />
         );
       case "Reflection_MiniGame":
@@ -288,7 +293,7 @@ export default function GamePlayPage() {
             currentPlayerId={currentPlayerId ?? ""}
             onGuess={handleMinigameGuess}
             maxGuesses={3}
-            setGamePhase={handleSetGamePhase}
+            onNextPhase={() => handleSetGamePhase("Reflection_MiniGame_Result")}
             isCurrentUserHost={isUserHost}
             gameId={gameId}
             roles={roles}
@@ -301,21 +306,25 @@ export default function GamePlayPage() {
             points={minigameResult?.totalPoints || 0}
             isHost={isUserHost}
             gameId={gameId}
-            setGamePhase={handleSetGamePhase}
+            onNextPhase={() =>
+              game?.include_outreach_phase
+                ? handleSetGamePhase("Outreach")
+                : handleSetGamePhase("Consultation_Discussion")
+            }
           />
         );
       case "Reflection_RoleActions":
         return (
           <ReflectionPhase
             player={currentPlayer}
-            setGamePhase={handleSetGamePhase}
+            onNextPhase={() => handleSetGamePhase("Reflection_MiniGame")}
           />
         );
       case "Outreach":
         return (
           <OutreachPhase
             player={currentPlayer}
-            setGamePhase={handleSetGamePhase}
+            onNextPhase={() => handleSetGamePhase("Consultation_Discussion")}
             isCurrentUserHost={isUserHost}
           />
         );
@@ -327,7 +336,8 @@ export default function GamePlayPage() {
           <ConsultationPhase
             players={players}
             player={currentPlayer}
-            setGamePhase={handleSetGamePhase}
+            onNextPhase={() => handleSetGamePhase("Reflection_RoleActions")}
+            onEndGame={() => handleSetGamePhase("Finished")}
           />
         );
       case "Finished":
