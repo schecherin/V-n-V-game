@@ -67,7 +67,6 @@ export function useJoinGame() {
         const player = await createPlayer({
           game_code: foundGame.game_code,
           player_name: trimmedPlayerName,
-          is_guest: true,
           status: "Alive",
         });
         // Update game player count

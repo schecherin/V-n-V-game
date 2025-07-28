@@ -63,7 +63,6 @@ export function useCreateGame() {
           game_code: gameCode,
           user_id: user.id, // Use the anonymous user ID
           player_name: playerName.trim(),
-          is_guest: false,
           status: "Alive",
           personal_points: 0.0,
         });

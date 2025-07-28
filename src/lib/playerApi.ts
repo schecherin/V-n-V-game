@@ -1,5 +1,5 @@
 import { supabase } from "@/lib/supabase/client";
-import { Player, PlayerData } from "@/types";
+import { Game, Player, PlayerData } from "@/types";
 
 /**
  * Fetch a player by their unique playerId.
@@ -106,18 +106,15 @@ export async function assignRoleNameToPlayer(
 /**
  * Check if the current player is the host of the game.
  * @param game The game object.
- * @param players Array of Player objects.
- * @param currentPlayerId The current player's ID.
+ * @param player_id The current player's ID.
  * @returns True if the current player is the host, false otherwise.
  */
 export function isCurrentUserHost(
-  game: any,
-  players: any[],
-  currentPlayerId: string | null
+  game: Game | null,
+  player_id: string | null
 ): boolean {
-  if (!game || !players || !currentPlayerId) return false;
-  const player = players.find((p) => p.player_id === currentPlayerId);
-  return player && player.user_id === game.host_user_id;
+  if (!game || !player_id) return false;
+  return player_id === game.host_user_id;
 }
 
 /**
@@ -169,24 +166,26 @@ export async function updatePlayerMinigamePointsAndRank(
     // First fetch current points
     const currentPoints = await fetchPlayerPoints(playerId);
     const newPoints = currentPoints + points;
-    
+
     // Update with new points and rank
     const { data, error } = await supabase
       .from("players")
-      .update({ 
-        personal_points: newPoints, 
-        last_mini_game_rank: rank 
+      .update({
+        personal_points: newPoints,
+        last_mini_game_rank: rank,
       })
       .eq("player_id", playerId)
       .select()
       .single();
-      
+
     if (error) {
       console.error("Error updating player points:", error);
       throw error;
     }
-    
-    console.log(`Updated player ${playerId}: points ${currentPoints} -> ${newPoints}, rank: ${rank}`);
+
+    console.log(
+      `Updated player ${playerId}: points ${currentPoints} -> ${newPoints}, rank: ${rank}`
+    );
     return data;
   } catch (error) {
     console.error("Failed to update player minigame points and rank:", error);

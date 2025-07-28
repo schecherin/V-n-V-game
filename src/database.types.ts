@@ -207,7 +207,6 @@ export type Database = {
       }
       games: {
         Row: {
-          chairman_player_id: string | null
           created_at: string | null
           current_day: number
           current_phase: Database["public"]["Enums"]["game_phase"]
@@ -221,12 +220,12 @@ export type Database = {
           last_phase_change_at: string | null
           max_players: number
           max_points_per_day_m: number
+          secretary_player_id: string | null
           treasurer_player_id: string | null
-          Tutorial: boolean
+          tutorial: boolean
           updated_at: string | null
         }
         Insert: {
-          chairman_player_id?: string | null
           created_at?: string | null
           current_day?: number
           current_phase?: Database["public"]["Enums"]["game_phase"]
@@ -240,12 +239,12 @@ export type Database = {
           last_phase_change_at?: string | null
           max_players?: number
           max_points_per_day_m?: number
+          secretary_player_id?: string | null
           treasurer_player_id?: string | null
-          Tutorial?: boolean
+          tutorial?: boolean
           updated_at?: string | null
         }
         Update: {
-          chairman_player_id?: string | null
           created_at?: string | null
           current_day?: number
           current_phase?: Database["public"]["Enums"]["game_phase"]
@@ -259,21 +258,22 @@ export type Database = {
           last_phase_change_at?: string | null
           max_players?: number
           max_points_per_day_m?: number
+          secretary_player_id?: string | null
           treasurer_player_id?: string | null
-          Tutorial?: boolean
+          tutorial?: boolean
           updated_at?: string | null
         }
         Relationships: [
           {
-            foreignKeyName: "fk_games_chairman_player"
-            columns: ["chairman_player_id"]
+            foreignKeyName: "fk_games_treasurer_player"
+            columns: ["treasurer_player_id"]
             isOneToOne: false
             referencedRelation: "players"
             referencedColumns: ["player_id"]
           },
           {
-            foreignKeyName: "fk_games_treasurer_player"
-            columns: ["treasurer_player_id"]
+            foreignKeyName: "games_secretary_player_id_fkey"
+            columns: ["secretary_player_id"]
             isOneToOne: false
             referencedRelation: "players"
             referencedColumns: ["player_id"]
@@ -492,12 +492,12 @@ export type Database = {
       }
       players: {
         Row: {
+          acted_today: boolean | null
           conversion_history: Json | null
           current_role_name: string | null
           current_y_value: number | null
           effective_identity_player_id: string | null
           game_code: string | null
-          is_guest: boolean | null
           joined_at: string | null
           last_mini_game_rank: number | null
           original_role_name: string | null
@@ -509,12 +509,12 @@ export type Database = {
           user_id: string | null
         }
         Insert: {
+          acted_today?: boolean | null
           conversion_history?: Json | null
           current_role_name?: string | null
           current_y_value?: number | null
           effective_identity_player_id?: string | null
           game_code?: string | null
-          is_guest?: boolean | null
           joined_at?: string | null
           last_mini_game_rank?: number | null
           original_role_name?: string | null
@@ -526,12 +526,12 @@ export type Database = {
           user_id?: string | null
         }
         Update: {
+          acted_today?: boolean | null
           conversion_history?: Json | null
           current_role_name?: string | null
           current_y_value?: number | null
           effective_identity_player_id?: string | null
           game_code?: string | null
-          is_guest?: boolean | null
           joined_at?: string | null
           last_mini_game_rank?: number | null
           original_role_name?: string | null

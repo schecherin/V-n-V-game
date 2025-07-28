@@ -10,7 +10,11 @@ import CardReveal from "@/components/game/CardReveal";
 import Tutorial from "@/components/game/Tutorial";
 import { useGame } from "@/hooks/useGame";
 import { GamePhase, Player, Role } from "@/types";
-import { getPlayersByGameCode, getPlayerById } from "@/lib/playerApi";
+import {
+  getPlayersByGameCode,
+  getPlayerById,
+  isCurrentUserHost,
+} from "@/lib/playerApi";
 import {
   updateGamePhase,
   getAssignableRoles,
@@ -90,10 +94,10 @@ export default function GamePlayPage() {
   }, [gameId]); // Only depends on gameId
 
   // Memoize current player and host status to prevent re-calculations
-  const { currentPlayer, isCurrentUserHost } = useMemo(() => {
+  const { currentPlayer, isUserHost } = useMemo(() => {
     const p = players.find((p) => p.player_id === currentPlayerId);
-    const isHost = !!(game && p && p.user_id === game.host_user_id);
-    return { currentPlayer: p, isCurrentUserHost: isHost };
+    const isHost = isCurrentUserHost(game, currentPlayerId);
+    return { currentPlayer: p, isUserHost: isHost };
   }, [players, currentPlayerId, game]);
 
   useEffect(() => {
@@ -102,7 +106,7 @@ export default function GamePlayPage() {
       const rolesAreAssigned = players.some((p) => p.current_role_name);
 
       if (
-        isCurrentUserHost &&
+        isUserHost &&
         game?.current_phase === "RoleReveal" &&
         !rolesAreAssigned &&
         !isAssigningRoles
@@ -137,14 +141,14 @@ export default function GamePlayPage() {
     };
 
     // Ensure we have the necessary data before trying to assign roles
-    if (game && players.length > 0 && isCurrentUserHost !== undefined) {
+    if (game && players.length > 0 && isUserHost !== undefined) {
       handleRoleAssignment();
     }
-  }, [game, players, isCurrentUserHost, gameId, isAssigningRoles]);
+  }, [game, players, isUserHost, gameId, isAssigningRoles]);
 
   const handleSetGamePhase = async (newPhase: GamePhase) => {
     setGamePhase(newPhase);
-    if (!isCurrentUserHost) return;
+    if (!isUserHost) return;
     try {
       await updateGamePhase(gameId, newPhase);
     } catch (err) {
@@ -177,7 +181,7 @@ export default function GamePlayPage() {
       setResultsCalculated(true);
 
       try {
-        if (isCurrentUserHost) {
+        if (isUserHost) {
           // HOST CALCULATES AND UPDATES DATABASE
           console.log("Host calculating results for everyone...");
           const results = await calculateMinigameResults(
@@ -245,7 +249,7 @@ export default function GamePlayPage() {
     if (gamePhase === "Reflection_MiniGame_Result" && !resultsCalculated) {
       handleMinigameResult();
     }
-  }, [gamePhase, resultsCalculated, gameId, playerId, isCurrentUserHost]);
+  }, [gamePhase, resultsCalculated, gameId, playerId, isUserHost]);
 
   const renderGameContent = () => {
     const roleName = currentPlayer?.current_role_name || "Assigning...";
@@ -285,7 +289,7 @@ export default function GamePlayPage() {
             onGuess={handleMinigameGuess}
             maxGuesses={3}
             setGamePhase={handleSetGamePhase}
-            isCurrentUserHost={isCurrentUserHost}
+            isCurrentUserHost={isUserHost}
             gameId={gameId}
             roles={roles}
           />
@@ -295,7 +299,7 @@ export default function GamePlayPage() {
           <MinigameResults
             position={minigameResult?.rank || 0}
             points={minigameResult?.totalPoints || 0}
-            isHost={isCurrentUserHost}
+            isHost={isUserHost}
             gameId={gameId}
             setGamePhase={handleSetGamePhase}
           />
@@ -312,7 +316,7 @@ export default function GamePlayPage() {
           <OutreachPhase
             player={currentPlayer}
             setGamePhase={handleSetGamePhase}
-            isCurrentUserHost={isCurrentUserHost}
+            isCurrentUserHost={isUserHost}
           />
         );
       case "Consultation_Discussion":

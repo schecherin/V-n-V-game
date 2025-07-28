@@ -207,11 +207,11 @@ export async function getGameTutorialStatus(
 ): Promise<boolean> {
   const { data, error } = await supabase
     .from("games")
-    .select("Tutorial")
+    .select("tutorial")
     .eq("game_code", gameCode)
     .single();
   if (error) throw error;
-  return data?.Tutorial || false;
+  return data?.tutorial || false;
 }
 
 /**
@@ -225,7 +225,7 @@ export async function setGameTutorialStatus(
 ) {
   const { error } = await supabase
     .from("games")
-    .update({ Tutorial: enabled })
+    .update({ tutorial: enabled })
     .eq("game_code", gameCode);
   if (error) throw error;
 }

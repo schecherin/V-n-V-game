@@ -1,15 +1,18 @@
 import React from "react";
 import { CheckCircle, Clock } from "lucide-react";
 import { Player } from "@/types";
+import { isCurrentUserHost } from "@/lib/playerApi";
 
 interface PlayerSlotHorizontalProps {
   player?: Player;
   isCurrentUser: boolean;
+  isHost: boolean;
 }
 
 const PlayerSlotHorizontal: React.FC<PlayerSlotHorizontalProps> = ({
   player,
   isCurrentUser,
+  isHost,
 }) => {
   if (!player) {
     return <div className="w-24 h-32" />;
@@ -20,7 +23,7 @@ const PlayerSlotHorizontal: React.FC<PlayerSlotHorizontalProps> = ({
   const hostBorderColor: string = "border-[var(--color-accent-gold)]";
   let currentBorderColor: string = baseBorderColor;
 
-  if (!player.is_guest) currentBorderColor = hostBorderColor;
+  if (!isHost) currentBorderColor = hostBorderColor;
 
   const avatarBgColor = "bg-cream";
   const avatarTextColor = "text-brown-dark";
@@ -37,12 +40,12 @@ const PlayerSlotHorizontal: React.FC<PlayerSlotHorizontalProps> = ({
           {player.player_name.charAt(0)}
         </div>
 
-        {!player.is_guest && (
+        {!isHost && (
           <span className="absolute -top-1.5 -right-1.5 text-xl" title="Host">
             👑
           </span>
         )}
-        {player.is_guest && (
+        {isHost && (
           <CheckCircle className="absolute -top-1 -right-1 h-5 w-5 text-accent-green bg-cream-light rounded-full p-0.5 shadow" />
         )}
       </div>
