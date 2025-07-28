@@ -111,10 +111,12 @@ export async function assignRoleNameToPlayer(
  */
 export function isCurrentUserHost(
   game: Game | null,
-  player_id: string | null
+  players: Player[],
+  currentPlayerId: string | null
 ): boolean {
-  if (!game || !player_id) return false;
-  return player_id === game.host_user_id;
+  if (!game || !players || !currentPlayerId) return false;
+  const player = players.find((p) => p.player_id === currentPlayerId);
+  return !!player && player.user_id === game.host_user_id;
 }
 
 /**

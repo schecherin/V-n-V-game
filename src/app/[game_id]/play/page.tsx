@@ -95,7 +95,7 @@ export default function GamePlayPage() {
   // Memoize current player and host status to prevent re-calculations
   const { currentPlayer, isUserHost } = useMemo(() => {
     const p = players.find((p) => p.player_id === currentPlayerId);
-    const isHost = isCurrentUserHost(game, currentPlayerId);
+    const isHost = isCurrentUserHost(game, players, currentPlayerId);
     return { currentPlayer: p, isUserHost: isHost };
   }, [players, currentPlayerId, game]);
 
@@ -266,6 +266,7 @@ export default function GamePlayPage() {
       case "RoleReveal":
         return (
           <CardReveal
+            players={players}
             roleName={roleName}
             roleDescription={roleDescription}
             onNextPhase={() =>

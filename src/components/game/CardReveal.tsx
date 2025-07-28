@@ -10,6 +10,7 @@ interface CardRevealProps {
   roleName: string;
   roleDescription: string;
   onNextPhase: () => void;
+  players: Player[];
   player: Player | undefined;
   game: any;
 }
@@ -25,6 +26,7 @@ export default function CardReveal({
   roleName,
   roleDescription,
   onNextPhase,
+  players,
   player,
   game,
 }: Readonly<CardRevealProps>) {
@@ -42,6 +44,7 @@ export default function CardReveal({
 
   const currentPlayerIsHost = isCurrentUserHost(
     game,
+    players,
     player?.player_id || null
   );
 

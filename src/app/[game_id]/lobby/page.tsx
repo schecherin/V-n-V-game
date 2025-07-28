@@ -48,6 +48,7 @@ export default function LobbyPage(): JSX.Element {
   const [showRoleExplanationModal, setShowRoleExplanationModal] =
     useState<boolean>(false);
   const [shouldRedirect, setShouldRedirect] = useState<boolean>(false);
+  const [currentUserIsHost, setCurrentUserIsHost] = useState<boolean>(false);
 
   const { game, loading, error } = useGame(gameId);
   const router = useRouter();
@@ -92,7 +93,10 @@ export default function LobbyPage(): JSX.Element {
     { id: "tutorial", label: "Tutorial", checked: false },
   ]);
 
-  const currentUserIsHost: boolean = isCurrentUserHost(game, playerId);
+  useEffect(() => {
+    setCurrentUserIsHost(isCurrentUserHost(game, players, playerId));
+    console.log("currentUserIsHost", currentUserIsHost);
+  }, [game, playerId]);
 
   const handlePlayerClick = (player: Player): void => {
     console.log("Player clicked:", player);
@@ -149,6 +153,7 @@ export default function LobbyPage(): JSX.Element {
               players={players}
               currentUserId={playerId}
               onPlayerClick={handlePlayerClick}
+              isHost={currentUserIsHost}
             />
             <RoomInfoPanel roomName={roomName} />
           </>
