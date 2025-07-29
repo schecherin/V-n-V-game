@@ -109,12 +109,22 @@ export async function assignRoleNameToPlayer(
  * @param player_id The current player's ID.
  * @returns True if the current player is the host, false otherwise.
  */
-export function isCurrentUserHost(
-  game: Game | null,
-  player_id: string | null
-): boolean {
-  if (!game || !player_id) return false;
-  return player_id === game.host_user_id;
+export async function isCurrentUserHost(player_id: string | null): Promise<boolean> {
+  if (!player_id) return false;
+  
+  const { data, error } = await supabase
+    .from("players")
+    .select("user_id")
+    .eq("player_id", player_id)
+    .single();
+
+  if (error) {
+    console.error("Error fetching player:", error);
+    return false;
+  }
+
+  // Player is host if they have a non-null user_id
+  return data?.user_id != null;
 }
 
 /**

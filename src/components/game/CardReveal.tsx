@@ -110,21 +110,26 @@ export default function CardReveal({
       router.push("/");
       return;
     }
-
-    try {
+    
       // Check if tutorial is enabled
       const tutorialEnabled = await getGameTutorialStatus(gameId);
+      
+      // Get current day from game object
+      const currentDay = game?.current_day || 1;
 
       if (tutorialEnabled) {
         setGamePhase("Tutorial");
       } else {
-        setGamePhase("Reflection_MiniGame");
+        // Day-based logic: 
+        // Day 1: Go straight to minigame
+        // Day 2+: Go to reflection phase first
+        if (currentDay === 0) {
+          setGamePhase("Reflection_MiniGame");
+        } else {
+          setGamePhase("Reflection_RoleActions");
+        }
       }
-    } catch (error) {
-      console.error("Failed to check tutorial status:", error);
-      // Fallback to Reflection_MiniGame if there's an error
-      setGamePhase("Reflection_MiniGame");
-    }
+     
   };
 
   // Handle image load error

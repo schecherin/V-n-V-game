@@ -92,7 +92,17 @@ export default function LobbyPage(): JSX.Element {
     { id: "tutorial", label: "Tutorial", checked: false },
   ]);
 
-  const currentUserIsHost: boolean = isCurrentUserHost(game, playerId);
+  const [currentUserIsHost, setCurrentUserIsHost] = useState(false);
+
+    useEffect(() => {
+      async function checkHost() {
+        if (playerId) {
+          const isHost = await isCurrentUserHost(playerId);
+          setCurrentUserIsHost(isHost);
+        }
+      }
+      checkHost();
+    }, [playerId]);
 
   const handlePlayerClick = (player: Player): void => {
     console.log("Player clicked:", player);

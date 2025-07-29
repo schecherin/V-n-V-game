@@ -94,11 +94,18 @@ export default function GamePlayPage() {
   }, [gameId]); // Only depends on gameId
 
   // Memoize current player and host status to prevent re-calculations
-  const { currentPlayer, isUserHost } = useMemo(() => {
-    const p = players.find((p) => p.player_id === currentPlayerId);
-    const isHost = isCurrentUserHost(game, currentPlayerId);
-    return { currentPlayer: p, isUserHost: isHost };
-  }, [players, currentPlayerId, game]);
+      const [isUserHost, setIsUserHost] = useState(false);
+
+    useEffect(() => {
+      async function checkHost() {
+        if (currentPlayerId) {
+          const hostStatus = await isCurrentUserHost(currentPlayerId);
+          setIsUserHost(hostStatus);
+        }
+      }
+      checkHost();
+    }, [currentPlayerId]);
+    const currentPlayer = players.find((p) => p.player_id === currentPlayerId);
 
   useEffect(() => {
     const handleRoleAssignment = async () => {
@@ -308,7 +315,9 @@ export default function GamePlayPage() {
         return (
           <ReflectionPhase
             player={currentPlayer}
+            game={game}
             setGamePhase={handleSetGamePhase}
+            isCurrentUserHost={isUserHost}
           />
         );
       case "Outreach":
