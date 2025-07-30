@@ -2,15 +2,15 @@
 import React, { useState, JSX, useEffect, useCallback, useRef } from "react";
 import { COUNTDOWN_SECONDS } from "@/lib/constants";
 import { initialRoomName, ActiveView } from "@/lib/mockData";
-import { useRouter } from "next/navigation";
+import { useRouter, useParams, useSearchParams } from "next/navigation";
 import PlayerListHorizontal from "@/components/lobby/PlayerListHorizontal";
 import RoomInfoPanel from "@/components/lobby/RoomInfoPanel";
 import HostControlsPanel from "@/components/lobby/HostControlsPanel";
 import ChatPanel from "@/components/lobby/ChatPanel";
 import BottomNavBar from "@/components/lobby/BottomNavBar";
-import { useParams, useSearchParams } from "next/navigation";
 import { useGame } from "@/hooks/useGame";
-import { getPlayersByGameCode, isCurrentUserHost } from "@/lib/playerApi";
+import { getPlayersByGameCode } from "@/lib/playerApi";
+import { isCurrentUserHost } from "@/lib/gameUtils";
 import {
   subscribeToPlayerUpdates,
   subscribeToGameUpdates,
@@ -78,7 +78,7 @@ export default function LobbyPage(): JSX.Element {
   ]);
 
   useEffect(() => {
-    setCurrentUserIsHost(isCurrentUserHost(game, players, playerId));
+    setCurrentUserIsHost(isCurrentUserHost(game, playerId));
     console.log("currentUserIsHost", currentUserIsHost);
   }, [game, playerId]);
 

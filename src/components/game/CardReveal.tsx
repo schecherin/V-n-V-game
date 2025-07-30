@@ -1,7 +1,7 @@
 "use client";
 
 import { Player } from "@/types";
-import { isCurrentUserHost } from "@/lib/playerApi";
+import { isCurrentUserHost } from "@/lib/gameUtils";
 import { motion, useAnimation, AnimationControls } from "framer-motion";
 import { useRouter, useParams } from "next/navigation";
 import React, { useEffect, useState } from "react";
@@ -44,7 +44,6 @@ export default function CardReveal({
 
   const currentPlayerIsHost = isCurrentUserHost(
     game,
-    players,
     player?.player_id || null
   );
 

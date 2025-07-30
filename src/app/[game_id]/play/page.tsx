@@ -10,11 +10,8 @@ import CardReveal from "@/components/game/CardReveal";
 import Tutorial from "@/components/game/Tutorial";
 import { useGame } from "@/hooks/useGame";
 import { GamePhase, Player, Role } from "@/types";
-import {
-  getPlayersByGameCode,
-  getPlayerById,
-  isCurrentUserHost,
-} from "@/lib/playerApi";
+import { getPlayersByGameCode, getPlayerById } from "@/lib/playerApi";
+import { isCurrentUserHost } from "@/lib/gameUtils";
 import {
   updateGamePhase,
   getAssignableRoles,
@@ -95,7 +92,7 @@ export default function GamePlayPage() {
   // Memoize current player and host status to prevent re-calculations
   const { currentPlayer, isUserHost } = useMemo(() => {
     const p = players.find((p) => p.player_id === currentPlayerId);
-    const isHost = isCurrentUserHost(game, players, currentPlayerId);
+    const isHost = isCurrentUserHost(game, currentPlayerId);
     return { currentPlayer: p, isUserHost: isHost };
   }, [players, currentPlayerId, game]);
 

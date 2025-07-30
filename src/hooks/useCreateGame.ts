@@ -4,6 +4,7 @@ import {
   generateGameCode,
   checkGameCodeUnique,
   createGame,
+  setHostUserId,
 } from "@/lib/gameApi";
 import { createPlayer } from "@/lib/playerApi";
 import { signInAnonymously } from "@/lib/authApi";
@@ -54,7 +55,6 @@ export function useCreateGame() {
           current_player_count: 1,
           current_phase: "Lobby",
           current_day: 0,
-          host_user_id: user.id, // Use the anonymous user ID
         });
         setGame(game);
 
@@ -67,6 +67,9 @@ export function useCreateGame() {
           personal_points: 0.0,
         });
         setPlayer(player);
+
+        // Set host user ID
+        await setHostUserId(game.game_code, player.player_id);
 
         // Navigate to game lobby
         router.push(`/${gameCode}/lobby?playerId=${player.player_id}`);

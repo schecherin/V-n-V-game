@@ -7,7 +7,8 @@ import Modal from "@/components/ui/Modal";
 import Button from "@/components/ui/Button";
 import { useParams, useSearchParams, useRouter } from "next/navigation";
 import { useGame } from "@/hooks/useGame";
-import { getPlayersByGameCode, isCurrentUserHost } from "@/lib/playerApi";
+import { getPlayersByGameCode } from "@/lib/playerApi";
+import { isCurrentUserHost } from "@/lib/gameUtils";
 import { Player } from "@/types";
 import { UserGameData, mockUserGameData } from "@/lib/mockData";
 
@@ -44,8 +45,8 @@ export default function GameLayout({
   }, [gameId]);
 
   useEffect(() => {
-    setCurrentUserIsHost(isCurrentUserHost(game, players, playerId));
-  }, [game, players, playerId]);
+    setCurrentUserIsHost(isCurrentUserHost(game, playerId));
+  }, [game, playerId]);
 
   const handleOpenMenu = () => {
     setIsMenuOpen(true);

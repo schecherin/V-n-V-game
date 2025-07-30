@@ -1,7 +1,7 @@
 import React from "react";
 import Button from "@/components/ui/Button";
 import { Player } from "@/types";
-import { isCurrentUserHost } from "@/lib/playerApi";
+import { isCurrentUserHost } from "@/lib/gameUtils";
 
 interface TutorialProps {
   player: Player | undefined;
