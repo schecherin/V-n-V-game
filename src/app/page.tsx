@@ -1,19 +1,30 @@
-'use client';
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+"use client";
+import { useState, useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import UserButton from "@/components/ui/user-button";
 import JoinRoomComponent from "@/components/lobby/JoinRoomComponent";
 import CreateRoomComponent from "@/components/lobby/CreateRoomComponent";
 
 export default function MainMenu() {
   const router = useRouter();
-  const [activeComponent, setActiveComponent] = useState<'menu' | 'join' | 'create'>('menu');
+  const searchParams = useSearchParams();
+  const [activeComponent, setActiveComponent] = useState<
+    "menu" | "join" | "create"
+  >("menu");
+
+  // Check for URL parameter and auto-show join component
+  useEffect(() => {
+    const codeFromUrl = searchParams.get("code");
+    if (codeFromUrl) {
+      setActiveComponent("join");
+    }
+  }, [searchParams]);
 
   const handleBackToMenu = () => {
-    setActiveComponent('menu');
+    setActiveComponent("menu");
   };
 
-  if (activeComponent === 'join') {
+  if (activeComponent === "join") {
     return (
       <main className="min-h-screen flex justify-center items-center bg-gray-100 p-4">
         <UserButton />
@@ -24,7 +35,7 @@ export default function MainMenu() {
     );
   }
 
-  if (activeComponent === 'create') {
+  if (activeComponent === "create") {
     return (
       <main className="min-h-screen flex justify-center items-center bg-gray-100 p-4">
         <UserButton />
@@ -41,13 +52,13 @@ export default function MainMenu() {
       <div className="w-full max-w-xs space-y-6">
         <button
           className="w-full py-3 bg-gray-200 border border-black text-black text-lg rounded hover:bg-gray-300 transition"
-          onClick={() => setActiveComponent('join')}
+          onClick={() => setActiveComponent("join")}
         >
           Join room
         </button>
         <button
           className="w-full py-3 bg-gray-200 border border-black text-black text-lg rounded hover:bg-gray-300 transition"
-          onClick={() => setActiveComponent('create')}
+          onClick={() => setActiveComponent("create")}
         >
           Create room
         </button>
