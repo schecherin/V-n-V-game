@@ -34,6 +34,9 @@ export function useJoinGame() {
           await signInAnonymously();
           user = await getCurrentUser();
         }
+        if (!user?.id) {
+          throw new Error("User not found");
+        }
 
         // Fetch the game in the Lobby phase
         const trimmedGameCode = gameCode.trim();
@@ -66,6 +69,7 @@ export function useJoinGame() {
         // Create player
         const player = await createPlayer({
           game_code: foundGame.game_code,
+          user_id: user?.id,
           player_name: trimmedPlayerName,
           status: "Alive",
         });
