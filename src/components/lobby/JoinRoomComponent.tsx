@@ -1,6 +1,7 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useJoinGame } from "@/hooks/useJoinGame";
+import { useSearchParams } from "next/navigation";
 
 interface JoinRoomComponentProps {
   onBack: () => void;
@@ -10,6 +11,15 @@ export default function JoinRoomComponent({ onBack }: JoinRoomComponentProps) {
   const [gameCode, setGameCode] = useState("");
   const [playerName, setPlayerName] = useState("");
   const { joinGame, loading: isLoading, error } = useJoinGame();
+  const searchParams = useSearchParams();
+
+  // Pre-fill game code from URL parameter
+  useEffect(() => {
+    const codeFromUrl = searchParams.get("code");
+    if (codeFromUrl) {
+      setGameCode(codeFromUrl.toUpperCase());
+    }
+  }, [searchParams]);
 
   const handleJoinRoom = async () => {
     if (!gameCode.trim() || !playerName.trim()) {
@@ -28,8 +38,11 @@ export default function JoinRoomComponent({ onBack }: JoinRoomComponentProps) {
 
       <div className="space-y-4">
         <div>
-          <label className="block text-sm font-medium mb-2">Game Code</label>
+          <label htmlFor="game-code" className="block text-sm font-medium mb-2">
+            Game Code
+          </label>
           <input
+            id="game-code"
             type="text"
             value={gameCode}
             onChange={(e) => setGameCode(e.target.value.toUpperCase())}
@@ -40,8 +53,14 @@ export default function JoinRoomComponent({ onBack }: JoinRoomComponentProps) {
         </div>
 
         <div>
-          <label className="block text-sm font-medium mb-2">Your Name</label>
+          <label
+            htmlFor="player-name"
+            className="block text-sm font-medium mb-2"
+          >
+            Your Name
+          </label>
           <input
+            id="player-name"
             type="text"
             value={playerName}
             onChange={(e) => setPlayerName(e.target.value)}
