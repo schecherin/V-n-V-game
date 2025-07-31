@@ -1,11 +1,12 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { getGameByCode, getAssignableRoles } from "@/lib/gameApi";
 import { Game, Player } from "@/types";
-import { assignRoleNameToPlayer, getPlayersByGameCode } from "@/lib/playerApi";
+import { assignRoleNameToPlayer } from "@/lib/playerApi";
 import {
   subscribeToGameUpdates,
   subscribeToPlayerUpdates,
 } from "@/lib/gameSubscriptions";
+import { getPlayersByGameCode } from "@/lib/playerApi";
 
 /**
  * React hook to fetch and manage game state by gameId.
@@ -17,31 +18,86 @@ export function useGame(gameId: string) {
   const [players, setPlayers] = useState<Player[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<any>(null);
+  const [lastUpdate, setLastUpdate] = useState<Date>(new Date());
 
-  useEffect(() => {
-    setLoading(true);
-    Promise.all([getGameByCode(gameId), getPlayersByGameCode(gameId)])
-      .then(([gameData, playersData]) => {
-        setGame(gameData);
-        setPlayers(playersData);
-      })
-      .catch(setError)
-      .finally(() => setLoading(false));
+  // Memoized refetch function
+  const refetchData = useCallback(async () => {
+    try {
+      const [gameData, playersData] = await Promise.all([
+        getGameByCode(gameId),
+        getPlayersByGameCode(gameId),
+      ]);
+      setGame(gameData);
+      setPlayers(playersData);
+      setLastUpdate(new Date());
+    } catch (err) {
+      setError(err);
+    }
   }, [gameId]);
 
+  // Initial data fetch
+  useEffect(() => {
+    setLoading(true);
+    refetchData().finally(() => setLoading(false));
+  }, [refetchData]);
+
+  // Handle page visibility and focus changes
+  useEffect(() => {
+    let pollingInterval: NodeJS.Timeout;
+
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        refetchData();
+        // Stop polling when visible
+        if (pollingInterval) {
+          clearInterval(pollingInterval);
+        }
+      } else {
+        // Start polling when hidden
+        pollingInterval = setInterval(() => {
+          refetchData();
+        }, 3000); // Poll every 3 seconds when hidden
+      }
+    };
+
+    const handleWindowFocus = () => {
+      refetchData();
+    };
+
+    // Set up event listeners
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    window.addEventListener("focus", handleWindowFocus);
+
+    // Start polling if page is already hidden
+    if (document.hidden) {
+      pollingInterval = setInterval(() => {
+        refetchData();
+      }, 5000);
+    }
+
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+      window.removeEventListener("focus", handleWindowFocus);
+      if (pollingInterval) {
+        clearInterval(pollingInterval);
+      }
+    };
+  }, [refetchData]);
+
+  // Subscribe to real-time updates
   useEffect(() => {
     if (!gameId) return;
 
     const unsubscribeGame = subscribeToGameUpdates(gameId, (payload) => {
       if (payload.new) {
         setGame(payload.new);
+        setLastUpdate(new Date());
       }
     });
 
     const unsubscribePlayers = subscribeToPlayerUpdates(gameId, (payload) => {
-      if (payload.new) {
-        setPlayers(payload.new);
-      }
+      getPlayersByGameCode(gameId).then(setPlayers);
+      setLastUpdate(new Date());
     });
 
     return () => {
@@ -94,5 +150,13 @@ export function useGame(gameId: string) {
     }
   };
 
-  return { game, players, loading, error, assignRoles };
+  return {
+    game,
+    players,
+    loading,
+    error,
+    assignRoles,
+    refetchData,
+    lastUpdate,
+  };
 }
