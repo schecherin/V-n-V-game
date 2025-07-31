@@ -4,7 +4,6 @@ interface MinigameResultsProps {
   position?: number;
   points?: number;
   isHost: boolean;
-  gameId: string;
   onNextPhase: () => void;
 }
 

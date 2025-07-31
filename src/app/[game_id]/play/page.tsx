@@ -16,6 +16,7 @@ import {
   updateGamePhase,
   getAssignableRoles,
   insertReflectionPhaseGuess,
+  setGameDay,
 } from "@/lib/gameApi";
 import { supabase } from "@/lib/supabase/client";
 import { assignRolesToPlayers } from "@/lib/roleAssign";
@@ -100,11 +101,12 @@ export default function GamePlayPage() {
     }
   }, [game, players, isUserHost, gameId, isAssigningRoles]);
 
-  const handleSetGamePhase = async (newPhase: GamePhase) => {
-    setGamePhase(newPhase);
+  const handleSetGamePhase = async () => {
+    if (!gamePhase) return;
+    const nextPhase = getNextPhase(gamePhase);
     if (!isUserHost) return;
     try {
-      await updateGamePhase(gameId, newPhase);
+      await updateGamePhase(gameId, nextPhase);
     } catch (err) {
       console.error("Failed to update game phase:", err);
     }
@@ -201,6 +203,39 @@ export default function GamePlayPage() {
     }
   }, [gamePhase]);
 
+  // Phase transition map for cleaner logic
+  const getNextPhase = (currentPhase: GamePhase): GamePhase => {
+    const phaseTransitions: Record<GamePhase, GamePhase> = {
+      Lobby: "Lobby",
+      RoleReveal: game?.tutorial ? "Tutorial" : "Reflection_MiniGame",
+      Tutorial: "Reflection_MiniGame",
+      Reflection_RoleActions: "Reflection_MiniGame",
+      Reflection_MiniGame: "Reflection_MiniGame_Result",
+      Reflection_MiniGame_Result:
+        game?.current_day === 1
+          ? "Consultation_Elections_Chairperson"
+          : game?.include_outreach_phase
+          ? "Outreach"
+          : "Consultation_Discussion",
+      Consultation_Elections_Chairperson: "Consultation_Elections_Secretary",
+      Consultation_Elections_Secretary: "Consultation_Elections_Result",
+      Consultation_Elections_Result: game?.include_outreach_phase
+        ? "Outreach"
+        : "Consultation_Discussion",
+      Outreach: "Consultation_Discussion",
+      // TODO: fix these phases
+      Consultation_Discussion: "Reflection_RoleActions",
+      Consultation_TreasurerActions: "Reflection_RoleActions",
+      Consultation_Voting_Prison: "Reflection_RoleActions",
+      Paused: "Paused", // No transition
+      Finished: "Finished", // No transition
+    };
+
+    console.log("currentPhase", currentPhase);
+    console.log("day", game?.current_day);
+    return phaseTransitions[currentPhase] || currentPhase;
+  };
+
   // Add this useEffect to trigger calculation when entering results phase
   useEffect(() => {
     if (gamePhase === "Reflection_MiniGame_Result" && !resultsCalculated) {
@@ -224,11 +259,10 @@ export default function GamePlayPage() {
             players={players}
             roleName={roleName}
             roleDescription={roleDescription}
-            onNextPhase={() =>
-              game?.tutorial
-                ? handleSetGamePhase("Tutorial")
-                : handleSetGamePhase("Reflection_MiniGame")
-            }
+            onNextPhase={() => {
+              setGameDay(gameId, 1);
+              handleSetGamePhase();
+            }}
             player={currentPlayer}
             game={game}
           />
@@ -239,7 +273,14 @@ export default function GamePlayPage() {
             player={currentPlayer}
             game={game}
             players={players}
-            onNextPhase={() => handleSetGamePhase("Reflection_MiniGame")}
+            onNextPhase={() => handleSetGamePhase()}
+          />
+        );
+      case "Reflection_RoleActions":
+        return (
+          <ReflectionPhase
+            player={currentPlayer}
+            onNextPhase={() => handleSetGamePhase()}
           />
         );
       case "Reflection_MiniGame":
@@ -249,7 +290,7 @@ export default function GamePlayPage() {
             currentPlayerId={currentPlayerId ?? ""}
             onGuess={handleMinigameGuess}
             maxGuesses={3}
-            onNextPhase={() => handleSetGamePhase("Reflection_MiniGame_Result")}
+            onNextPhase={() => handleSetGamePhase()}
             isCurrentUserHost={isUserHost}
             gameId={gameId}
             roles={roles}
@@ -260,16 +301,10 @@ export default function GamePlayPage() {
           <MinigameResults
             position={minigameResult?.rank || 0}
             points={minigameResult?.totalPoints || 0}
+            onNextPhase={() => handleSetGamePhase()}
             isHost={isUserHost}
-            gameId={gameId}
-            onNextPhase={() =>
-              game?.include_outreach_phase
-                ? handleSetGamePhase("Outreach")
-                : handleSetGamePhase("Consultation_Discussion")
-            }
           />
         );
-      case "Reflection_RoleActions":
         return (
           <ReflectionPhase
             player={currentPlayer}
@@ -280,20 +315,23 @@ export default function GamePlayPage() {
         return (
           <OutreachPhase
             player={currentPlayer}
-            onNextPhase={() => handleSetGamePhase("Consultation_Discussion")}
+            onNextPhase={() => handleSetGamePhase()}
             isCurrentUserHost={isUserHost}
           />
         );
       case "Consultation_Discussion":
-      case "Consultation_Elections":
       case "Consultation_TreasurerActions":
       case "Consultation_Voting_Prison":
         return (
           <ConsultationPhase
             players={players}
             player={currentPlayer}
-            onNextPhase={() => handleSetGamePhase("Reflection_RoleActions")}
-            onEndGame={() => handleSetGamePhase("Finished")}
+            onNextPhase={() => {
+              // TODO: the day should increment once before going to reflection phase
+              setGameDay(gameId, (game?.current_day ?? 1) + 1);
+              handleSetGamePhase();
+            }}
+            onEndGame={() => handleSetGamePhase()}
           />
         );
       case "Finished":
