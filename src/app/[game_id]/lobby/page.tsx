@@ -27,43 +27,22 @@ export default function LobbyPage(): JSX.Element {
   const searchParams = useSearchParams();
   const gameId = params.game_id as string;
   const playerId = searchParams.get("playerId");
-  const [players, setPlayers] = useState<Player[]>([]);
   const [roomName, setRoomName] = useState<string>(initialRoomName);
   const [isChatOpen, setIsChatOpen] = useState<boolean>(false);
   const [activeMainView, setActiveMainView] = useState<ActiveView>("players");
   const [shouldRedirect, setShouldRedirect] = useState<boolean>(false);
   const [currentUserIsHost, setCurrentUserIsHost] = useState<boolean>(false);
 
-  const { game, loading, error } = useGame(gameId);
+  const { game, players, loading, error } = useGame(gameId);
   const router = useRouter();
-
-  useEffect(() => {
-    getPlayersByGameCode(gameId).then(setPlayers);
-  }, [gameId]);
-
-  // Subscribe to real-time player updates
-  useEffect(() => {
-    const unsubscribe = subscribeToPlayerUpdates(gameId, (payload) => {
-      // Refetch players when any player change occurs (INSERT, UPDATE, DELETE)
-      getPlayersByGameCode(gameId).then(setPlayers);
-    });
-    return unsubscribe;
-  }, [gameId]);
 
   // Subscribe to real-time game updates to redirect when phase changes
   useEffect(() => {
-    const unsubscribe = subscribeToGameUpdates(gameId, (payload) => {
-      if (
-        payload.new &&
-        payload.new.current_phase &&
-        payload.new.current_phase !== "Lobby"
-      ) {
-        // Set flag to redirect instead of calling router directly
-        setShouldRedirect(true);
-      }
-    });
-    return unsubscribe;
-  }, [gameId]);
+    if (game?.current_phase !== "Lobby") {
+      // Set flag to redirect instead of calling router directly
+      setShouldRedirect(true);
+    }
+  }, [game]);
 
   // Handle redirect when phase changes
   useEffect(() => {
