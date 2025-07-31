@@ -178,3 +178,20 @@ export async function updatePlayerMinigamePointsAndRank(
     throw error;
   }
 }
+
+/**
+ * Set the game code for a player.
+ * @param playerId The player's ID.
+ * @param gameCode The game code to set.
+ * @returns The updated player data.
+ */
+export async function setPlayerGameCode(playerId: string, gameCode: string) {
+  const { data, error } = await supabase
+    .from("players")
+    .update({ game_code: gameCode })
+    .eq("player_id", playerId)
+    .select()
+    .single();
+  if (error) throw error;
+  return data;
+}

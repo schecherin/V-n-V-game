@@ -4,9 +4,11 @@ import {
   generateGameCode,
   checkGameCodeUnique,
   createGame,
-  setHostUserId,
+  setHostPlayerId,
+  getHostPlayerId,
+  getGameByCode,
 } from "@/lib/gameApi";
-import { createPlayer } from "@/lib/playerApi";
+import { createPlayer, setPlayerGameCode } from "@/lib/playerApi";
 import { signInAnonymously } from "@/lib/authApi";
 
 /**
@@ -48,19 +50,8 @@ export function useCreateGame() {
           }
         }
 
-        // Create the game
-        const game = await createGame({
-          game_code: gameCode,
-          max_players: maxPlayers,
-          current_player_count: 1,
-          current_phase: "Lobby",
-          current_day: 0,
-        });
-        setGame(game);
-
         // Create host player
         const player = await createPlayer({
-          game_code: gameCode,
           user_id: user.id, // Use the anonymous user ID
           player_name: playerName.trim(),
           status: "Alive",
@@ -68,8 +59,19 @@ export function useCreateGame() {
         });
         setPlayer(player);
 
-        // Set host user ID
-        await setHostUserId(game.game_code, player.player_id);
+        // Create the game
+        const game = await createGame({
+          game_code: gameCode,
+          host_player_id: player.player_id,
+          max_players: maxPlayers,
+          current_player_count: 1,
+          current_phase: "Lobby",
+          current_day: 0,
+        });
+        setGame(game);
+
+        // set the player game_code
+        await setPlayerGameCode(player.player_id, gameCode);
 
         // Navigate to game lobby
         router.push(`/${gameCode}/lobby?playerId=${player.player_id}`);

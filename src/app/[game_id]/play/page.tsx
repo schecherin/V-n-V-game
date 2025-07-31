@@ -121,7 +121,12 @@ export default function GamePlayPage() {
             setIsAssigningRoles(false);
             return;
           }
-          const result = await assignRolesToPlayers(gameId, user.id);
+          if (!currentPlayerId) {
+            console.error("Current player ID is null");
+            setIsAssigningRoles(false);
+            return;
+          }
+          const result = await assignRolesToPlayers(gameId, currentPlayerId);
           if (result.success) {
             console.log("Roles assigned successfully:", result.assignments);
             // The real-time subscription should automatically update the UI
