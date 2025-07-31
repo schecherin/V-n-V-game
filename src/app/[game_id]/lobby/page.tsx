@@ -107,7 +107,6 @@ export default function LobbyPage(): JSX.Element {
       await updateGamePhase(gameId, "RoleReveal");
     } catch (error) {
       console.error("Failed to update game settings:", error);
-      // Optionally show an error message to the user
     }
   };
   const canStartGame: boolean = currentUserIsHost;

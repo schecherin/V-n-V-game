@@ -10,7 +10,7 @@ import CardReveal from "@/components/game/CardReveal";
 import Tutorial from "@/components/game/Tutorial";
 import { useGame } from "@/hooks/useGame";
 import { GamePhase, Player, Role } from "@/types";
-import { getPlayersByGameCode, getPlayerById } from "@/lib/playerApi";
+import { getPlayerById } from "@/lib/playerApi";
 import { isCurrentUserHost } from "@/lib/gameUtils";
 import {
   updateGamePhase,
@@ -19,11 +19,6 @@ import {
 } from "@/lib/gameApi";
 import { supabase } from "@/lib/supabase/client";
 import { assignRolesToPlayers } from "@/lib/roleAssign";
-// Import both subscription functions
-import {
-  subscribeToGameUpdates,
-  subscribeToPlayerUpdates,
-} from "@/lib/gameSubscriptions";
 import MinigameResults from "@/components/game/MinigameResults";
 import {
   calculateMinigameResults,
@@ -39,55 +34,13 @@ export default function GamePlayPage() {
   const playerId: string | null = searchParams.get("playerId");
 
   // Game state and hooks
-  const { game, loading, error } = useGame(gameId);
-  const [players, setPlayers] = useState<Player[]>([]);
+  const { game, players, loading, error } = useGame(gameId);
   const [currentPlayerId] = useState<string | null>(playerId);
-  const [gamePhase, setGamePhase] = useState<GamePhase | undefined>(
-    game?.current_phase
-  );
+  const gamePhase = game?.current_phase;
+
   const [roles, setRoles] = useState<Role[]>([]);
   const [minigameResult, setMinigameResult] = useState<MinigameResult>();
   const [isAssigningRoles, setIsAssigningRoles] = useState(false);
-
-  // Fetch initial data (players and roles)
-  useEffect(() => {
-    if (gameId) {
-      getPlayersByGameCode(gameId).then(setPlayers);
-      getAssignableRoles().then(setRoles);
-    }
-  }, [gameId]);
-
-  // Subscribe to real-time game updates (for phase changes)
-  useEffect(() => {
-    if (!gameId) return;
-
-    // Set initial phase from the game object when it loads
-    if (game?.current_phase) {
-      setGamePhase(game.current_phase);
-    }
-
-    const unsubscribe = subscribeToGameUpdates(gameId, (payload) => {
-      if (payload.new && payload.new.current_phase) {
-        console.log("Game phase changed to:", payload.new.current_phase);
-        setGamePhase(payload.new.current_phase);
-      }
-    });
-
-    return unsubscribe;
-  }, [gameId, game]); // Rerun when the game object itself changes
-
-  // Subscribe to real-time player updates (for role assignments, etc.)
-  useEffect(() => {
-    if (!gameId) return;
-
-    const unsubscribe = subscribeToPlayerUpdates(gameId, (payload) => {
-      // A player has been inserted, updated, or deleted. Refetch the list for all clients.
-      console.log("Player data changed, refetching players...");
-      getPlayersByGameCode(gameId).then(setPlayers);
-    });
-
-    return unsubscribe;
-  }, [gameId]); // Only depends on gameId
 
   // Memoize current player and host status to prevent re-calculations
   const { currentPlayer, isUserHost } = useMemo(() => {

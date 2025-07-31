@@ -1,7 +1,11 @@
 import { useEffect, useState } from "react";
 import { getGameByCode, getAssignableRoles } from "@/lib/gameApi";
 import { Game, Player } from "@/types";
-import { assignRoleNameToPlayer } from "@/lib/playerApi";
+import { assignRoleNameToPlayer, getPlayersByGameCode } from "@/lib/playerApi";
+import {
+  subscribeToGameUpdates,
+  subscribeToPlayerUpdates,
+} from "@/lib/gameSubscriptions";
 
 /**
  * React hook to fetch and manage game state by gameId.
@@ -10,15 +14,40 @@ import { assignRoleNameToPlayer } from "@/lib/playerApi";
  */
 export function useGame(gameId: string) {
   const [game, setGame] = useState<Game | null>(null);
+  const [players, setPlayers] = useState<Player[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<any>(null);
 
   useEffect(() => {
     setLoading(true);
-    getGameByCode(gameId)
-      .then(setGame)
+    Promise.all([getGameByCode(gameId), getPlayersByGameCode(gameId)])
+      .then(([gameData, playersData]) => {
+        setGame(gameData);
+        setPlayers(playersData);
+      })
       .catch(setError)
       .finally(() => setLoading(false));
+  }, [gameId]);
+
+  useEffect(() => {
+    if (!gameId) return;
+
+    const unsubscribeGame = subscribeToGameUpdates(gameId, (payload) => {
+      if (payload.new) {
+        setGame(payload.new);
+      }
+    });
+
+    const unsubscribePlayers = subscribeToPlayerUpdates(gameId, (payload) => {
+      if (payload.new) {
+        setPlayers(payload.new);
+      }
+    });
+
+    return () => {
+      unsubscribeGame();
+      unsubscribePlayers();
+    };
   }, [gameId]);
 
   /**
@@ -63,8 +92,7 @@ export function useGame(gameId: string) {
       const role = nonUniqueRole.role_name;
       await assignRoleNameToPlayer(player.player_id, role, true);
     }
-    return;
   };
 
-  return { game, loading, error, assignRoles };
+  return { game, players, loading, error, assignRoles };
 }
