@@ -66,14 +66,11 @@ const ConsultationPhase = ({
             className="bg-green-700 text-white"
             onClick={() => setVoting(true)}
           >
-            Vote
+            Start Voting
           </Button>
         </div>
       )}
-      <Button onClick={onNextPhase}>Go to next phase</Button>
-      <Button className="bg-red-700 text-white" onClick={onEndGame}>
-        End game
-      </Button>
+      <Button onClick={onNextPhase}>Skip Voting, and go to next phase</Button>
     </>
   );
 };

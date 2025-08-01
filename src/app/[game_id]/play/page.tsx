@@ -15,7 +15,12 @@ import OutreachPhase from "@/components/game/OutreachPhase";
 import CardReveal from "@/components/game/CardReveal";
 import Tutorial from "@/components/game/Tutorial";
 import MinigameResults from "@/components/game/MinigameResults";
-import ConsultationElections from "@/components/game/ConsultationElections";
+import ConsultationElections from "@/components/game/Elections";
+import {
+  subscribeToGameUpdates,
+  subscribeToPlayerUpdates,
+} from "@/lib/gameSubscriptions";
+import { getPlayersByGameCode } from "@/lib/playerApi";
 
 export default function GamePlayPage() {
   return (
@@ -143,9 +148,9 @@ function GamePlayPageInner() {
             isHost={isUserHost}
           />
         );
-      case "Consultation_Elections_Chairperson":
-      case "Consultation_Elections_Secretary":
-      case "Consultation_Elections_Result":
+      case "Elections_Chairperson":
+      case "Elections_Secretary":
+      case "Elections_Result":
         return (
           <ConsultationElections
             game={game}

@@ -1086,14 +1086,14 @@ export type Database = {
         | "Consultation_Discussion"
         | "Consultation_Voting_Prison"
         | "Consultation_TreasurerActions"
-        | "Consultation_Elections_Chairperson"
+        | "Elections_Chairperson"
         | "Paused"
         | "Finished"
         | "Tutorial"
         | "RoleReveal"
         | "Reflection_MiniGame_Result"
-        | "Consultation_Elections_Secretary"
-        | "Consultation_Elections_Result"
+        | "Elections_Secretary"
+        | "Elections_Result"
       player_status:
         | "Alive"
         | "Dead"
@@ -1283,14 +1283,14 @@ export const Constants = {
         "Consultation_Discussion",
         "Consultation_Voting_Prison",
         "Consultation_TreasurerActions",
-        "Consultation_Elections_Chairperson",
+        "Elections_Chairperson",
         "Paused",
         "Finished",
         "Tutorial",
         "RoleReveal",
         "Reflection_MiniGame_Result",
-        "Consultation_Elections_Secretary",
-        "Consultation_Elections_Result",
+        "Elections_Secretary",
+        "Elections_Result",
       ],
       player_status: [
         "Alive",

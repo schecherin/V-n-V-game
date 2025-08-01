@@ -45,7 +45,7 @@ const ConsultationElections: React.FC<ConsultationElectionsProps> = ({
   isCurrentUserHost,
 }) => {
   const getCurrentRole = (phase: GamePhase): ElectionRole => {
-    if (phase === "Consultation_Elections_Chairperson") return "chairperson";
+    if (phase === "Elections_Chairperson") return "chairperson";
     return "secretary";
   };
 
@@ -118,7 +118,7 @@ const ConsultationElections: React.FC<ConsultationElectionsProps> = ({
         currentRole: currentRole,
         electedPlayers: newElectedPlayers,
         candidates: newCandidates,
-        electionComplete: currentPhase === "Consultation_Elections_Result",
+        electionComplete: currentPhase === "Elections_Result",
       };
     });
 
