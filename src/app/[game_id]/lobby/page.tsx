@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, JSX, useEffect } from "react";
+import React, { useState, JSX, useEffect, Suspense } from "react";
 import { initialRoomName } from "@/lib/mockData";
 import { useRouter, useParams, useSearchParams } from "next/navigation";
 import PlayerListHorizontal from "@/components/lobby/PlayerListHorizontal";
@@ -17,6 +17,14 @@ import PlayerList from "@/components/app/PlayerList";
 import { MIN_PLAYERS } from "@/lib/constants";
 
 export default function LobbyPage(): JSX.Element {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <LobbyPageInner />
+    </Suspense>
+  );
+}
+
+function LobbyPageInner(): JSX.Element {
   const params = useParams();
   const searchParams = useSearchParams();
   const gameId = params.game_id as string;

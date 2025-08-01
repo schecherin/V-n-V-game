@@ -1,7 +1,7 @@
 "use client";
 
 import { useParams, useSearchParams, useRouter } from "next/navigation";
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, Suspense } from "react";
 import { useGameContext } from "@/app/[game_id]/layout";
 import { Role } from "@/types";
 import { getNextPhase } from "@/lib/gameUtils";
@@ -18,6 +18,14 @@ import MinigameResults from "@/components/game/MinigameResults";
 import ConsultationElections from "@/components/game/ConsultationElections";
 
 export default function GamePlayPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <GamePlayPageInner />
+    </Suspense>
+  );
+}
+
+function GamePlayPageInner() {
   const params = useParams();
   const searchParams = useSearchParams();
   const router = useRouter();
