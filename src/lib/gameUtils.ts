@@ -96,9 +96,8 @@ export function getNextPhase(
       ? "Outreach"
       : "Consultation_Discussion",
     Outreach: "Consultation_Discussion",
-    // TODO: fix these phases
-    Consultation_Discussion: "Reflection_RoleActions",
-    Consultation_TreasurerActions: "Reflection_RoleActions",
+    Consultation_Discussion: "Consultation_TreasurerActions",
+    Consultation_TreasurerActions: "Consultation_Voting_Prison",
     Consultation_Voting_Prison: "Reflection_RoleActions",
     Paused: "Paused", // No transition
     Finished: "Finished", // No transition

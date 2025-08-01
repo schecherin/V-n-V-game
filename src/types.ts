@@ -9,8 +9,7 @@ export type AbilityEffectType = Enums<"ability_effect_type">;
 export type AbilityTargetType = Enums<"ability_target_type">;
 export type ChatChannelType = Enums<"chat_channel_type">;
 export type TreasuryActionType = Enums<"treasury_action_type">;
-
-
+export type ElectionRole = Enums<"election_role_name">;
 
 // TABLES
 export type Player = Tables<"players">;
@@ -29,24 +28,22 @@ export type SecretaryVoteAnnouncement = Tables<"secretary_vote_announcements">;
 export type TreasuryTransaction = Tables<"treasury_transactions">;
 export type VengeanceGuess = Tables<"vengeance_guesses">;
 
-
 // Insert types for making new stuff in
 export type GameData = Database["public"]["Tables"]["games"]["Insert"];
 export type PlayerData = Database["public"]["Tables"]["players"]["Insert"];
 
-export type RoleActionType = 
-  | 'Kill'
-  | 'RevealVotesOnTarget'
-  | 'Hospitalize'
-  | 'Kill' // Justice kill
-  | 'Protect'
-  | 'SwapIdentity'
-  | 'RevealTierPlayers'
-  | 'MiniGameDisrupt'
-  | 'SacrificeWithTarget'
-  | 'GuessVoterForHospitalization'
-  | 'RevealAllVotesOnImprisoned';
-
+export type RoleActionType =
+  | "Kill"
+  | "RevealVotesOnTarget"
+  | "Hospitalize"
+  | "Kill" // Justice kill
+  | "Protect"
+  | "SwapIdentity"
+  | "RevealTierPlayers"
+  | "MiniGameDisrupt"
+  | "SacrificeWithTarget"
+  | "GuessVoterForHospitalization"
+  | "RevealAllVotesOnImprisoned";
 
 /**
  * Represents a toggleable game switch (e.g., for host controls UI)
@@ -56,6 +53,3 @@ export interface GameSwitch {
   label: string;
   checked: boolean;
 }
-
-
-
