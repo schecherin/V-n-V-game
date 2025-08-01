@@ -77,7 +77,6 @@ export default function GamePlayPage() {
     const unsubscribeGame = subscribeToGameUpdates(gameId, (payload) => {
       if (payload.new) {
         setGame(payload.new);
-        console.log(`Game updated: ${JSON.stringify(payload.new)}`);
       }
     });
 
@@ -126,7 +125,6 @@ export default function GamePlayPage() {
     const nextPhase = getNextPhase(gamePhase, game);
     if (!isUserHost) return;
     try {
-      console.log(`Updating game phase from ${gamePhase} to ${nextPhase}`);
       await updateGamePhase(gameId, nextPhase);
     } catch (err) {
       console.error("Failed to update game phase:", err);

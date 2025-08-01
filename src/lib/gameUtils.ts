@@ -104,9 +104,6 @@ export function getNextPhase(
     Finished: "Finished", // No transition
   };
 
-  console.log("currentPhase", currentPhase);
-  console.log("day", game?.current_day);
   const nextPhase = phaseTransitions[currentPhase] || currentPhase;
-  console.log("nextPhase", nextPhase);
   return nextPhase;
 }

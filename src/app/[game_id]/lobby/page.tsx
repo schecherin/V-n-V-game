@@ -109,7 +109,6 @@ export default function LobbyPage(): JSX.Element {
 
   useEffect(() => {
     setCurrentUserIsHost(isCurrentUserHost(game, playerId));
-    console.log("currentUserIsHost", currentUserIsHost);
   }, [game, playerId]);
 
   const handlePlayerClick = (player: Player): void => {
