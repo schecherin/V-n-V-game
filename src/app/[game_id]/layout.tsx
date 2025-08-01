@@ -7,6 +7,7 @@ import React, {
   useMemo,
   createContext,
   useContext,
+  Suspense,
 } from "react";
 import MobileHeader from "@/components/app/MobileHeader";
 import SideMenu from "@/components/app/SideMenu";
@@ -54,6 +55,14 @@ export default function GameLayout({
 }: {
   children: React.ReactNode;
 }) {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <GameLayoutInner>{children}</GameLayoutInner>
+    </Suspense>
+  );
+}
+
+function GameLayoutInner({ children }: { children: React.ReactNode }) {
   const params = useParams();
   const searchParams = useSearchParams();
   const gameId = params.game_id as string;
@@ -175,6 +184,8 @@ export default function GameLayout({
       refetchData,
       activeMainView,
       setActiveMainView,
+      isPlayerListOpen,
+      setIsPlayerListOpen,
     ]
   );
 
