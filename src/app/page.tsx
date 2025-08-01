@@ -1,11 +1,19 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import UserButton from "@/components/ui/user-button";
 import JoinRoomComponent from "@/components/lobby/JoinRoomComponent";
 import CreateRoomComponent from "@/components/lobby/CreateRoomComponent";
 
 export default function MainMenu() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <MainMenuInner />
+    </Suspense>
+  );
+}
+
+function MainMenuInner() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [activeComponent, setActiveComponent] = useState<

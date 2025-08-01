@@ -2,20 +2,16 @@ import React from "react";
 import { Users } from "lucide-react";
 import PlayerSlotHorizontal from "./PlayerSlotHorizontal";
 import { Player } from "@/types";
+import { useGameContext } from "@/app/[game_id]/layout";
 
 interface PlayerListHorizontalProps {
-  players: Player[];
-  currentUserId: string | null;
   onPlayerClick: (player: Player) => void;
-  isHost: boolean;
 }
 
 const PlayerListHorizontal: React.FC<PlayerListHorizontalProps> = ({
-  players,
-  currentUserId,
   onPlayerClick,
-  isHost,
 }) => {
+  const { players, currentUserIsHost, playerId } = useGameContext();
   const handleInvite = async () => {
     // TODO: Implement invite functionality
   };
@@ -34,8 +30,8 @@ const PlayerListHorizontal: React.FC<PlayerListHorizontalProps> = ({
           >
             <PlayerSlotHorizontal
               player={p}
-              isCurrentUser={p.player_id === currentUserId}
-              isHost={isHost}
+              isCurrentUser={p.player_id === playerId}
+              isHost={currentUserIsHost}
             />
           </button>
         ))}

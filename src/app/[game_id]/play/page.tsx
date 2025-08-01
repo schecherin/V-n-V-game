@@ -1,16 +1,11 @@
 "use client";
 
 import { useParams, useSearchParams, useRouter } from "next/navigation";
-import { useState, useMemo, useEffect, useCallback } from "react";
-import { useGame } from "@/hooks/useGame";
-import { Game, Player, Role } from "@/types";
-import { isCurrentUserHost, getNextPhase } from "@/lib/gameUtils";
-import {
-  updateGamePhase,
-  setGameDay,
-  getAssignableRoles,
-  getGameByCode,
-} from "@/lib/gameApi";
+import { useState, useMemo, useEffect, Suspense } from "react";
+import { useGameContext } from "@/app/[game_id]/layout";
+import { Role } from "@/types";
+import { getNextPhase } from "@/lib/gameUtils";
+import { updateGamePhase, setGameDay, getAssignableRoles } from "@/lib/gameApi";
 import { useRoleAssignment } from "@/hooks/useRoleAssignment";
 import { useMinigame } from "@/hooks/useMinigame";
 import MinigameCore from "@/components/game/MinigameCore";
@@ -21,13 +16,16 @@ import CardReveal from "@/components/game/CardReveal";
 import Tutorial from "@/components/game/Tutorial";
 import MinigameResults from "@/components/game/MinigameResults";
 import ConsultationElections from "@/components/game/ConsultationElections";
-import {
-  subscribeToGameUpdates,
-  subscribeToPlayerUpdates,
-} from "@/lib/gameSubscriptions";
-import { getPlayersByGameCode } from "@/lib/playerApi";
 
 export default function GamePlayPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <GamePlayPageInner />
+    </Suspense>
+  );
+}
+
+function GamePlayPageInner() {
   const params = useParams();
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -35,9 +33,10 @@ export default function GamePlayPage() {
   const gameId: string = params.game_id as string;
   const playerId: string | null = searchParams.get("playerId");
 
+  // Get game data from layout context
+  const { game, players, currentUserIsHost } = useGameContext();
+
   // Game state and hooks
-  const [game, setGame] = useState<Game | null>(null);
-  const [players, setPlayers] = useState<Player[]>([]);
   const [currentPlayerId] = useState<string | null>(playerId);
   const gamePhase = game?.current_phase;
 
@@ -46,56 +45,9 @@ export default function GamePlayPage() {
   // Memoize current player and host status to prevent re-calculations
   const { currentPlayer, isUserHost } = useMemo(() => {
     const p = players.find((p) => p.player_id === currentPlayerId);
-    const isHost = isCurrentUserHost(game, currentPlayerId);
+    const isHost = currentUserIsHost; // Use the host status from context
     return { currentPlayer: p, isUserHost: isHost };
-  }, [players, currentPlayerId, game]);
-
-  // Memoized refetch function
-  const refetchData = useCallback(async () => {
-    try {
-      const [gameData, playersData] = await Promise.all([
-        getGameByCode(gameId),
-        getPlayersByGameCode(gameId),
-      ]);
-      setGame(gameData);
-      setPlayers(playersData);
-    } catch (err) {
-      console.error("[lobby] Error re-fetching game and players:", err);
-    }
-  }, [gameId]);
-
-  // Initial data fetch
-  useEffect(() => {
-    refetchData();
-  }, [refetchData]);
-
-  useEffect(() => {
-    if (!gameId) {
-      return;
-    }
-
-    const unsubscribeGame = subscribeToGameUpdates(gameId, (payload) => {
-      if (payload.new) {
-        setGame(payload.new);
-      }
-    });
-
-    const unsubscribePlayers = subscribeToPlayerUpdates(gameId, (payload) => {
-      getPlayersByGameCode(gameId)
-        .then(setPlayers)
-        .catch((err) => {
-          console.error(
-            "[lobby] Error re-fetching players on Realtime update:",
-            err
-          );
-        });
-    });
-
-    return () => {
-      unsubscribeGame();
-      unsubscribePlayers();
-    };
-  }, [gameId]);
+  }, [players, currentPlayerId, currentUserIsHost]);
 
   useEffect(() => {
     getAssignableRoles().then(setRoles);
@@ -177,7 +129,6 @@ export default function GamePlayPage() {
             players={players}
             currentPlayerId={currentPlayerId ?? ""}
             onGuess={handleMinigameGuess}
-            maxGuesses={3}
             onNextPhase={() => handleSetGamePhase()}
             isCurrentUserHost={isUserHost}
             roles={roles}

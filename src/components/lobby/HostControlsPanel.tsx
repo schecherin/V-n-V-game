@@ -4,7 +4,6 @@ import Switch from "../ui/Switch";
 import { GameSwitch } from "@/types";
 
 interface HostControlsPanelProps {
-  isHost: boolean;
   onStartGame: () => void;
   canStartGame: boolean;
   gameSwitches: GameSwitch[];
@@ -12,19 +11,11 @@ interface HostControlsPanelProps {
 }
 
 const HostControlsPanel: React.FC<HostControlsPanelProps> = ({
-  isHost,
   onStartGame,
   canStartGame,
   gameSwitches,
   onGameSwitchChange,
 }) => {
-  if (!isHost) {
-    return (
-      <div className="p-6 text-center text-brown-medium bg-cream h-full flex items-center justify-center">
-        <p>Waiting for the host to start the game...</p>
-      </div>
-    );
-  }
   return (
     <div className="p-4 bg-cream">
       <h3 className="text-base font-semibold text-brown-dark mb-1">
