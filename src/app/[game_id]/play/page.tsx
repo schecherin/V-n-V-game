@@ -20,6 +20,7 @@ import OutreachPhase from "@/components/game/OutreachPhase";
 import CardReveal from "@/components/game/CardReveal";
 import Tutorial from "@/components/game/Tutorial";
 import MinigameResults from "@/components/game/MinigameResults";
+import ConsultationElections from "@/components/game/ConsultationElections";
 import {
   subscribeToGameUpdates,
   subscribeToPlayerUpdates,
@@ -101,14 +102,15 @@ export default function GamePlayPage() {
     getAssignableRoles().then(setRoles);
   }, []);
 
-      Consultation_TreasurerActions: "Reflection_RoleActions",
-      Consultation_Voting_Prison: "Reflection_RoleActions",
-      Paused: "Paused", // No transition
-    };
+  // Custom hooks for role assignment
+  useRoleAssignment({
+    game,
+    players,
+    isUserHost,
+    gameId,
+    currentPlayerId,
+  });
 
-    console.log("currentPhase", currentPhase);
-    console.log("day", game?.current_day);
-    return phaseTransitions[currentPhase] || currentPhase;
   // Custom hooks for minigame logic
   const { minigameResult, handleMinigameGuess } = useMinigame({
     game,
@@ -192,7 +194,21 @@ export default function GamePlayPage() {
             isHost={isUserHost}
           />
         );
+      case "Consultation_Elections_Chairperson":
+      case "Consultation_Elections_Secretary":
+      case "Consultation_Elections_Result":
         return (
+          <ConsultationElections
+            game={game}
+            players={players}
+            currentPlayer={currentPlayer}
+            gameId={gameId}
+            dayNumber={game?.current_day || 1}
+            currentPhase={gamePhase}
+            onNextPhase={() => {
+              handleSetGamePhase();
+            }}
+            isCurrentUserHost={isUserHost}
           />
         );
       case "Outreach":
