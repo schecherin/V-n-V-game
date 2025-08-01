@@ -3,7 +3,7 @@
 import { useParams, useSearchParams, useRouter } from "next/navigation";
 import { useState, useMemo, useEffect, Suspense } from "react";
 import { useGameContext } from "@/app/[game_id]/layout";
-import { Role } from "@/types";
+import { GamePhase, Role } from "@/types";
 import { getNextPhase } from "@/lib/gameUtils";
 import { updateGamePhase, setGameDay, getAssignableRoles } from "@/lib/gameApi";
 import { useRoleAssignment } from "@/hooks/useRoleAssignment";
@@ -16,11 +16,7 @@ import CardReveal from "@/components/game/CardReveal";
 import Tutorial from "@/components/game/Tutorial";
 import MinigameResults from "@/components/game/MinigameResults";
 import ConsultationElections from "@/components/game/Elections";
-import {
-  subscribeToGameUpdates,
-  subscribeToPlayerUpdates,
-} from "@/lib/gameSubscriptions";
-import { getPlayersByGameCode } from "@/lib/playerApi";
+import ConsultationVoting from "@/components/game/ConsultationVoting";
 
 export default function GamePlayPage() {
   return (
@@ -77,9 +73,9 @@ function GamePlayPageInner() {
     gamePhase,
   });
 
-  const handleSetGamePhase = async () => {
+  const handleSetGamePhase = async (newPhase?: GamePhase) => {
     if (!gamePhase) return;
-    const nextPhase = getNextPhase(gamePhase, game);
+    const nextPhase = newPhase ?? getNextPhase(gamePhase, game);
     if (!isUserHost) return;
     try {
       await updateGamePhase(gameId, nextPhase);
@@ -175,17 +171,27 @@ function GamePlayPageInner() {
         );
       case "Consultation_Discussion":
       case "Consultation_TreasurerActions":
-      case "Consultation_Voting_Prison":
         return (
           <ConsultationPhase
             players={players}
             player={currentPlayer}
             onNextPhase={() => {
+              handleSetGamePhase();
+            }}
+            onEndGame={() => handleSetGamePhase()}
+          />
+        );
+      case "Consultation_Voting_Prison":
+        return (
+          <ConsultationVoting
+            game={game}
+            players={players}
+            onNextPhase={() => {
               // TODO: the day should increment once before going to reflection phase
               setGameDay(gameId, (game?.current_day ?? 1) + 1);
               handleSetGamePhase();
             }}
-            onEndGame={() => handleSetGamePhase()}
+            isCurrentUserHost={isUserHost}
           />
         );
       case "Finished":
