@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import Button from "../ui/Button";
-import { GamePhase, Player } from "@/types";
+import { GamePhase, Player, Role } from "@/types";
 
 interface MinigameCoreProps {
   players: Player[];
@@ -10,23 +10,10 @@ interface MinigameCoreProps {
   onGuess: (targetPlayerId: string, guessedRole: string) => void; // Callback when a guess is made
   maxGuesses?: number;
   setGamePhase: (phase: GamePhase) => void;
+  isCurrentUserHost: boolean;
+  gameId: string;
+  roles: Role[];
 }
-
-// Sample roles for guessing - with bakend, these must be more dynamic
-const POSSIBLE_ROLES = [
-  "Murder",
-  "Empathy",
-  "Intoxication",
-  "Justice",
-  "Envy",
-  "Torment",
-  "Certainty",
-  "Vengeance",
-  "Sacrifice",
-  "Truthfulness",
-  "Vice Worshipper",
-  "Virtue Seeker",
-];
 
 export default function MinigameCore({
   players,
@@ -34,21 +21,22 @@ export default function MinigameCore({
   onGuess,
   maxGuesses = 10,
   setGamePhase,
-}: MinigameCoreProps) {
+  isCurrentUserHost,
+  gameId,
+  roles,
+}: Readonly<MinigameCoreProps>) {
   const [selectedPlayer, setSelectedPlayer] = useState<Player | null>(null);
   const [guessedRole, setGuessedRole] = useState<string>("");
   const [guessesMade, setGuessesMade] = useState<Record<string, string>>({}); // { playerId: guessedRole }
   const [feedback, setFeedback] = useState<string>(""); // Feedback on guess
+  const [loadingNextPhase, setLoadingNextPhase] = useState(false);
 
   const availablePlayers = players.filter(
-    (p) =>
-      p.player_id !== currentPlayerId &&
-      (p.isTargetable === undefined || p.isTargetable === true) &&
-      p.status !== "Dead"
+    (p) => p.player_id !== currentPlayerId && p.status !== "Dead"
   );
 
-  const guessesRemaining = maxGuesses - Object.keys(guessesMade).length;
-
+  const guessesRemaining =
+    Math.min(maxGuesses, players.length - 1) - Object.keys(guessesMade).length;
   const handlePlayerSelect = (player: Player) => {
     if (guessesMade[player.player_id]) {
       setFeedback(`You have already made a guess for ${player.player_name}.`);
@@ -90,6 +78,17 @@ export default function MinigameCore({
       );
       setSelectedPlayer(null);
       setGuessedRole("");
+    }
+  };
+
+  const handleNextPhase = async () => {
+    setLoadingNextPhase(true);
+    try {
+      setGamePhase("Reflection_MiniGame_Result");
+    } catch (err) {
+      console.log(err);
+    } finally {
+      setLoadingNextPhase(false);
     }
   };
 
@@ -204,9 +203,9 @@ export default function MinigameCore({
                   <option value="" disabled>
                     -- Select a Role --
                   </option>
-                  {POSSIBLE_ROLES.map((role) => (
-                    <option key={role} value={role}>
-                      {role}
+                  {roles.map((role: any) => (
+                    <option key={role.role_name} value={role.role_name}>
+                      {role.role_name}
                     </option>
                   ))}
                 </select>
@@ -228,10 +227,12 @@ export default function MinigameCore({
             <p className="text-slate-400 text-center">
               Waiting for the next phase or results.
             </p>
-            {/* BACKEND INTEGRATION: Could be a button to "Confirm End of Minigame" or automatically proceed */}
-            <Button onClick={() => setGamePhase("Outreach")}>
-              Go to next phase
-            </Button>
+            {/* Only host can see the button */}
+            {isCurrentUserHost && (
+              <Button onClick={handleNextPhase} disabled={loadingNextPhase}>
+                {loadingNextPhase ? "Loading..." : "Go to next phase"}
+              </Button>
+            )}
           </div>
         )}
       </div>

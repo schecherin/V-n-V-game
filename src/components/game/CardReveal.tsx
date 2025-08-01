@@ -1,20 +1,35 @@
 "use client";
 
-import { GamePhase } from "@/types";
+import { GamePhase, Player } from "@/types";
+import { isCurrentUserHost } from "@/lib/playerApi";
+import { getGameTutorialStatus } from "@/lib/gameApi";
 import { motion, useAnimation, AnimationControls } from "framer-motion";
 import { useRouter, useParams } from "next/navigation";
-import React, { useEffect, useState } from "react"; // Added React for CSSProperties
+import React, { useEffect, useState } from "react";
 
 interface CardRevealProps {
   roleName: string;
   roleDescription: string;
   setGamePhase: (phase: GamePhase) => void;
+  player: Player | undefined;
+  game: any;
+  players: Player[];
 }
+
+// Helper function to get role image path
+const getRoleImagePath = (roleName: string): string => {
+  // Convert role name to lowercase and replace spaces with hyphens for consistent file naming
+  const formattedRoleName = roleName.toLowerCase().replace(/\s+/g, '-');
+  return `/roles/${formattedRoleName}.png`;
+};
 
 export default function CardReveal({
   roleName,
   roleDescription,
   setGamePhase,
+  player,
+  game,
+  players,
 }: CardRevealProps) {
   const cardControls: AnimationControls = useAnimation();
   const infoControls: AnimationControls = useAnimation();
@@ -22,20 +37,26 @@ export default function CardReveal({
   const router = useRouter();
   const params = useParams();
 
-  let gameIdFromParams: string | null = null;
-  if (typeof params.gameId === "string") {
-    gameIdFromParams = params.gameId;
-  } else if (
-    Array.isArray(params.gameId) &&
-    params.gameId.length > 0 &&
-    typeof params.gameId[0] === "string"
-  ) {
-    gameIdFromParams = params.gameId[0];
-  }
-  const gameId = gameIdFromParams || "1";
+  const gameId: string = params.game_id as string;
 
   const [cardFrontImage, setCardFrontImage] = useState("/card-image.png");
   const [isAnimationComplete, setIsAnimationComplete] = useState(false);
+  const [imageError, setImageError] = useState(false);
+
+  const currentPlayerIsHost = isCurrentUserHost(
+    game,
+    players,
+    player?.player_id || null
+  );
+
+  // Set the role-specific image when component mounts or roleName changes
+  useEffect(() => {
+    if (roleName) {
+      const roleImagePath = getRoleImagePath(roleName);
+      setCardFrontImage(roleImagePath);
+      setImageError(false); // Reset error state when new role is set
+    }
+  }, [roleName]);
 
   useEffect(() => {
     const animateScene = async () => {
@@ -77,7 +98,7 @@ export default function CardReveal({
     animateScene();
   }, [cardControls, infoControls, buttonControls, gameId]);
 
-  const handleConfirm = () => {
+  const handleConfirm = async () => {
     //we will use this for specific lobbies
     if (!gameId) {
       const messageBox = document.getElementById("message-box");
@@ -89,7 +110,27 @@ export default function CardReveal({
       router.push("/");
       return;
     }
-    setGamePhase("Reflection_MiniGame");
+
+    try {
+      // Check if tutorial is enabled
+      const tutorialEnabled = await getGameTutorialStatus(gameId);
+
+      if (tutorialEnabled) {
+        setGamePhase("Tutorial");
+      } else {
+        setGamePhase("Reflection_MiniGame");
+      }
+    } catch (error) {
+      console.error("Failed to check tutorial status:", error);
+      // Fallback to Reflection_MiniGame if there's an error
+      setGamePhase("Reflection_MiniGame");
+    }
+  };
+
+  // Handle image load error
+  const handleImageError = () => {
+    setImageError(true);
+    setCardFrontImage("/card-image.png"); // Fallback to default image
   };
 
   return (
@@ -143,10 +184,19 @@ export default function CardReveal({
             }}
           >
             <img
-              src={cardFrontImage} // Ensure this path is correct
+              src={cardFrontImage}
               alt={roleName}
               className="w-full h-full object-cover"
+              onError={handleImageError}
             />
+            {/* Optional: Show role name overlay if image fails to load */}
+            {imageError && (
+              <div className="absolute inset-0 flex items-center justify-center bg-cream-light">
+                <p className="text-2xl font-bold text-brown-dark text-center px-4">
+                  {roleName}
+                </p>
+              </div>
+            )}
           </div>
         </div>
       </motion.div>
@@ -164,15 +214,25 @@ export default function CardReveal({
       </motion.div>
 
       {/* Continue Button */}
-      <motion.button
-        initial={{ opacity: 0, y: 20 }}
-        animate={buttonControls}
-        className="px-8 py-3 bg-accent-green hover:opacity-90 text-white font-semibold rounded-lg shadow-xl transition-all duration-200 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-accent-gold focus:ring-opacity-75 disabled:opacity-60 disabled:cursor-not-allowed disabled:transform-none"
-        onClick={handleConfirm}
-        disabled={!isAnimationComplete || !gameId}
-      >
-        Continue
-      </motion.button>
+      {currentPlayerIsHost ? (
+        <motion.button
+          initial={{ opacity: 0, y: 20 }}
+          animate={buttonControls}
+          className="px-8 py-3 bg-accent-green hover:opacity-90 text-white font-semibold rounded-lg shadow-xl transition-all duration-200 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-accent-gold focus:ring-opacity-75 disabled:opacity-60 disabled:cursor-not-allowed disabled:transform-none"
+          onClick={handleConfirm}
+          disabled={!isAnimationComplete || !gameId}
+        >
+          Continue
+        </motion.button>
+      ) : (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={buttonControls}
+          className="text-brown-medium italic text-lg"
+        >
+          Waiting for the host to continue...
+        </motion.div>
+      )}
     </div>
   );
 }

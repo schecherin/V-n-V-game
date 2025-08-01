@@ -1,14 +1,11 @@
 "use client";
 import React, { useState, JSX, useEffect, useCallback, useRef } from "react";
-import { COUNTDOWN_SECONDS, CURRENT_USER_ID } from "@/lib/constants";
+import { COUNTDOWN_SECONDS } from "@/lib/constants";
 import {
-  mockPlayers,
   initialRoomName,
-  mockUserGameData,
-  Player,
   UserGameData,
-  PhaseSwitch,
   ActiveView,
+  mockUserGameData,
 } from "@/lib/mockData";
 import { useRouter } from "next/navigation";
 import Modal from "@/components/ui/Modal";
@@ -20,9 +17,26 @@ import ChatPanel from "@/components/lobby/ChatPanel";
 import BottomNavBar from "@/components/lobby/BottomNavBar";
 import SideMenu from "@/components/lobby/SideMenu";
 import Button from "@/components/ui/Button";
+import { useParams, useSearchParams } from "next/navigation";
+import { useGame } from "@/hooks/useGame";
+import { getPlayersByGameCode, isCurrentUserHost } from "@/lib/playerApi";
+import {
+  subscribeToPlayerUpdates,
+  subscribeToGameUpdates,
+} from "@/lib/gameSubscriptions";
+import {
+  setGameIncludeOutreachPhase,
+  setGameTutorialStatus,
+  updateGamePhase,
+} from "@/lib/gameApi";
+import { Player, GameSwitch } from "@/types";
 
 export default function LobbyPage(): JSX.Element {
-  const [players, setPlayers] = useState<Player[]>(mockPlayers);
+  const params = useParams();
+  const searchParams = useSearchParams();
+  const gameId = params.game_id as string;
+  const playerId = searchParams.get("playerId");
+  const [players, setPlayers] = useState<Player[]>([]);
   const [roomName, setRoomName] = useState<string>(initialRoomName);
   const [isChatOpen, setIsChatOpen] = useState<boolean>(false);
   const [isMenuOpen, setIsMenuOpen] = useState<boolean>(false);
@@ -33,39 +47,82 @@ export default function LobbyPage(): JSX.Element {
     useState<boolean>(false);
   const [showRoleExplanationModal, setShowRoleExplanationModal] =
     useState<boolean>(false);
+  const [shouldRedirect, setShouldRedirect] = useState<boolean>(false);
 
+  const { game, loading, error } = useGame(gameId);
   const router = useRouter();
 
-  const [phaseSwitches, setPhaseSwitches] = useState<PhaseSwitch[]>([
+  useEffect(() => {
+    getPlayersByGameCode(gameId).then(setPlayers);
+  }, [gameId]);
+
+  // Subscribe to real-time player updates
+  useEffect(() => {
+    const unsubscribe = subscribeToPlayerUpdates(gameId, (payload) => {
+      // Refetch players when any player change occurs (INSERT, UPDATE, DELETE)
+      getPlayersByGameCode(gameId).then(setPlayers);
+    });
+    return unsubscribe;
+  }, [gameId]);
+
+  // Subscribe to real-time game updates to redirect when phase changes
+  useEffect(() => {
+    const unsubscribe = subscribeToGameUpdates(gameId, (payload) => {
+      if (
+        payload.new &&
+        payload.new.current_phase &&
+        payload.new.current_phase !== "Lobby"
+      ) {
+        // Set flag to redirect instead of calling router directly
+        setShouldRedirect(true);
+      }
+    });
+    return unsubscribe;
+  }, [gameId]);
+
+  // Handle redirect when phase changes
+  useEffect(() => {
+    if (shouldRedirect && playerId) {
+      router.push(`/${gameId}/play?playerId=${playerId}`);
+    }
+  }, [shouldRedirect, gameId, playerId, router]);
+
+  const [gameSwitches, setGameSwitches] = useState<GameSwitch[]>([
     { id: "outreach", label: "Outreach Phase", checked: true },
-    { id: "reflection", label: "Reflection Phase", checked: false },
-    { id: "consultation", label: "Consultation Phase", checked: false },
+    { id: "tutorial", label: "Tutorial", checked: false },
   ]);
 
-  const isCurrentUserHost: boolean =
-    players.find((p) => p.id === CURRENT_USER_ID)?.isHost ?? false;
+  const currentUserIsHost: boolean = isCurrentUserHost(game, playerId);
 
   const handlePlayerClick = (player: Player): void => {
     console.log("Player clicked:", player);
-    if (player.id === CURRENT_USER_ID) {
-      setPlayers((prevPlayers) =>
-        prevPlayers.map((p) =>
-          p.id === player.id ? { ...p, isReady: !p.isReady } : p
-        )
-      );
-    }
   };
-  const handlePhaseChange = (id: string, value: boolean): void => {
-    setPhaseSwitches((prev) =>
-      prev.map((ps) => (ps.id === id ? { ...ps, checked: value } : ps))
+  const handleGameSwitchChange = (id: string, value: boolean): void => {
+    setGameSwitches((prev) =>
+      prev.map((gs) => (gs.id === id ? { ...gs, checked: value } : gs))
     );
   };
-  const gameId = "TODO: GET GAME ID HERE";
-  const handleStartGame = (): void => {
-    router.push(`game/${gameId}/play`);
+  const handleStartGame = async (): Promise<void> => {
+    try {
+      // Get the current switch values
+      const outreachSwitch = gameSwitches.find((gs) => gs.id === "outreach");
+      const tutorialSwitch = gameSwitches.find((gs) => gs.id === "tutorial");
+
+      // Update the database with the switch values
+      await setGameIncludeOutreachPhase(
+        gameId,
+        outreachSwitch?.checked || false
+      );
+      await setGameTutorialStatus(gameId, tutorialSwitch?.checked || false);
+
+      // Set the game phase to RoleReveal
+      await updateGamePhase(gameId, "RoleReveal");
+    } catch (error) {
+      console.error("Failed to update game settings:", error);
+      // Optionally show an error message to the user
+    }
   };
-  const canStartGame: boolean =
-    isCurrentUserHost && players.some((p) => p.isReady);
+  const canStartGame: boolean = currentUserIsHost;
 
   const handleLeaveGame = (): void => {
     setShowLeaveConfirmModal(false);
@@ -90,19 +147,19 @@ export default function LobbyPage(): JSX.Element {
           <>
             <PlayerListHorizontal
               players={players}
-              currentUserId={CURRENT_USER_ID}
+              currentUserId={playerId}
               onPlayerClick={handlePlayerClick}
             />
             <RoomInfoPanel roomName={roomName} />
           </>
         )}
-        {activeMainView === "controls" && (
+        {activeMainView === "controls" && currentUserIsHost && (
           <HostControlsPanel
-            isHost={isCurrentUserHost}
+            isHost={currentUserIsHost}
             onStartGame={handleStartGame}
             canStartGame={canStartGame}
-            phaseSwitches={phaseSwitches}
-            onPhaseChange={handlePhaseChange}
+            gameSwitches={gameSwitches}
+            onGameSwitchChange={handleGameSwitchChange}
           />
         )}
       </main>
@@ -121,6 +178,7 @@ export default function LobbyPage(): JSX.Element {
         }}
         activeView={activeMainView}
         chatOpen={isChatOpen}
+        showControls={currentUserIsHost}
       />
 
       <ChatPanel isOpen={isChatOpen} onClose={() => setIsChatOpen(false)} />
@@ -161,9 +219,7 @@ export default function LobbyPage(): JSX.Element {
         onClose={() => setShowRoleExplanationModal(false)}
         title={`Your Role: ${userGameData.role}`}
       >
-        <p className="text-left whitespace-pre-line">
-          {userGameData.roleDescription}
-        </p>
+        <p className="text-left whitespace-pre-line">{"roleDescription"}</p>
         <div className="mt-6 flex justify-end">
           <Button
             variant="default"

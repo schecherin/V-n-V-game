@@ -1,20 +1,26 @@
 import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import {
-  getGameById,
-  getGameByCodeAndPhase,
-  updateGamePlayerCount,
-} from "@/lib/gameApi";
+import { getGameByCodeAndPhase, updateGamePlayerCount } from "@/lib/gameApi";
 import { getPlayerByNameInGame, createPlayer } from "@/lib/playerApi";
 import { getCurrentUser, signInAnonymously } from "@/lib/authApi";
 import { Game } from "@/types";
 
+/**
+ * React hook to join an existing game as a player.
+ * @returns { game, loading, error, joinGame }
+ */
 export function useJoinGame() {
   const [game, setGame] = useState<Game | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<any>(null);
   const router = useRouter();
 
+  /**
+   * Join a game by code and player name.
+   * @param gameCode The code of the game to join.
+   * @param playerName The name of the player joining.
+   * @returns The joined game and player objects.
+   */
   const joinGame = useCallback(
     async (gameCode: string, playerName: string) => {
       setLoading(true);
@@ -28,47 +34,54 @@ export function useJoinGame() {
           await signInAnonymously();
           user = await getCurrentUser();
         }
-        // Get game in lobby phase with error handling
+
+        // Fetch the game in the Lobby phase
+        const trimmedGameCode = gameCode.trim();
+        let foundGame: Game | null = null;
         try {
-          const _game = await getGameByCodeAndPhase(gameCode.trim(), "Lobby");
-          setGame(_game);
-        } catch (err: any) {
+          foundGame = await getGameByCodeAndPhase(trimmedGameCode, "Lobby");
+          setGame(foundGame);
+        } catch {
           throw new Error(
             "Could not find a game with that code in the Lobby phase"
           );
         }
-        if (!game) {
+
+        if (!foundGame) {
           throw new Error("Game not found or not in Lobby phase");
         }
-        if (game.current_player_count >= game.max_players) {
+
+        if (foundGame.current_player_count >= foundGame.max_players) {
           throw new Error("Game is full");
         }
         // Check if player name is already taken
+        const trimmedPlayerName = playerName.trim();
         const existingPlayer = await getPlayerByNameInGame(
-          game.game_id,
-          playerName.trim()
+          foundGame.game_code,
+          trimmedPlayerName
         );
         if (existingPlayer) {
           throw new Error("Player name already taken in this game");
         }
         // Create player
         const player = await createPlayer({
-          game_id: game.game_id,
-          player_name: playerName.trim(),
-          is_guest: true,
+          game_code: foundGame.game_code,
+          player_name: trimmedPlayerName,
           status: "Alive",
         });
         // Update game player count
         await updateGamePlayerCount(
-          game.game_id,
-          game.current_player_count + 1
+          foundGame.game_code,
+          foundGame.current_player_count + 1
         );
         // Navigate to game lobby
-        router.push(`/${game.game_code}/lobby?playerId=${player.player_id}`);
+        router.push(
+          `/${foundGame.game_code}/lobby?playerId=${player.player_id}`
+        );
         setLoading(false);
-        return { game, player };
+        return { game: foundGame, player };
       } catch (err: any) {
-        setError(err.message || "An unexpected error occurred");
+        setError(err?.message || "An unexpected error occurred");
         setLoading(false);
         throw err;
       }
