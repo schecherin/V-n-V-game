@@ -9,18 +9,20 @@ import HostControlsPanel from "@/components/lobby/HostControlsPanel";
 import ChatPanel from "@/components/lobby/ChatPanel";
 import BottomNavBar from "@/components/lobby/BottomNavBar";
 import { useGame } from "@/hooks/useGame";
-import { getPlayersByGameCode } from "@/lib/playerApi";
 import { isCurrentUserHost } from "@/lib/gameUtils";
+
 import {
-  subscribeToPlayerUpdates,
-  subscribeToGameUpdates,
-} from "@/lib/gameSubscriptions";
-import {
+  getGameByCode,
   setGameIncludeOutreachPhase,
   setGameTutorialStatus,
   updateGamePhase,
 } from "@/lib/gameApi";
-import { Player, GameSwitch } from "@/types";
+import { Player, GameSwitch, Game } from "@/types";
+import {
+  subscribeToGameUpdates,
+  subscribeToPlayerUpdates,
+} from "@/lib/gameSubscriptions";
+import { getPlayersByGameCode } from "@/lib/playerApi";
 
 export default function LobbyPage(): JSX.Element {
   const params = useParams();
@@ -33,12 +35,61 @@ export default function LobbyPage(): JSX.Element {
   const [shouldRedirect, setShouldRedirect] = useState<boolean>(false);
   const [currentUserIsHost, setCurrentUserIsHost] = useState<boolean>(false);
 
-  const { game, players, loading, error } = useGame(gameId);
+  const [game, setGame] = useState<Game | null>(null);
+  const [players, setPlayers] = useState<Player[]>([]);
+  const gamePhase = game?.current_phase;
   const router = useRouter();
 
-  // Subscribe to real-time game updates to redirect when phase changes
+  // Memoized refetch function
+  const refetchData = useCallback(async () => {
+    try {
+      const [gameData, playersData] = await Promise.all([
+        getGameByCode(gameId),
+        getPlayersByGameCode(gameId),
+      ]);
+      setGame(gameData);
+      setPlayers(playersData);
+    } catch (err) {
+      console.error("[lobby] Error re-fetching game and players:", err);
+    }
+  }, [gameId]);
+
+  // Initial data fetch
   useEffect(() => {
-    if (game?.current_phase !== "Lobby") {
+    refetchData();
+  }, [refetchData]);
+
+  useEffect(() => {
+    if (!gameId) {
+      return;
+    }
+
+    const unsubscribeGame = subscribeToGameUpdates(gameId, (payload) => {
+      if (payload.new) {
+        setGame(payload.new);
+      }
+    });
+
+    const unsubscribePlayers = subscribeToPlayerUpdates(gameId, (payload) => {
+      getPlayersByGameCode(gameId)
+        .then(setPlayers)
+        .catch((err) => {
+          console.error(
+            "[lobby] Error re-fetching players on Realtime update:",
+            err
+          );
+        });
+    });
+
+    return () => {
+      unsubscribeGame();
+      unsubscribePlayers();
+    };
+  }, [gameId]);
+
+  // redirect when phase changes
+  useEffect(() => {
+    if (gamePhase && gamePhase !== "Lobby") {
       // Set flag to redirect instead of calling router directly
       setShouldRedirect(true);
     }

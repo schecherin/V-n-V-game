@@ -11,7 +11,6 @@ interface MinigameCoreProps {
   maxGuesses?: number;
   onNextPhase: () => void;
   isCurrentUserHost: boolean;
-  gameId: string;
   roles: Role[];
 }
 
@@ -22,7 +21,6 @@ export default function MinigameCore({
   maxGuesses = 10,
   onNextPhase,
   isCurrentUserHost,
-  gameId,
   roles,
 }: Readonly<MinigameCoreProps>) {
   const [selectedPlayer, setSelectedPlayer] = useState<Player | null>(null);

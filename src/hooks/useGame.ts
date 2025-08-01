@@ -1,12 +1,11 @@
 import { useEffect, useState, useCallback } from "react";
 import { getGameByCode, getAssignableRoles } from "@/lib/gameApi";
 import { Game, Player } from "@/types";
-import { assignRoleNameToPlayer } from "@/lib/playerApi";
+import { assignRoleNameToPlayer, getPlayersByGameCode } from "@/lib/playerApi";
 import {
   subscribeToGameUpdates,
   subscribeToPlayerUpdates,
 } from "@/lib/gameSubscriptions";
-import { getPlayersByGameCode } from "@/lib/playerApi";
 
 /**
  * React hook to fetch and manage game state by gameId.
@@ -41,7 +40,7 @@ export function useGame(gameId: string) {
     refetchData().finally(() => setLoading(false));
   }, [refetchData]);
 
-  // Handle page visibility and focus changes
+  /* // Handle page visibility and focus changes
   useEffect(() => {
     let pollingInterval: NodeJS.Timeout;
 
@@ -56,7 +55,7 @@ export function useGame(gameId: string) {
         // Start polling when hidden
         pollingInterval = setInterval(() => {
           refetchData();
-        }, 3000); // Poll every 3 seconds when hidden
+        }, 5000); // Poll every 3 seconds when hidden
       }
     };
 
@@ -82,29 +81,7 @@ export function useGame(gameId: string) {
         clearInterval(pollingInterval);
       }
     };
-  }, [refetchData]);
-
-  // Subscribe to real-time updates
-  useEffect(() => {
-    if (!gameId) return;
-
-    const unsubscribeGame = subscribeToGameUpdates(gameId, (payload) => {
-      if (payload.new) {
-        setGame(payload.new);
-        setLastUpdate(new Date());
-      }
-    });
-
-    const unsubscribePlayers = subscribeToPlayerUpdates(gameId, (payload) => {
-      getPlayersByGameCode(gameId).then(setPlayers);
-      setLastUpdate(new Date());
-    });
-
-    return () => {
-      unsubscribeGame();
-      unsubscribePlayers();
-    };
-  }, [gameId]);
+  }, [refetchData]); */
 
   /**
    * Assign roles to players in the game.
