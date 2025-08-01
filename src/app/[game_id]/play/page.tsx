@@ -1,97 +1,47 @@
 "use client";
 
-import { useParams, useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useState, useMemo } from "react";
+import { useParams, useSearchParams, useRouter } from "next/navigation";
+import { useState, useMemo, useEffect, useCallback } from "react";
+import { useGame } from "@/hooks/useGame";
+import { Game, Player, Role } from "@/types";
+import { isCurrentUserHost, getNextPhase } from "@/lib/gameUtils";
+import {
+  updateGamePhase,
+  setGameDay,
+  getAssignableRoles,
+  getGameByCode,
+} from "@/lib/gameApi";
+import { useRoleAssignment } from "@/hooks/useRoleAssignment";
+import { useMinigame } from "@/hooks/useMinigame";
 import MinigameCore from "@/components/game/MinigameCore";
 import ConsultationPhase from "@/components/game/ConsultationPhase";
 import ReflectionPhase from "@/components/game/ReflectionPhase";
 import OutreachPhase from "@/components/game/OutreachPhase";
 import CardReveal from "@/components/game/CardReveal";
 import Tutorial from "@/components/game/Tutorial";
-import { useGame } from "@/hooks/useGame";
-import { GamePhase, Player, Role } from "@/types";
-import {
-  getPlayersByGameCode,
-  getPlayerById,
-  isCurrentUserHost,
-} from "@/lib/playerApi";
-import {
-  updateGamePhase,
-  getAssignableRoles,
-  insertReflectionPhaseGuess,
-} from "@/lib/gameApi";
-import { supabase } from "@/lib/supabase/client";
-import { assignRolesToPlayers } from "@/lib/roleAssign";
-// Import both subscription functions
+import MinigameResults from "@/components/game/MinigameResults";
+import ConsultationElections from "@/components/game/ConsultationElections";
 import {
   subscribeToGameUpdates,
   subscribeToPlayerUpdates,
 } from "@/lib/gameSubscriptions";
-import MinigameResults from "@/components/game/MinigameResults";
-import {
-  calculateMinigameResults,
-  fetchMinigameResults,
-  type MinigameResult,
-} from "@/lib/minigameAPI";
+import { getPlayersByGameCode } from "@/lib/playerApi";
 
 export default function GamePlayPage() {
   const params = useParams();
-  const router = useRouter();
   const searchParams = useSearchParams();
+  const router = useRouter();
 
   const gameId: string = params.game_id as string;
   const playerId: string | null = searchParams.get("playerId");
 
   // Game state and hooks
-  const { game, loading, error } = useGame(gameId);
+  const [game, setGame] = useState<Game | null>(null);
   const [players, setPlayers] = useState<Player[]>([]);
   const [currentPlayerId] = useState<string | null>(playerId);
-  const [gamePhase, setGamePhase] = useState<GamePhase | undefined>(
-    game?.current_phase
-  );
+  const gamePhase = game?.current_phase;
+
   const [roles, setRoles] = useState<Role[]>([]);
-  const [minigameResult, setMinigameResult] = useState<MinigameResult>();
-  const [isAssigningRoles, setIsAssigningRoles] = useState(false);
-
-  // Fetch initial data (players and roles)
-  useEffect(() => {
-    if (gameId) {
-      getPlayersByGameCode(gameId).then(setPlayers);
-      getAssignableRoles().then(setRoles);
-    }
-  }, [gameId]);
-
-  // Subscribe to real-time game updates (for phase changes)
-  useEffect(() => {
-    if (!gameId) return;
-
-    // Set initial phase from the game object when it loads
-    if (game?.current_phase) {
-      setGamePhase(game.current_phase);
-    }
-
-    const unsubscribe = subscribeToGameUpdates(gameId, (payload) => {
-      if (payload.new && payload.new.current_phase) {
-        console.log("Game phase changed to:", payload.new.current_phase);
-        setGamePhase(payload.new.current_phase);
-      }
-    });
-
-    return unsubscribe;
-  }, [gameId, game]); // Rerun when the game object itself changes
-
-  // Subscribe to real-time player updates (for role assignments, etc.)
-  useEffect(() => {
-    if (!gameId) return;
-
-    const unsubscribe = subscribeToPlayerUpdates(gameId, (payload) => {
-      // A player has been inserted, updated, or deleted. Refetch the list for all clients.
-      console.log("Player data changed, refetching players...");
-      getPlayersByGameCode(gameId).then(setPlayers);
-    });
-
-    return unsubscribe;
-  }, [gameId]); // Only depends on gameId
 
   // Memoize current player and host status to prevent re-calculations
   const { currentPlayer, isUserHost } = useMemo(() => {
@@ -100,156 +50,86 @@ export default function GamePlayPage() {
     return { currentPlayer: p, isUserHost: isHost };
   }, [players, currentPlayerId, game]);
 
-  useEffect(() => {
-    const handleRoleAssignment = async () => {
-      // Check if roles are already assigned
-      const rolesAreAssigned = players.some((p) => p.current_role_name);
-
-      if (
-        isUserHost &&
-        game?.current_phase === "RoleReveal" &&
-        !rolesAreAssigned &&
-        !isAssigningRoles
-      ) {
-        setIsAssigningRoles(true);
-        console.log("Host is assigning roles via edge function...");
-
-        try {
-          // Get the current user's ID (the host)
-          const {
-            data: { user },
-          } = await supabase.auth.getUser();
-
-          if (!user) {
-            console.error("Host user not authenticated");
-            setIsAssigningRoles(false);
-            return;
-          }
-          const result = await assignRolesToPlayers(gameId, user.id);
-          if (result.success) {
-            console.log("Roles assigned successfully:", result.assignments);
-            // The real-time subscription should automatically update the UI
-          } else {
-            console.error("Failed to assign roles:", result.error);
-          }
-        } catch (error) {
-          console.error("Error during role assignment:", error);
-        } finally {
-          setIsAssigningRoles(false);
-        }
-      }
-    };
-
-    // Ensure we have the necessary data before trying to assign roles
-    if (game && players.length > 0 && isUserHost !== undefined) {
-      handleRoleAssignment();
+  // Memoized refetch function
+  const refetchData = useCallback(async () => {
+    try {
+      const [gameData, playersData] = await Promise.all([
+        getGameByCode(gameId),
+        getPlayersByGameCode(gameId),
+      ]);
+      setGame(gameData);
+      setPlayers(playersData);
+    } catch (err) {
+      console.error("[lobby] Error re-fetching game and players:", err);
     }
-  }, [game, players, isUserHost, gameId, isAssigningRoles]);
+  }, [gameId]);
 
-  const handleSetGamePhase = async (newPhase: GamePhase) => {
-    setGamePhase(newPhase);
+  // Initial data fetch
+  useEffect(() => {
+    refetchData();
+  }, [refetchData]);
+
+  useEffect(() => {
+    if (!gameId) {
+      return;
+    }
+
+    const unsubscribeGame = subscribeToGameUpdates(gameId, (payload) => {
+      if (payload.new) {
+        setGame(payload.new);
+      }
+    });
+
+    const unsubscribePlayers = subscribeToPlayerUpdates(gameId, (payload) => {
+      getPlayersByGameCode(gameId)
+        .then(setPlayers)
+        .catch((err) => {
+          console.error(
+            "[lobby] Error re-fetching players on Realtime update:",
+            err
+          );
+        });
+    });
+
+    return () => {
+      unsubscribeGame();
+      unsubscribePlayers();
+    };
+  }, [gameId]);
+
+  useEffect(() => {
+    getAssignableRoles().then(setRoles);
+  }, []);
+
+  // Custom hooks for role assignment
+  useRoleAssignment({
+    game,
+    players,
+    isUserHost,
+    gameId,
+    currentPlayerId,
+  });
+
+  // Custom hooks for minigame logic
+  const { minigameResult, handleMinigameGuess } = useMinigame({
+    game,
+    gameId,
+    playerId,
+    currentPlayerId,
+    isUserHost,
+    gamePhase,
+  });
+
+  const handleSetGamePhase = async () => {
+    if (!gamePhase) return;
+    const nextPhase = getNextPhase(gamePhase, game);
     if (!isUserHost) return;
     try {
-      await updateGamePhase(gameId, newPhase);
+      await updateGamePhase(gameId, nextPhase);
     } catch (err) {
       console.error("Failed to update game phase:", err);
     }
   };
-
-  const handleMinigameGuess = async (
-    targetPlayerId: string,
-    guessedRole: string
-  ) => {
-    if (!currentPlayerId) return;
-    try {
-      await insertReflectionPhaseGuess({
-        game_code: gameId,
-        day_number: game?.current_day ?? 1,
-        guessed_player_id: targetPlayerId,
-        guessed_role_name: guessedRole,
-        guessing_player_id: currentPlayerId,
-      });
-    } catch (err) {
-      console.error("Failed to insert minigame guess:", err);
-    }
-  };
-  // Add this state near your other useState declarations at the top of the component
-  const [resultsCalculated, setResultsCalculated] = useState(false);
-
-  const handleMinigameResult = async () => {
-    if (!resultsCalculated && gameId && playerId) {
-      setResultsCalculated(true);
-
-      try {
-        if (isUserHost) {
-          // HOST CALCULATES AND UPDATES DATABASE
-          console.log("Host calculating results for everyone...");
-          const results = await calculateMinigameResults(
-            gameId,
-            game?.current_day ?? 0,
-            true
-          );
-
-          const myResult = results.find((r) => r.playerId === playerId);
-          if (myResult) {
-            setMinigameResult(myResult);
-          }
-        } else {
-          // GUESTS: Just poll database for their updated rank/points
-          console.log("Guest waiting for results...");
-
-          let attempts = 0;
-          const maxAttempts = 30; // 30 seconds max
-
-          while (attempts < maxAttempts) {
-            // Fetch own player data directly from database
-            const player = await getPlayerById(playerId);
-
-            // Check if rank has been set (meaning host calculated)
-            if (player.last_mini_game_rank && player.last_mini_game_rank > 0) {
-              // Create result object from player data
-              const myResult: MinigameResult = {
-                playerId: player.player_id,
-                playerName: player.player_name,
-                rank: player.last_mini_game_rank,
-                points: 0, // We don't store points earned separately, could calculate if needed
-                totalPoints: player.personal_points,
-              };
-
-              setMinigameResult(myResult);
-              console.log("Guest found their results:", myResult);
-              break;
-            }
-            // I'm waiting here idk if its the best idea tbh.
-            await new Promise((resolve) => setTimeout(resolve, 1000));
-            attempts++;
-          }
-
-          if (attempts === maxAttempts) {
-            console.error("Timed out waiting for results");
-            setResultsCalculated(false);
-          }
-        }
-      } catch (error) {
-        console.error("Failed to handle minigame results:", error);
-        setResultsCalculated(false);
-      }
-    }
-  };
-  // Add this useEffect to reset the flag when phase changes
-  useEffect(() => {
-    if (gamePhase !== "Reflection_MiniGame_Result") {
-      setResultsCalculated(false);
-      setMinigameResult(undefined);
-    }
-  }, [gamePhase]);
-
-  // Add this useEffect to trigger calculation when entering results phase
-  useEffect(() => {
-    if (gamePhase === "Reflection_MiniGame_Result" && !resultsCalculated) {
-      handleMinigameResult();
-    }
-  }, [gamePhase, resultsCalculated, gameId, playerId, isUserHost]);
 
   const renderGameContent = () => {
     const roleName = currentPlayer?.current_role_name || "Assigning...";
@@ -264,12 +144,15 @@ export default function GamePlayPage() {
       case "RoleReveal":
         return (
           <CardReveal
+            players={players}
             roleName={roleName}
             roleDescription={roleDescription}
-            setGamePhase={handleSetGamePhase}
+            onNextPhase={() => {
+              setGameDay(gameId, 1);
+              handleSetGamePhase();
+            }}
             player={currentPlayer}
             game={game}
-            players={players}
           />
         );
       case "Tutorial":
@@ -278,7 +161,14 @@ export default function GamePlayPage() {
             player={currentPlayer}
             game={game}
             players={players}
-            setGamePhase={handleSetGamePhase}
+            onNextPhase={() => handleSetGamePhase()}
+          />
+        );
+      case "Reflection_RoleActions":
+        return (
+          <ReflectionPhase
+            player={currentPlayer}
+            onNextPhase={() => handleSetGamePhase()}
           />
         );
       case "Reflection_MiniGame":
@@ -288,9 +178,8 @@ export default function GamePlayPage() {
             currentPlayerId={currentPlayerId ?? ""}
             onGuess={handleMinigameGuess}
             maxGuesses={3}
-            setGamePhase={handleSetGamePhase}
+            onNextPhase={() => handleSetGamePhase()}
             isCurrentUserHost={isUserHost}
-            gameId={gameId}
             roles={roles}
           />
         );
@@ -299,35 +188,48 @@ export default function GamePlayPage() {
           <MinigameResults
             position={minigameResult?.rank || 0}
             points={minigameResult?.totalPoints || 0}
+            onNextPhase={() => handleSetGamePhase()}
             isHost={isUserHost}
-            gameId={gameId}
-            setGamePhase={handleSetGamePhase}
           />
         );
-      case "Reflection_RoleActions":
+      case "Consultation_Elections_Chairperson":
+      case "Consultation_Elections_Secretary":
+      case "Consultation_Elections_Result":
         return (
-          <ReflectionPhase
-            player={currentPlayer}
-            setGamePhase={handleSetGamePhase}
+          <ConsultationElections
+            game={game}
+            players={players}
+            currentPlayer={currentPlayer}
+            gameId={gameId}
+            dayNumber={game?.current_day || 1}
+            currentPhase={gamePhase}
+            onNextPhase={() => {
+              handleSetGamePhase();
+            }}
+            isCurrentUserHost={isUserHost}
           />
         );
       case "Outreach":
         return (
           <OutreachPhase
             player={currentPlayer}
-            setGamePhase={handleSetGamePhase}
+            onNextPhase={() => handleSetGamePhase()}
             isCurrentUserHost={isUserHost}
           />
         );
       case "Consultation_Discussion":
-      case "Consultation_Elections":
       case "Consultation_TreasurerActions":
       case "Consultation_Voting_Prison":
         return (
           <ConsultationPhase
             players={players}
             player={currentPlayer}
-            setGamePhase={handleSetGamePhase}
+            onNextPhase={() => {
+              // TODO: the day should increment once before going to reflection phase
+              setGameDay(gameId, (game?.current_day ?? 1) + 1);
+              handleSetGamePhase();
+            }}
+            onEndGame={() => handleSetGamePhase()}
           />
         );
       case "Finished":
@@ -344,7 +246,7 @@ export default function GamePlayPage() {
         );
     }
   };
-
+  /* 
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-gray-900 text-white">
@@ -359,7 +261,7 @@ export default function GamePlayPage() {
         Error loading game: {error.toString()}
       </div>
     );
-  }
+  } */
 
   return (
     <div className="min-h-screen p-4 sm:p-8 flex flex-col items-center justify-center font-sans">

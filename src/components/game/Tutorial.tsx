@@ -1,30 +1,25 @@
 import React from "react";
 import Button from "@/components/ui/Button";
-import { GamePhase, Player } from "@/types";
-import { isCurrentUserHost } from "@/lib/playerApi";
+import { Player } from "@/types";
+import { isCurrentUserHost } from "@/lib/gameUtils";
 
 interface TutorialProps {
   player: Player | undefined;
   game: any;
   players: Player[];
-  setGamePhase: (phase: GamePhase) => void;
+  onNextPhase: () => void;
 }
 
 const Tutorial: React.FC<TutorialProps> = ({
   player,
   game,
   players,
-  setGamePhase,
+  onNextPhase,
 }) => {
   const currentPlayerIsHost = isCurrentUserHost(
     game,
-    players,
     player?.player_id || null
   );
-
-  const handleContinue = () => {
-    setGamePhase("Reflection_MiniGame");
-  };
 
   return (
     <div className="min-h-screen bg-cream flex flex-col items-center justify-center p-8">
@@ -54,7 +49,7 @@ const Tutorial: React.FC<TutorialProps> = ({
 
         {currentPlayerIsHost && (
           <Button
-            onClick={handleContinue}
+            onClick={onNextPhase}
             className="px-8 py-3 text-lg font-semibold"
           >
             Continue to Next Phase

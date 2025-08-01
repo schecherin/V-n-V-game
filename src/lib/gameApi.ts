@@ -5,14 +5,11 @@ import {
   updatePlayerMinigamePointsAndRank,
   getPlayersByGameCode,
 } from "@/lib/playerApi";
-
-export interface MinigameResult {
-  playerId: string;
-  playerName: string;
-  correctGuesses: number;
-  rank: number;
-  points: number;
-}
+import {
+  countCorrectGuesses,
+  rankAndAssignPoints,
+  MinigameResult,
+} from "./gameUtils";
 
 /**
  * Fetch a game by its unique game_id.
@@ -75,7 +72,7 @@ export async function joinGame(gameCode: string, name: string) {
         user_id: user.id,
         game_code: gameCode,
         player_name: name,
-        state: "Alive",
+        status: "Alive",
       },
     ])
     .single();
@@ -91,7 +88,7 @@ export async function joinGame(gameCode: string, name: string) {
 export async function generateGameCode() {
   const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
   let code = "";
-  for (let i = 0; i < 5; i++) {
+  for (let i = 0; i < 4; i++) {
     code += chars.charAt(Math.floor(Math.random() * chars.length));
   }
   return code;
@@ -310,52 +307,6 @@ export async function insertReflectionPhaseGuess({
 }
 
 /**
- * Count correct guesses for each player.
- * @param guesses Array of guesses with guessing_player_id and is_correct.
- * @param players Array of players.
- * @returns Record mapping playerId to number of correct guesses.
- */
-function countCorrectGuesses(
-  guesses: { guessing_player_id: string; is_correct: boolean }[],
-  players: { player_id: string }[]
-): Record<string, number> {
-  const correctGuessCount: Record<string, number> = {};
-  for (const player of players) {
-    correctGuessCount[player.player_id] = 0;
-  }
-  for (const guess of guesses) {
-    if (guess.is_correct) {
-      correctGuessCount[guess.guessing_player_id] =
-        (correctGuessCount[guess.guessing_player_id] || 0) + 1;
-    }
-  }
-  return correctGuessCount;
-}
-
-/**
- * Sort, rank, and assign points to results.
- * @param results Array of MinigameResult (playerId, playerName, correctGuesses)
- * @returns Array of MinigameResult with rank and points assigned
- */
-function rankAndAssignPoints(
-  results: Omit<MinigameResult, "rank" | "points">[],
-  m: number
-): MinigameResult[] {
-  // Sort descending by correctGuesses
-  results.sort((a, b) => b.correctGuesses - a.correctGuesses);
-  let points = m;
-  return results.map((r, i) => {
-    const newResult = {
-      ...r,
-      rank: i,
-      points: Math.min(Math.round(0.25 * m), Math.round(points)),
-    };
-    points *= 0.93;
-    return newResult;
-  });
-}
-
-/**
  * Fetch all reflection phase guesses for a game (and optionally a specific day).
  * @param gameId The game code.
  * @param dayNumber The day number to filter by.
@@ -424,4 +375,167 @@ export async function calculateAndAssignMinigameResults(
   }
 
   return results;
+}
+
+/**
+ * Record a vote in an election.
+ * @param params Object containing vote details.
+ * @returns The inserted vote record.
+ */
+export async function recordVote({
+  gameId,
+  voterId,
+  candidateId,
+  dayNumber,
+  gamePhase,
+  electionRole,
+}: {
+  gameId: string;
+  voterId: string;
+  candidateId: string;
+  dayNumber: number;
+  gamePhase: GamePhase;
+  electionRole: "chairperson" | "secretary" | "treasurer";
+}) {
+  const { data, error } = await supabase
+    .from("game_votes")
+    .insert({
+      game_code: gameId,
+      voter_player_id: voterId,
+      voted_player_id: candidateId,
+      day_number: dayNumber,
+      voting_phase: gamePhase,
+      election_target_role_name: electionRole,
+    })
+    .select()
+    .single();
+  if (error) throw error;
+  return data;
+}
+
+/**
+ * Get the player ID with the most votes for a specific role in an election.
+ * @param gameId The game ID.
+ * @param dayNumber The day number.
+ * @param gamePhase The game phase.
+ * @param electionRole The election role.
+ * @param voterId Optional voter ID to check if they've voted.
+ * @returns The player ID with the most votes, or null if no votes exist.
+ */
+export async function countVotes(
+  gameId: string,
+  dayNumber: number,
+  gamePhase: GamePhase,
+  electionRole: "chairperson" | "secretary" | "treasurer",
+  voterId?: string
+): Promise<string | null> {
+  let query = supabase
+    .from("game_votes")
+    .select("voted_player_id")
+    .eq("game_code", gameId)
+    .eq("day_number", dayNumber)
+    .eq("voting_phase", gamePhase)
+    .eq("election_target_role_name", electionRole);
+
+  // If voterId is provided, filter by voterId, for checking if they've voted
+  if (voterId) {
+    query = query.eq("voter_player_id", voterId);
+  }
+
+  const { data, error } = await query;
+  if (error) throw error;
+
+  if (!data || data.length === 0) {
+    return null;
+  }
+
+  // Count votes for each candidate
+  const voteCounts: Record<string, number> = {};
+  data.forEach((vote) => {
+    voteCounts[vote.voted_player_id] =
+      (voteCounts[vote.voted_player_id] || 0) + 1;
+  });
+
+  // Find the player with the most votes
+  let winnerId: string | null = null;
+  let maxVotes = 0;
+
+  for (const [playerId, voteCount] of Object.entries(voteCounts)) {
+    if (voteCount > maxVotes) {
+      maxVotes = voteCount;
+      winnerId = playerId;
+    }
+  }
+
+  return winnerId;
+}
+
+/**
+ * Get the host player ID for a game.
+ * @param gameId The game ID.
+ * @returns The host player ID, or null if not set.
+ */
+export async function getHostPlayerId(gameId: string): Promise<string | null> {
+  const { data, error } = await supabase
+    .from("games")
+    .select("host_player_id")
+    .eq("game_code", gameId)
+    .single();
+  if (error) throw error;
+  return data?.host_player_id || null;
+}
+
+/**
+ * Set the host user ID in the games table.
+ * @param gameId The game ID.
+ * @param hostPlayerId The host player ID.
+ */
+export async function setHostPlayerId(gameId: string, hostPlayerId: string) {
+  const { data, error } = await supabase
+    .from("games")
+    .update({ host_player_id: hostPlayerId })
+    .eq("game_code", gameId)
+    .select();
+  if (error) throw error;
+  return data;
+}
+
+/**
+ * Set the secretary player ID in the games table.
+ * @param gameId The game ID.
+ * @param secretaryPlayerId The secretary player ID.
+ */
+export async function setSecretaryPlayerId(
+  gameId: string,
+  secretaryPlayerId: string
+) {
+  const { error } = await supabase
+    .from("games")
+    .update({ secretary_player_id: secretaryPlayerId })
+    .eq("game_code", gameId);
+  if (error) throw error;
+}
+
+/**
+ * Set the treasurer player ID in the games table.
+ * @param gameId The game ID.
+ * @param treasurerPlayerId The treasurer player ID.
+ */
+export async function setTreasurerPlayerId(
+  gameId: string,
+  treasurerPlayerId: string
+) {
+  const { error } = await supabase
+    .from("games")
+    .update({ treasurer_player_id: treasurerPlayerId })
+    .eq("game_code", gameId);
+  if (error) throw error;
+}
+
+export async function setGameDay(gameId: string, dayNumber: number) {
+  const { error } = await supabase
+    .from("games")
+    .update({ current_day: dayNumber })
+    .eq("game_code", gameId);
+  if (error) throw error;
 }

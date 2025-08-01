@@ -144,7 +144,9 @@ export type Database = {
         Row: {
           created_at: string | null
           day_number: number
-          election_target_role_name: string | null
+          election_target_role_name:
+            | Database["public"]["Enums"]["election_role_name"]
+            | null
           game_code: string
           is_chairman_double_vote: boolean | null
           vote_id: string
@@ -155,7 +157,9 @@ export type Database = {
         Insert: {
           created_at?: string | null
           day_number: number
-          election_target_role_name?: string | null
+          election_target_role_name?:
+            | Database["public"]["Enums"]["election_role_name"]
+            | null
           game_code: string
           is_chairman_double_vote?: boolean | null
           vote_id?: string
@@ -166,7 +170,9 @@ export type Database = {
         Update: {
           created_at?: string | null
           day_number?: number
-          election_target_role_name?: string | null
+          election_target_role_name?:
+            | Database["public"]["Enums"]["election_role_name"]
+            | null
           game_code?: string
           is_chairman_double_vote?: boolean | null
           vote_id?: string
@@ -175,13 +181,6 @@ export type Database = {
           voting_phase?: Database["public"]["Enums"]["game_phase"]
         }
         Relationships: [
-          {
-            foreignKeyName: "game_votes_election_target_role_name_fkey"
-            columns: ["election_target_role_name"]
-            isOneToOne: false
-            referencedRelation: "roles"
-            referencedColumns: ["role_name"]
-          },
           {
             foreignKeyName: "game_votes_game_code_fkey"
             columns: ["game_code"]
@@ -213,7 +212,7 @@ export type Database = {
           current_player_count: number
           game_code: string
           group_points_pool: number
-          host_user_id: string | null
+          host_player_id: string | null
           houses_of_worship_vice: number
           houses_of_worship_virtue: number
           include_outreach_phase: boolean
@@ -232,7 +231,7 @@ export type Database = {
           current_player_count?: number
           game_code: string
           group_points_pool?: number
-          host_user_id?: string | null
+          host_player_id?: string | null
           houses_of_worship_vice?: number
           houses_of_worship_virtue?: number
           include_outreach_phase?: boolean
@@ -251,7 +250,7 @@ export type Database = {
           current_player_count?: number
           game_code?: string
           group_points_pool?: number
-          host_user_id?: string | null
+          host_player_id?: string | null
           houses_of_worship_vice?: number
           houses_of_worship_virtue?: number
           include_outreach_phase?: boolean
@@ -267,6 +266,13 @@ export type Database = {
           {
             foreignKeyName: "fk_games_treasurer_player"
             columns: ["treasurer_player_id"]
+            isOneToOne: false
+            referencedRelation: "players"
+            referencedColumns: ["player_id"]
+          },
+          {
+            foreignKeyName: "games_host_player_id_fkey1"
+            columns: ["host_player_id"]
             isOneToOne: false
             referencedRelation: "players"
             referencedColumns: ["player_id"]
@@ -506,7 +512,7 @@ export type Database = {
           player_name: string
           role_inherited_from: string | null
           status: Database["public"]["Enums"]["player_status"]
-          user_id: string | null
+          user_id: string
         }
         Insert: {
           acted_today?: boolean | null
@@ -523,7 +529,7 @@ export type Database = {
           player_name: string
           role_inherited_from?: string | null
           status?: Database["public"]["Enums"]["player_status"]
-          user_id?: string | null
+          user_id: string
         }
         Update: {
           acted_today?: boolean | null
@@ -540,7 +546,7 @@ export type Database = {
           player_name?: string
           role_inherited_from?: string | null
           status?: Database["public"]["Enums"]["player_status"]
-          user_id?: string | null
+          user_id?: string
         }
         Relationships: [
           {
@@ -1071,6 +1077,7 @@ export type Database = {
         | "PrisonChat"
         | "OfficialChat"
         | "DirectMessage"
+      election_role_name: "chairperson" | "secretary" | "treasurer" | "prison"
       game_phase:
         | "Lobby"
         | "Reflection_RoleActions"
@@ -1079,12 +1086,14 @@ export type Database = {
         | "Consultation_Discussion"
         | "Consultation_Voting_Prison"
         | "Consultation_TreasurerActions"
-        | "Consultation_Elections"
+        | "Consultation_Elections_Chairperson"
         | "Paused"
         | "Finished"
         | "Tutorial"
         | "RoleReveal"
         | "Reflection_MiniGame_Result"
+        | "Consultation_Elections_Secretary"
+        | "Consultation_Elections_Result"
       player_status:
         | "Alive"
         | "Dead"
@@ -1265,6 +1274,7 @@ export const Constants = {
         "OfficialChat",
         "DirectMessage",
       ],
+      election_role_name: ["chairperson", "secretary", "treasurer", "prison"],
       game_phase: [
         "Lobby",
         "Reflection_RoleActions",
@@ -1273,12 +1283,14 @@ export const Constants = {
         "Consultation_Discussion",
         "Consultation_Voting_Prison",
         "Consultation_TreasurerActions",
-        "Consultation_Elections",
+        "Consultation_Elections_Chairperson",
         "Paused",
         "Finished",
         "Tutorial",
         "RoleReveal",
         "Reflection_MiniGame_Result",
+        "Consultation_Elections_Secretary",
+        "Consultation_Elections_Result",
       ],
       player_status: [
         "Alive",
