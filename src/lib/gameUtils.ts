@@ -86,19 +86,18 @@ export function getNextPhase(
     Reflection_MiniGame: "Reflection_MiniGame_Result",
     Reflection_MiniGame_Result:
       game?.current_day === 1
-        ? "Consultation_Elections_Chairperson"
+        ? "Elections_Chairperson"
         : game?.include_outreach_phase
         ? "Outreach"
         : "Consultation_Discussion",
-    Consultation_Elections_Chairperson: "Consultation_Elections_Secretary",
-    Consultation_Elections_Secretary: "Consultation_Elections_Result",
-    Consultation_Elections_Result: game?.include_outreach_phase
+    Elections_Chairperson: "Elections_Secretary",
+    Elections_Secretary: "Elections_Result",
+    Elections_Result: game?.include_outreach_phase
       ? "Outreach"
       : "Consultation_Discussion",
     Outreach: "Consultation_Discussion",
-    // TODO: fix these phases
-    Consultation_Discussion: "Reflection_RoleActions",
-    Consultation_TreasurerActions: "Reflection_RoleActions",
+    Consultation_Discussion: "Consultation_TreasurerActions",
+    Consultation_TreasurerActions: "Consultation_Voting_Prison",
     Consultation_Voting_Prison: "Reflection_RoleActions",
     Paused: "Paused", // No transition
     Finished: "Finished", // No transition

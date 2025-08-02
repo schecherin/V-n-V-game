@@ -1,5 +1,5 @@
 import { supabase } from "@/lib/supabase/client";
-import { Game, GameData, GamePhase } from "@/types";
+import { ElectionRole, Game, GameData, GamePhase } from "@/types";
 import { playerHasRole } from "./playerApi";
 import {
   updatePlayerMinigamePointsAndRank,
@@ -395,7 +395,7 @@ export async function recordVote({
   candidateId: string;
   dayNumber: number;
   gamePhase: GamePhase;
-  electionRole: "chairperson" | "secretary" | "treasurer";
+  electionRole: ElectionRole;
 }) {
   const { data, error } = await supabase
     .from("game_votes")
