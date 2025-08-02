@@ -920,6 +920,7 @@ export type Database = {
           details: string | null
           game_code: string
           points_spent: number
+          secretary_confirmed: boolean | null
           target_player_id: string | null
           transaction_id: string
           treasurer_player_id: string
@@ -931,6 +932,7 @@ export type Database = {
           details?: string | null
           game_code: string
           points_spent: number
+          secretary_confirmed?: boolean | null
           target_player_id?: string | null
           transaction_id?: string
           treasurer_player_id: string
@@ -942,6 +944,7 @@ export type Database = {
           details?: string | null
           game_code?: string
           points_spent?: number
+          secretary_confirmed?: boolean | null
           target_player_id?: string | null
           transaction_id?: string
           treasurer_player_id?: string

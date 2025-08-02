@@ -1,5 +1,12 @@
 import { supabase } from "@/lib/supabase/client";
-import { ElectionRole, Game, GameData, GamePhase } from "@/types";
+import {
+  ElectionRole,
+  Game,
+  GameData,
+  GamePhase,
+  TreasuryActionType,
+} from "@/types";
+import { Database } from "@/database.types";
 import { playerHasRole } from "./playerApi";
 import {
   updatePlayerMinigamePointsAndRank,
@@ -538,4 +545,68 @@ export async function setGameDay(gameId: string, dayNumber: number) {
     .update({ current_day: dayNumber })
     .eq("game_code", gameId);
   if (error) throw error;
+}
+
+export async function setTreasurerAction(
+  gameId: string,
+  action: TreasuryActionType,
+  dayNumber: number,
+  treasurerPlayerId: string,
+  pointsSpent: number,
+  targetPlayerId?: string,
+  details?: string
+) {
+  const { error } = await supabase.from("treasury_transactions").insert({
+    game_code: gameId,
+    action_type: action,
+    day_number: dayNumber,
+    treasurer_player_id: treasurerPlayerId,
+    points_spent: pointsSpent,
+    target_player_id: targetPlayerId,
+    details: details,
+  });
+  if (error) throw error;
+}
+
+export async function confirmTreasuryAction(transactionId: string) {
+  const { error } = await supabase
+    .from("treasury_transactions")
+    .update({ secretary_confirmed: true })
+    .eq("id", transactionId);
+  if (error) throw error;
+}
+
+export async function updateGameGroupPointsPool(
+  gameId: string,
+  points: number
+) {
+  const { error } = await supabase
+    .from("games")
+    .update({ group_points_pool: points })
+    .eq("game_code", gameId);
+  if (error) throw error;
+}
+
+/**
+ * Update multiple game properties at once.
+ * Use this for less common updates or when updating multiple properties atomically.
+ * For common operations, prefer the specific functions like updateGamePhase(), setHostPlayerId(), etc.
+ *
+ * @param gameCode The code of the game to update.
+ * @param updates Object containing the properties to update.
+ * @returns The updated Game object.
+ */
+export async function updateGameProperties(
+  gameCode: string,
+  updates: Partial<Database["public"]["Tables"]["games"]["Update"]>
+) {
+  const { data, error } = await supabase
+    .from("games")
+    .update(updates)
+    .eq("game_code", gameCode)
+    .select()
+    .single();
+
+  if (error) throw error;
+  return data as Game;
 }

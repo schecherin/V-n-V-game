@@ -32,6 +32,7 @@ interface GameContextType {
   currentPlayerIsHost: boolean;
   playerId: string | null;
   gameId: string;
+  roles: Role[];
   refetchData: () => Promise<void>;
   activeMainView: ActiveView;
   setActiveMainView: (view: ActiveView) => void;
@@ -170,6 +171,7 @@ function GameLayoutInner({ children }: { children: React.ReactNode }) {
       currentPlayerIsHost,
       playerId,
       gameId,
+      roles,
       refetchData,
       activeMainView,
       setActiveMainView,
@@ -182,6 +184,7 @@ function GameLayoutInner({ children }: { children: React.ReactNode }) {
       currentPlayerIsHost,
       playerId,
       gameId,
+      roles,
       refetchData,
       activeMainView,
       setActiveMainView,
