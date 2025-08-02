@@ -1,18 +1,14 @@
 "use client";
 
-import { Player } from "@/types";
-import { isCurrentUserHost } from "@/lib/gameUtils";
 import { motion, useAnimation, AnimationControls } from "framer-motion";
 import { useRouter, useParams } from "next/navigation";
 import React, { useEffect, useState } from "react";
+import { useGameContext } from "@/app/[game_id]/layout";
 
 interface CardRevealProps {
   roleName: string;
   roleDescription: string;
   onNextPhase: () => void;
-  players: Player[];
-  player: Player | undefined;
-  game: any;
 }
 
 // Helper function to get role image path
@@ -26,10 +22,8 @@ export default function CardReveal({
   roleName,
   roleDescription,
   onNextPhase,
-  players,
-  player,
-  game,
 }: Readonly<CardRevealProps>) {
+  const { players, playerId, currentPlayerIsHost } = useGameContext();
   const cardControls: AnimationControls = useAnimation();
   const infoControls: AnimationControls = useAnimation();
   const buttonControls: AnimationControls = useAnimation();
@@ -42,10 +36,8 @@ export default function CardReveal({
   const [isAnimationComplete, setIsAnimationComplete] = useState(false);
   const [imageError, setImageError] = useState(false);
 
-  const currentPlayerIsHost = isCurrentUserHost(
-    game,
-    player?.player_id || null
-  );
+  // Get current player from context
+  const player = players.find((p) => p.player_id === playerId);
 
   // Set the role-specific image when component mounts or roleName changes
   useEffect(() => {

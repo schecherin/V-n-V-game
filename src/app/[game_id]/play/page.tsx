@@ -35,7 +35,7 @@ function GamePlayPageInner() {
   const playerId: string | null = searchParams.get("playerId");
 
   // Get game data from layout context
-  const { game, players, currentUserIsHost } = useGameContext();
+  const { game, players, currentPlayerIsHost } = useGameContext();
 
   // Game state and hooks
   const [currentPlayerId] = useState<string | null>(playerId);
@@ -44,39 +44,27 @@ function GamePlayPageInner() {
   const [roles, setRoles] = useState<Role[]>([]);
 
   // Memoize current player and host status to prevent re-calculations
-  const { currentPlayer, isUserHost } = useMemo(() => {
+  const { currentPlayer } = useMemo(() => {
     const p = players.find((p) => p.player_id === currentPlayerId);
-    const isHost = currentUserIsHost; // Use the host status from context
-    return { currentPlayer: p, isUserHost: isHost };
-  }, [players, currentPlayerId, currentUserIsHost]);
+    return { currentPlayer: p };
+  }, [players, currentPlayerId]);
 
   useEffect(() => {
     getAssignableRoles().then(setRoles);
   }, []);
 
   // Custom hooks for role assignment
-  useRoleAssignment({
-    game,
-    players,
-    isUserHost,
-    gameId,
-    currentPlayerId,
-  });
+  useRoleAssignment();
 
   // Custom hooks for minigame logic
   const { minigameResult, handleMinigameGuess } = useMinigame({
-    game,
-    gameId,
-    playerId,
-    currentPlayerId,
-    isUserHost,
     gamePhase,
   });
 
   const handleSetGamePhase = async (newPhase?: GamePhase) => {
     if (!gamePhase) return;
     const nextPhase = newPhase ?? getNextPhase(gamePhase, game);
-    if (!isUserHost) return;
+    if (!currentPlayerIsHost) return;
     try {
       await updateGamePhase(gameId, nextPhase);
     } catch (err) {
@@ -97,41 +85,23 @@ function GamePlayPageInner() {
       case "RoleReveal":
         return (
           <CardReveal
-            players={players}
             roleName={roleName}
             roleDescription={roleDescription}
             onNextPhase={() => {
               setGameDay(gameId, 1);
               handleSetGamePhase();
             }}
-            player={currentPlayer}
-            game={game}
           />
         );
       case "Tutorial":
-        return (
-          <Tutorial
-            player={currentPlayer}
-            game={game}
-            players={players}
-            onNextPhase={() => handleSetGamePhase()}
-          />
-        );
+        return <Tutorial onNextPhase={() => handleSetGamePhase()} />;
       case "Reflection_RoleActions":
-        return (
-          <ReflectionPhase
-            player={currentPlayer}
-            onNextPhase={() => handleSetGamePhase()}
-          />
-        );
+        return <ReflectionPhase onNextPhase={() => handleSetGamePhase()} />;
       case "Reflection_MiniGame":
         return (
           <MinigameCore
-            players={players}
-            currentPlayerId={currentPlayerId ?? ""}
             onGuess={handleMinigameGuess}
             onNextPhase={() => handleSetGamePhase()}
-            isCurrentUserHost={isUserHost}
             roles={roles}
           />
         );
@@ -141,7 +111,6 @@ function GamePlayPageInner() {
             position={minigameResult?.rank || 0}
             points={minigameResult?.totalPoints || 0}
             onNextPhase={() => handleSetGamePhase()}
-            isHost={isUserHost}
           />
         );
       case "Elections_Chairperson":
@@ -149,32 +118,17 @@ function GamePlayPageInner() {
       case "Elections_Result":
         return (
           <ConsultationElections
-            game={game}
-            players={players}
-            currentPlayer={currentPlayer}
-            gameId={gameId}
-            dayNumber={game?.current_day || 1}
-            currentPhase={gamePhase}
             onNextPhase={() => {
               handleSetGamePhase();
             }}
-            isCurrentUserHost={isUserHost}
           />
         );
       case "Outreach":
-        return (
-          <OutreachPhase
-            player={currentPlayer}
-            onNextPhase={() => handleSetGamePhase()}
-            isCurrentUserHost={isUserHost}
-          />
-        );
+        return <OutreachPhase onNextPhase={() => handleSetGamePhase()} />;
       case "Consultation_Discussion":
       case "Consultation_TreasurerActions":
         return (
           <ConsultationPhase
-            players={players}
-            player={currentPlayer}
             onNextPhase={() => {
               handleSetGamePhase();
             }}
@@ -184,14 +138,11 @@ function GamePlayPageInner() {
       case "Consultation_Voting_Prison":
         return (
           <ConsultationVoting
-            game={game}
-            players={players}
             onNextPhase={() => {
               // TODO: the day should increment once before going to reflection phase
               setGameDay(gameId, (game?.current_day ?? 1) + 1);
               handleSetGamePhase();
             }}
-            isCurrentUserHost={isUserHost}
           />
         );
       case "Finished":

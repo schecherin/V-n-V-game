@@ -4,24 +4,21 @@ import React, { useState } from "react";
 import Button from "../ui/Button";
 import { Player, Role } from "@/types";
 import { MINIGAME_MAX_GUESSES } from "@/lib/constants";
+import { useGameContext } from "@/app/[game_id]/layout";
 
 interface MinigameCoreProps {
-  players: Player[];
-  currentPlayerId: string; // ID of the player viewing the minigame
   onGuess: (targetPlayerId: string, guessedRole: string) => void; // Callback when a guess is made
   onNextPhase: () => void;
-  isCurrentUserHost: boolean;
   roles: Role[];
 }
 
 export default function MinigameCore({
-  players,
-  currentPlayerId,
   onGuess,
   onNextPhase,
-  isCurrentUserHost,
   roles,
 }: Readonly<MinigameCoreProps>) {
+  const { players, playerId, currentPlayerIsHost } = useGameContext();
+  const currentPlayerId = playerId || "";
   const [selectedPlayer, setSelectedPlayer] = useState<Player | null>(null);
   const [guessedRole, setGuessedRole] = useState<string>("");
   const [guessesMade, setGuessesMade] = useState<Record<string, string>>({}); // { playerId: guessedRole }
@@ -226,7 +223,7 @@ export default function MinigameCore({
               Waiting for the next phase or results.
             </p>
             {/* Only host can see the button */}
-            {isCurrentUserHost && (
+            {currentPlayerIsHost && (
               <Button onClick={handleNextPhase} disabled={loadingNextPhase}>
                 {loadingNextPhase ? "Loading..." : "Go to next phase"}
               </Button>

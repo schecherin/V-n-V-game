@@ -2,22 +2,16 @@ import { Game, Player } from "@/types";
 import { useState } from "react";
 import Button from "../ui/Button";
 import { recordVote } from "@/lib/gameApi";
+import { useGameContext } from "@/app/[game_id]/layout";
 
 interface ConsultationVotingProps {
-  game: Game | null;
-  player?: Player;
-  players: Player[];
   onNextPhase: () => void;
-  isCurrentUserHost: boolean;
 }
 
-const ConsultationVoting = ({
-  game,
-  player,
-  players,
-  onNextPhase,
-  isCurrentUserHost,
-}: ConsultationVotingProps) => {
+const ConsultationVoting = ({ onNextPhase }: ConsultationVotingProps) => {
+  const { game, players, playerId, currentPlayerIsHost } = useGameContext();
+  const player = players.find((p) => p.player_id === playerId);
+
   const [hasVoted, setHasVoted] = useState(false);
   const [votingComplete, setVotingComplete] = useState(false);
   const [selectedPlayer, setSelectedPlayer] = useState<string | null>(null);
@@ -89,13 +83,13 @@ const ConsultationVoting = ({
         <div className="text-green-600 font-semibold mb-4">✓ Vote recorded</div>
       )}
 
-      {isCurrentUserHost && hasVoted && (
+      {currentPlayerIsHost && hasVoted && (
         <Button onClick={completeVoting} className="w-full">
           Complete Voting
         </Button>
       )}
 
-      {!isCurrentUserHost && hasVoted && (
+      {!currentPlayerIsHost && hasVoted && (
         <div className="text-slate-600 italic">
           Waiting for the host to continue...
         </div>

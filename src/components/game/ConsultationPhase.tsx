@@ -1,20 +1,20 @@
 import React, { useState } from "react";
 import Button from "../ui/Button";
-import { GamePhase, Player } from "@/types";
+import { GamePhase } from "@/types";
+import { useGameContext } from "@/app/[game_id]/layout";
 
 interface ConsultationPhaseProps {
-  player?: Player;
-  players: Player[];
   onNextPhase: (newPhase?: GamePhase) => void;
   onEndGame: () => void;
 }
 
 const ConsultationPhase = ({
-  player,
-  players,
   onNextPhase,
   onEndGame,
 }: ConsultationPhaseProps) => {
+  const { players, playerId } = useGameContext();
+  const player = players.find((p) => p.player_id === playerId);
+
   return (
     <>
       <div className="flex flex-col items-center justify-center gap-2">

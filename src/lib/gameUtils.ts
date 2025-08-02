@@ -14,7 +14,7 @@ export interface MinigameResult {
  * @param currentPlayerId The current player's ID.
  * @returns True if the current player is the host, false otherwise.
  */
-export function isCurrentUserHost(
+export function isCurrentPlayerHost(
   game: Game | null,
   currentPlayerId: string | null
 ): boolean {

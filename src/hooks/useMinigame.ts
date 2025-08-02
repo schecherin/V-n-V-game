@@ -1,29 +1,18 @@
 import { useEffect, useState } from "react";
-import { Game } from "@/types";
 import { getPlayerById } from "@/lib/playerApi";
 import {
   calculateMinigameResults,
   type MinigameResult,
 } from "@/lib/minigameAPI";
 import { insertReflectionPhaseGuess } from "@/lib/gameApi";
+import { useGameContext } from "@/app/[game_id]/layout";
 
 interface UseMinigameProps {
-  game: Game | null;
-  gameId: string;
-  playerId: string | null;
-  currentPlayerId: string | null;
-  isUserHost: boolean;
   gamePhase: string | undefined;
 }
 
-export function useMinigame({
-  game,
-  gameId,
-  playerId,
-  currentPlayerId,
-  isUserHost,
-  gamePhase,
-}: UseMinigameProps) {
+export function useMinigame({ gamePhase }: UseMinigameProps) {
+  const { game, gameId, playerId, currentPlayerIsHost } = useGameContext();
   const [minigameResult, setMinigameResult] = useState<MinigameResult>();
   const [resultsCalculated, setResultsCalculated] = useState(false);
 
@@ -35,7 +24,7 @@ export function useMinigame({
     setResultsCalculated(true);
 
     try {
-      if (isUserHost) {
+      if (currentPlayerIsHost) {
         // HOST CALCULATES AND UPDATES DATABASE
         console.log("Host calculating results for everyone...");
         const results = await calculateMinigameResults(
@@ -103,20 +92,20 @@ export function useMinigame({
     if (gamePhase === "Reflection_MiniGame_Result" && !resultsCalculated) {
       handleMinigameResult();
     }
-  }, [gamePhase, resultsCalculated, gameId, playerId, isUserHost]);
+  }, [gamePhase, resultsCalculated, gameId, playerId, currentPlayerIsHost]);
 
   const handleMinigameGuess = async (
     targetPlayerId: string,
     guessedRole: string
   ) => {
-    if (!currentPlayerId) return;
+    if (!playerId) return;
     try {
       await insertReflectionPhaseGuess({
         game_code: gameId,
         day_number: game?.current_day ?? 1,
         guessed_player_id: targetPlayerId,
         guessed_role_name: guessedRole,
-        guessing_player_id: currentPlayerId,
+        guessing_player_id: playerId,
       });
     } catch (err) {
       console.error("Failed to insert minigame guess:", err);

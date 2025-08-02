@@ -8,16 +8,10 @@ import {
   setSecretaryPlayerId,
   setTreasurerPlayerId,
 } from "@/lib/gameApi";
+import { useGameContext } from "@/app/[game_id]/layout";
 
 interface ConsultationElectionsProps {
-  game: Game | null;
-  players: Player[];
-  currentPlayer: Player | undefined;
-  gameId: string;
-  dayNumber: number;
-  currentPhase: GamePhase;
   onNextPhase: () => void;
-  isCurrentUserHost: boolean;
 }
 
 type ElectionRole = "chairperson" | "secretary";
@@ -35,15 +29,14 @@ interface ElectionState {
 }
 
 const ConsultationElections: React.FC<ConsultationElectionsProps> = ({
-  game,
-  players,
-  currentPlayer,
-  gameId,
-  dayNumber,
-  currentPhase,
   onNextPhase,
-  isCurrentUserHost,
 }) => {
+  const { game, players, playerId, currentPlayerIsHost, gameId } =
+    useGameContext();
+  const currentPlayer = players.find((p) => p.player_id === playerId);
+  const dayNumber = game?.current_day || 1;
+  const currentPhase = game?.current_phase || "Elections_Chairperson";
+
   const getCurrentRole = (phase: GamePhase): ElectionRole => {
     if (phase === "Elections_Chairperson") return "chairperson";
     return "secretary";
@@ -283,7 +276,7 @@ const ConsultationElections: React.FC<ConsultationElectionsProps> = ({
           </div>
         </div>
 
-        {isCurrentUserHost && (
+        {currentPlayerIsHost && (
           <Button onClick={onNextPhase} className="w-full">
             Continue to Next Phase
           </Button>
@@ -353,7 +346,7 @@ const ConsultationElections: React.FC<ConsultationElectionsProps> = ({
         <div className="text-green-600 font-semibold mb-4">✓ Vote recorded</div>
       )}
 
-      {isCurrentUserHost && electionState.hasVoted && (
+      {currentPlayerIsHost && electionState.hasVoted && (
         <Button onClick={handleNextRole} className="w-full">
           {electionState.currentRole === "secretary"
             ? "Complete Election"
@@ -361,7 +354,7 @@ const ConsultationElections: React.FC<ConsultationElectionsProps> = ({
         </Button>
       )}
 
-      {!isCurrentUserHost && electionState.hasVoted && (
+      {!currentPlayerIsHost && electionState.hasVoted && (
         <div className="text-slate-600 italic">
           Waiting for the host to continue...
         </div>

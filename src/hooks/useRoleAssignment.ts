@@ -1,24 +1,11 @@
 import { useEffect, useState } from "react";
-import { Player, Game } from "@/types";
-import { isCurrentUserHost } from "@/lib/gameUtils";
 import { assignRolesToPlayers } from "@/lib/roleAssign";
 import { supabase } from "@/lib/supabase/client";
+import { useGameContext } from "@/app/[game_id]/layout";
 
-interface UseRoleAssignmentProps {
-  game: Game | null;
-  players: Player[];
-  isUserHost: boolean;
-  gameId: string;
-  currentPlayerId: string | null;
-}
-
-export function useRoleAssignment({
-  game,
-  players,
-  isUserHost,
-  gameId,
-  currentPlayerId,
-}: UseRoleAssignmentProps) {
+export function useRoleAssignment() {
+  const { game, players, gameId, currentPlayerIsHost, playerId } =
+    useGameContext();
   const [isAssigningRoles, setIsAssigningRoles] = useState(false);
 
   useEffect(() => {
@@ -27,7 +14,7 @@ export function useRoleAssignment({
       const rolesAreAssigned = players.some((p) => p.current_role_name);
 
       if (
-        isUserHost &&
+        currentPlayerIsHost &&
         game?.current_phase === "RoleReveal" &&
         !rolesAreAssigned &&
         !isAssigningRoles
@@ -46,12 +33,12 @@ export function useRoleAssignment({
             setIsAssigningRoles(false);
             return;
           }
-          if (!currentPlayerId) {
+          if (!playerId) {
             console.error("Current player ID is null");
             setIsAssigningRoles(false);
             return;
           }
-          const result = await assignRolesToPlayers(gameId, currentPlayerId);
+          const result = await assignRolesToPlayers(gameId, playerId);
           if (result.success) {
             console.log("Roles assigned successfully:", result.assignments);
             // The real-time subscription should automatically update the UI
@@ -67,10 +54,10 @@ export function useRoleAssignment({
     };
 
     // Ensure we have the necessary data before trying to assign roles
-    if (game && players.length > 0 && isUserHost !== undefined) {
+    if (game && players.length > 0 && currentPlayerIsHost !== undefined) {
       handleRoleAssignment();
     }
-  }, [game, players, isUserHost, gameId, isAssigningRoles, currentPlayerId]);
+  }, [game, players, currentPlayerIsHost, gameId, isAssigningRoles, playerId]);
 
   return { isAssigningRoles };
 }

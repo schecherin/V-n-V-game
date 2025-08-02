@@ -16,7 +16,7 @@ import Button from "@/components/ui/Button";
 import { useParams, useSearchParams, useRouter } from "next/navigation";
 import { getPlayersByGameCode } from "@/lib/playerApi";
 import { getAssignableRoles, getGameByCode } from "@/lib/gameApi";
-import { isCurrentUserHost } from "@/lib/gameUtils";
+import { isCurrentPlayerHost } from "@/lib/gameUtils";
 import { Player, Game, Role } from "@/types";
 import {
   subscribeToGameUpdates,
@@ -29,7 +29,7 @@ import PlayerListDrawer from "@/components/app/PlayerList";
 interface GameContextType {
   game: Game | null;
   players: Player[];
-  currentUserIsHost: boolean;
+  currentPlayerIsHost: boolean;
   playerId: string | null;
   gameId: string;
   refetchData: () => Promise<void>;
@@ -72,7 +72,8 @@ function GameLayoutInner({ children }: { children: React.ReactNode }) {
   const [game, setGame] = useState<Game | null>(null);
   const [players, setPlayers] = useState<Player[]>([]);
   const [roles, setRoles] = useState<Role[]>([]);
-  const [currentUserIsHost, setCurrentUserIsHost] = useState<boolean>(false);
+  const [currentPlayerIsHost, setCurrentPlayerIsHost] =
+    useState<boolean>(false);
 
   // UI state
   const [isMenuOpen, setIsMenuOpen] = useState<boolean>(false);
@@ -146,7 +147,7 @@ function GameLayoutInner({ children }: { children: React.ReactNode }) {
 
   // Update host status when game or playerId changes
   useEffect(() => {
-    setCurrentUserIsHost(isCurrentUserHost(game, playerId));
+    setCurrentPlayerIsHost(isCurrentPlayerHost(game, playerId));
   }, [game, playerId]);
 
   const handleOpenMenu = () => {
@@ -166,7 +167,7 @@ function GameLayoutInner({ children }: { children: React.ReactNode }) {
     () => ({
       game,
       players,
-      currentUserIsHost,
+      currentPlayerIsHost,
       playerId,
       gameId,
       refetchData,
@@ -178,7 +179,7 @@ function GameLayoutInner({ children }: { children: React.ReactNode }) {
     [
       game,
       players,
-      currentUserIsHost,
+      currentPlayerIsHost,
       playerId,
       gameId,
       refetchData,
@@ -198,7 +199,6 @@ function GameLayoutInner({ children }: { children: React.ReactNode }) {
         <SideMenu
           isOpen={isMenuOpen}
           onClose={() => setIsMenuOpen(false)}
-          player={currentPlayer}
           onLeaveGameConfirm={() => setShowLeaveConfirmModal(true)}
           onShowRoleExplanation={handleShowRoleExplanation}
         />
@@ -221,7 +221,7 @@ function GameLayoutInner({ children }: { children: React.ReactNode }) {
           gamePhase={game?.current_phase ?? "Lobby"}
           activeView={activeMainView}
           chatOpen={isChatOpen}
-          showControls={currentUserIsHost}
+          showControls={currentPlayerIsHost}
         />
         <PlayerListDrawer
           isOpen={isPlayerListOpen}
