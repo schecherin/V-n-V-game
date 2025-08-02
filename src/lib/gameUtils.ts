@@ -1,4 +1,5 @@
-import { Game, GamePhase } from "@/types";
+import { Game, GamePhase, Player, Role } from "@/types";
+import { censorList } from "./utils";
 
 export interface MinigameResult {
   playerId: string;
@@ -20,6 +21,24 @@ export function isCurrentPlayerHost(
 ): boolean {
   if (!game || !currentPlayerId) return false;
   return currentPlayerId === game.host_player_id;
+}
+
+/**
+ * Generate a random 5-character game code.
+ * @returns A unique game code string.
+ */
+export async function generateGameCode() {
+  const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+  let code = "";
+  for (let i = 0; i < 4; i++) {
+    code += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return code;
+}
+
+export function containsProfanity(code: string): boolean {
+  const normalizedCode = code.toLowerCase();
+  return censorList.some((profaneWord) => normalizedCode.includes(profaneWord));
 }
 
 /**
@@ -106,3 +125,29 @@ export function getNextPhase(
   const nextPhase = phaseTransitions[currentPhase] || currentPhase;
   return nextPhase;
 }
+
+/**
+ * Get the vices and virtues from the players and roles.
+ * @param players The players.
+ * @param roles The roles.
+ * @returns The vices and virtues.
+ */
+export const getVicesAndVirtues = (
+  players: Player[],
+  roles: Role[]
+): { virtues: Player[]; vices: Player[] } => {
+  const virtueRoleNames = roles
+    .filter((role) => role.faction === "Virtue")
+    .map((role) => role.role_name);
+  return players.reduce(
+    (acc, player) => {
+      if (virtueRoleNames.includes(player.current_role_name ?? "")) {
+        acc.virtues.push(player);
+      } else {
+        acc.vices.push(player);
+      }
+      return acc;
+    },
+    { virtues: [] as Player[], vices: [] as Player[] }
+  );
+};

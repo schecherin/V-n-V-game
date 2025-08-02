@@ -1,7 +1,6 @@
 import { useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import {
-  generateGameCode,
   checkGameCodeUnique,
   createGame,
   setHostPlayerId,
@@ -10,6 +9,7 @@ import {
 } from "@/lib/gameApi";
 import { createPlayer, setPlayerGameCode } from "@/lib/playerApi";
 import { signInAnonymously } from "@/lib/authApi";
+import { generateGameCode, containsProfanity } from "@/lib/gameUtils";
 
 /**
  * React hook to create a new game and host player.
@@ -43,9 +43,11 @@ export function useCreateGame() {
         // Generate unique game code
         let gameCode = await generateGameCode();
         let isUnique = false;
-        while (!isUnique) {
+        let isClean = true;
+        while (!isUnique || !isClean) {
           isUnique = await checkGameCodeUnique(gameCode);
-          if (!isUnique) {
+          isClean = !containsProfanity(gameCode);
+          if (!isUnique || !isClean) {
             gameCode = await generateGameCode();
           }
         }
