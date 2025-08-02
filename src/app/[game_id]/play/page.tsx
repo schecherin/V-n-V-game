@@ -132,7 +132,6 @@ function GamePlayPageInner() {
             onNextPhase={() => {
               handleSetGamePhase();
             }}
-            onEndGame={() => handleSetGamePhase()}
           />
         );
       case "Consultation_Voting_Prison":

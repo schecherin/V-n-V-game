@@ -1,4 +1,3 @@
-import { Game, Player } from "@/types";
 import { useState } from "react";
 import Button from "../ui/Button";
 import { recordVote } from "@/lib/gameApi";

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import Button from "../ui/Button";
-import { Game, GamePhase, Player } from "@/types";
+import { GamePhase, Player } from "@/types";
 import {
   recordVote,
   countVotes,

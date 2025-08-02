@@ -23,7 +23,7 @@ export default function CardReveal({
   roleDescription,
   onNextPhase,
 }: Readonly<CardRevealProps>) {
-  const { players, playerId, currentPlayerIsHost } = useGameContext();
+  const { currentPlayerIsHost } = useGameContext();
   const cardControls: AnimationControls = useAnimation();
   const infoControls: AnimationControls = useAnimation();
   const buttonControls: AnimationControls = useAnimation();
@@ -35,9 +35,6 @@ export default function CardReveal({
   const [cardFrontImage, setCardFrontImage] = useState("/card-image.png");
   const [isAnimationComplete, setIsAnimationComplete] = useState(false);
   const [imageError, setImageError] = useState(false);
-
-  // Get current player from context
-  const player = players.find((p) => p.player_id === playerId);
 
   // Set the role-specific image when component mounts or roleName changes
   useEffect(() => {

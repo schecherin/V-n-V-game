@@ -7,8 +7,7 @@ interface TutorialProps {
 }
 
 const Tutorial: React.FC<TutorialProps> = ({ onNextPhase }) => {
-  const { game, players, playerId, currentPlayerIsHost } = useGameContext();
-  const player = players.find((p) => p.player_id === playerId);
+  const { currentPlayerIsHost } = useGameContext();
 
   return (
     <div className="min-h-screen bg-cream flex flex-col items-center justify-center p-8">
