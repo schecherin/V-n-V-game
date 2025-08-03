@@ -89,19 +89,6 @@ export async function joinGame(gameCode: string, name: string) {
 }
 
 /**
- * Generate a random 5-character game code.
- * @returns A unique game code string.
- */
-export async function generateGameCode() {
-  const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-  let code = "";
-  for (let i = 0; i < 4; i++) {
-    code += chars.charAt(Math.floor(Math.random() * chars.length));
-  }
-  return code;
-}
-
-/**
  * Check if a game code is unique (not already used).
  * @param gameCode The game code to check.
  * @returns True if unique, false otherwise.

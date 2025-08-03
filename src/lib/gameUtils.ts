@@ -30,7 +30,7 @@ export function isCurrentPlayerHost(
 export async function generateGameCode() {
   const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
   let code = "";
-  for (let i = 0; i < 4; i++) {
+  for (let i = 0; i < 3; i++) {
     code += chars.charAt(Math.floor(Math.random() * chars.length));
   }
   return code;

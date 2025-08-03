@@ -1,12 +1,6 @@
 import { useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import {
-  checkGameCodeUnique,
-  createGame,
-  setHostPlayerId,
-  getHostPlayerId,
-  getGameByCode,
-} from "@/lib/gameApi";
+import { checkGameCodeUnique, createGame } from "@/lib/gameApi";
 import { createPlayer, setPlayerGameCode } from "@/lib/playerApi";
 import { signInAnonymously } from "@/lib/authApi";
 import { generateGameCode, containsProfanity } from "@/lib/gameUtils";
