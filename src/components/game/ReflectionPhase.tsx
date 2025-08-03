@@ -14,7 +14,6 @@ const ReflectionPhase = ({ onNextPhase }: ReflectionPhaseProps) => {
   const player = players.find((p) => p.player_id === playerId);
   const [timer, setTimer] = useState(15);
   const [confirmed, setConfirmed] = useState(false);
-  const router = useRouter();
 
   useEffect(() => {
     if (timer > 0 && !confirmed) {

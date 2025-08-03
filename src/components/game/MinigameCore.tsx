@@ -21,7 +21,7 @@ export default function MinigameCore({
   const currentPlayerId = playerId || "";
   const [selectedPlayer, setSelectedPlayer] = useState<Player | null>(null);
   const [guessedRole, setGuessedRole] = useState<string>("");
-  const [guessesMade, setGuessesMade] = useState<Record<string, string>>({}); // { playerId: guessedRole }
+  const [guessesMade, setGuessesMade] = useState<Record<string, string>>({});
   const [maxGuesses] = useState<number>(MINIGAME_MAX_GUESSES);
   const [feedback, setFeedback] = useState<string>(""); // Feedback on guess
   const [loadingNextPhase, setLoadingNextPhase] = useState(false);

@@ -7,8 +7,7 @@ interface OutreachPhaseProps {
 }
 
 const OutreachPhase = ({ onNextPhase }: Readonly<OutreachPhaseProps>) => {
-  const { players, playerId, currentPlayerIsHost } = useGameContext();
-  const player = players.find((p) => p.player_id === playerId);
+  const { currentPlayerIsHost } = useGameContext();
 
   return (
     <div className="flex flex-col items-center justify-center gap-2">
