@@ -7,7 +7,11 @@ import {
   TREASURY_REVEAL_COST,
 } from "@/lib/constants";
 import { TreasuryActionType } from "@/types";
-import { setTreasurerAction, updateGameGroupPointsPool } from "@/lib/gameApi";
+import {
+  setTreasurerAction,
+  updateGameGroupPointsPool,
+  updateGameProperties,
+} from "@/lib/gameApi";
 import {
   Select,
   SelectContent,
@@ -17,6 +21,7 @@ import {
 } from "../ui/select";
 import { useState } from "react";
 import { MinusIcon, PlusIcon } from "lucide-react";
+import { updatePlayerStatus } from "@/lib/playerApi";
 
 interface TreasurerViewProps {
   onNextPhase: () => void;
@@ -78,14 +83,22 @@ const TreasurerView = ({ onNextPhase }: TreasurerViewProps) => {
   };
 
   const handleTreasuryActions = () => {
+    if (!game) return;
     for (let i = 0; i < houseOfWorshipPurchases; i++) {
       handleTreasuryAction("BuildHouseOfWorship");
     }
-    for (const playerId of freePlayerPurchases) {
-      handleTreasuryAction("FreePlayerFromPrison", playerId);
+    updateGameProperties(game?.game_code, {
+      houses_of_worship_virtue:
+        game.houses_of_worship_virtue + houseOfWorshipPurchases,
+    });
+
+    for (const imprisonedPlayerId of freePlayerPurchases) {
+      handleTreasuryAction("FreePlayerFromPrison", imprisonedPlayerId);
+      updatePlayerStatus(imprisonedPlayerId, "Alive");
     }
-    for (const playerId of resuscitatePlayerPurchases) {
-      handleTreasuryAction("ResuscitatePlayer", playerId);
+    for (const hospitalizedPlayerId of resuscitatePlayerPurchases) {
+      handleTreasuryAction("ResuscitatePlayer", hospitalizedPlayerId);
+      updatePlayerStatus(hospitalizedPlayerId, "Alive");
     }
     if (revealFactionCountPurchase) {
       handleTreasuryAction("RevealFactionCount");

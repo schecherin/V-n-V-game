@@ -597,3 +597,22 @@ export async function updateGameProperties(
   if (error) throw error;
   return data as Game;
 }
+
+/**
+ * Get the treasurer actions for a game.
+ * @param gameId The game ID.
+ * @param dayNumber The day number.
+ * @returns The treasurer actions.
+ */
+export async function getGameTreasurerActions(
+  gameId: string,
+  dayNumber: number
+) {
+  const { data, error } = await supabase
+    .from("treasury_transactions")
+    .select("*")
+    .eq("game_code", gameId)
+    .eq("day_number", dayNumber);
+  if (error) throw error;
+  return data;
+}
