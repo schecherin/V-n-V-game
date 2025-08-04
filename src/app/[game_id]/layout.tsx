@@ -17,9 +17,10 @@ import { useParams, useSearchParams, useRouter } from "next/navigation";
 import { getPlayersByGameCode } from "@/lib/playerApi";
 import { getAssignableRoles, getGameByCode } from "@/lib/gameApi";
 import { isCurrentPlayerHost } from "@/lib/gameUtils";
-import { Player, Game, Role } from "@/types";
+import { Player, Game, Role, PlayerAction } from "@/types";
 import {
   subscribeToGameUpdates,
+  subscribeToPlayerActions,
   subscribeToPlayerUpdates,
 } from "@/lib/gameSubscriptions";
 import BottomNavBar from "@/components/app/BottomNavBar";
@@ -29,6 +30,7 @@ import PlayerListDrawer from "@/components/app/PlayerList";
 interface GameContextType {
   game: Game | null;
   players: Player[];
+  playerActions: PlayerAction[];
   currentPlayerIsHost: boolean;
   playerId: string | null;
   gameId: string;
@@ -72,6 +74,7 @@ function GameLayoutInner({ children }: { children: React.ReactNode }) {
   // Game and player state
   const [game, setGame] = useState<Game | null>(null);
   const [players, setPlayers] = useState<Player[]>([]);
+  const [playerActions, setPlayerActions] = useState<PlayerAction[]>([]);
   const [roles, setRoles] = useState<Role[]>([]);
   const [currentPlayerIsHost, setCurrentPlayerIsHost] =
     useState<boolean>(false);
@@ -140,9 +143,19 @@ function GameLayoutInner({ children }: { children: React.ReactNode }) {
         });
     });
 
+    const unsubscribePlayerActions = subscribeToPlayerActions(
+      gameId,
+      (payload) => {
+        if (payload.new) {
+          setPlayerActions(payload.new);
+        }
+      }
+    );
+
     return () => {
       unsubscribeGame();
       unsubscribePlayers();
+      unsubscribePlayerActions();
     };
   }, [gameId]);
 
@@ -168,6 +181,7 @@ function GameLayoutInner({ children }: { children: React.ReactNode }) {
     () => ({
       game,
       players,
+      playerActions,
       currentPlayerIsHost,
       playerId,
       gameId,
@@ -181,6 +195,7 @@ function GameLayoutInner({ children }: { children: React.ReactNode }) {
     [
       game,
       players,
+      playerActions,
       currentPlayerIsHost,
       playerId,
       gameId,

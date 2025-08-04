@@ -116,8 +116,10 @@ export function getNextPhase(
       : "Consultation_Discussion",
     Outreach: "Consultation_Discussion",
     Consultation_Discussion: "Consultation_TreasurerActions",
-    Consultation_TreasurerActions: "Consultation_Voting_Prison",
-    Consultation_Voting_Prison: "Reflection_RoleActions",
+    Consultation_TreasurerActions: "Consultation_Voting",
+    Consultation_Voting: "Consultation_Voting_Count",
+    Consultation_Voting_Count: "Consultation_Voting_Results",
+    Consultation_Voting_Results: "Reflection_RoleActions",
     Paused: "Paused", // No transition
     Finished: "Finished", // No transition
   };

@@ -88,8 +88,7 @@ const TreasurerView = ({ onNextPhase }: TreasurerViewProps) => {
       handleTreasuryAction("BuildHouseOfWorship");
     }
     updateGameProperties(game?.game_code, {
-      houses_of_worship_virtue:
-        game.houses_of_worship_virtue + houseOfWorshipPurchases,
+      houses_of_worship: game.houses_of_worship + houseOfWorshipPurchases,
     });
 
     for (const imprisonedPlayerId of freePlayerPurchases) {

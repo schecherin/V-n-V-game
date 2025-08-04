@@ -17,6 +17,7 @@ import Tutorial from "@/components/game/Tutorial";
 import MinigameResults from "@/components/game/MinigameResults";
 import ConsultationElections from "@/components/game/Elections";
 import ConsultationVoting from "@/components/game/ConsultationVoting";
+import ConsultationVotingResults from "@/components/game/ConsultationVotingResults";
 
 export default function GamePlayPage() {
   return (
@@ -134,11 +135,19 @@ function GamePlayPageInner() {
             }}
           />
         );
-      case "Consultation_Voting_Prison":
+      case "Consultation_Voting":
+      case "Consultation_Voting_Count":
         return (
           <ConsultationVoting
             onNextPhase={() => {
-              // TODO: the day should increment once before going to reflection phase
+              handleSetGamePhase();
+            }}
+          />
+        );
+      case "Consultation_Voting_Results":
+        return (
+          <ConsultationVotingResults
+            onNextPhase={() => {
               setGameDay(gameId, (game?.current_day ?? 1) + 1);
               handleSetGamePhase();
             }}

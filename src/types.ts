@@ -24,7 +24,7 @@ export type PlayerProtection = Tables<"player_protections">;
 export type ReflectionPhaseGuess = Tables<"reflection_phase_guesses">;
 export type RoleConversion = Tables<"role_conversions">;
 export type RoleInheritanceChoice = Tables<"role_inheritance_choices">;
-export type SecretaryVoteAnnouncement = Tables<"secretary_vote_announcements">;
+export type VoteAnnouncement = Tables<"vote_announcements">;
 export type TreasuryTransaction = Tables<"treasury_transactions">;
 export type VengeanceGuess = Tables<"vengeance_guesses">;
 

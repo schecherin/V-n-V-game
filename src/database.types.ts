@@ -152,7 +152,6 @@ export type Database = {
           vote_id: string
           voted_player_id: string
           voter_player_id: string
-          voting_phase: Database["public"]["Enums"]["game_phase"]
         }
         Insert: {
           created_at?: string | null
@@ -165,7 +164,6 @@ export type Database = {
           vote_id?: string
           voted_player_id: string
           voter_player_id: string
-          voting_phase: Database["public"]["Enums"]["game_phase"]
         }
         Update: {
           created_at?: string | null
@@ -178,7 +176,6 @@ export type Database = {
           vote_id?: string
           voted_player_id?: string
           voter_player_id?: string
-          voting_phase?: Database["public"]["Enums"]["game_phase"]
         }
         Relationships: [
           {
@@ -213,8 +210,7 @@ export type Database = {
           game_code: string
           group_points_pool: number
           host_player_id: string | null
-          houses_of_worship_vice: number
-          houses_of_worship_virtue: number
+          houses_of_worship: number
           include_outreach_phase: boolean
           last_phase_change_at: string | null
           max_players: number
@@ -232,8 +228,7 @@ export type Database = {
           game_code: string
           group_points_pool?: number
           host_player_id?: string | null
-          houses_of_worship_vice?: number
-          houses_of_worship_virtue?: number
+          houses_of_worship?: number
           include_outreach_phase?: boolean
           last_phase_change_at?: string | null
           max_players?: number
@@ -251,8 +246,7 @@ export type Database = {
           game_code?: string
           group_points_pool?: number
           host_player_id?: string | null
-          houses_of_worship_vice?: number
-          houses_of_worship_virtue?: number
+          houses_of_worship?: number
           include_outreach_phase?: boolean
           last_phase_change_at?: string | null
           max_players?: number
@@ -861,57 +855,6 @@ export type Database = {
         }
         Relationships: []
       }
-      secretary_vote_announcements: {
-        Row: {
-          actual_votes: Json
-          announced_votes: Json
-          announcement_id: string
-          created_at: string | null
-          day_number: number
-          game_code: string
-          is_truthful: boolean
-          secretary_player_id: string
-          voting_phase: Database["public"]["Enums"]["game_phase"]
-        }
-        Insert: {
-          actual_votes: Json
-          announced_votes: Json
-          announcement_id?: string
-          created_at?: string | null
-          day_number: number
-          game_code: string
-          is_truthful: boolean
-          secretary_player_id: string
-          voting_phase: Database["public"]["Enums"]["game_phase"]
-        }
-        Update: {
-          actual_votes?: Json
-          announced_votes?: Json
-          announcement_id?: string
-          created_at?: string | null
-          day_number?: number
-          game_code?: string
-          is_truthful?: boolean
-          secretary_player_id?: string
-          voting_phase?: Database["public"]["Enums"]["game_phase"]
-        }
-        Relationships: [
-          {
-            foreignKeyName: "secretary_vote_announcements_game_code_fkey"
-            columns: ["game_code"]
-            isOneToOne: false
-            referencedRelation: "games"
-            referencedColumns: ["game_code"]
-          },
-          {
-            foreignKeyName: "secretary_vote_announcements_secretary_player_id_fkey"
-            columns: ["secretary_player_id"]
-            isOneToOne: false
-            referencedRelation: "players"
-            referencedColumns: ["player_id"]
-          },
-        ]
-      }
       treasury_transactions: {
         Row: {
           action_type: Database["public"]["Enums"]["treasury_action_type"]
@@ -1035,6 +978,71 @@ export type Database = {
           },
         ]
       }
+      vote_announcements: {
+        Row: {
+          announcement_id: string
+          created_at: string | null
+          day_number: number
+          game_code: string
+          host_is_truthful: boolean
+          host_player_id: string | null
+          imprisoned_player_id: string | null
+          secretary_confirmed: boolean | null
+          secretary_player_id: string
+        }
+        Insert: {
+          announcement_id?: string
+          created_at?: string | null
+          day_number: number
+          game_code: string
+          host_is_truthful: boolean
+          host_player_id?: string | null
+          imprisoned_player_id?: string | null
+          secretary_confirmed?: boolean | null
+          secretary_player_id: string
+        }
+        Update: {
+          announcement_id?: string
+          created_at?: string | null
+          day_number?: number
+          game_code?: string
+          host_is_truthful?: boolean
+          host_player_id?: string | null
+          imprisoned_player_id?: string | null
+          secretary_confirmed?: boolean | null
+          secretary_player_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "secretary_vote_announcements_game_code_fkey"
+            columns: ["game_code"]
+            isOneToOne: false
+            referencedRelation: "games"
+            referencedColumns: ["game_code"]
+          },
+          {
+            foreignKeyName: "secretary_vote_announcements_secretary_player_id_fkey"
+            columns: ["secretary_player_id"]
+            isOneToOne: false
+            referencedRelation: "players"
+            referencedColumns: ["player_id"]
+          },
+          {
+            foreignKeyName: "vote_announcements_host_player_id_fkey"
+            columns: ["host_player_id"]
+            isOneToOne: false
+            referencedRelation: "players"
+            referencedColumns: ["player_id"]
+          },
+          {
+            foreignKeyName: "vote_announcements_imprisoned_player_id_fkey"
+            columns: ["imprisoned_player_id"]
+            isOneToOne: false
+            referencedRelation: "players"
+            referencedColumns: ["player_id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -1087,9 +1095,9 @@ export type Database = {
         | "Reflection_MiniGame"
         | "Outreach"
         | "Consultation_Discussion"
-        | "Consultation_Voting_Prison"
+        | "Consultation_Voting"
         | "Consultation_TreasurerActions"
-        | "Elections_Chairperson"
+        | "Consultation_Voting_Results"
         | "Paused"
         | "Finished"
         | "Tutorial"
@@ -1097,6 +1105,8 @@ export type Database = {
         | "Reflection_MiniGame_Result"
         | "Elections_Secretary"
         | "Elections_Result"
+        | "Elections_Chairperson"
+        | "Consultation_Voting_Count"
       player_status:
         | "Alive"
         | "Dead"
@@ -1284,9 +1294,9 @@ export const Constants = {
         "Reflection_MiniGame",
         "Outreach",
         "Consultation_Discussion",
-        "Consultation_Voting_Prison",
+        "Consultation_Voting",
         "Consultation_TreasurerActions",
-        "Elections_Chairperson",
+        "Consultation_Voting_Results",
         "Paused",
         "Finished",
         "Tutorial",
@@ -1294,6 +1304,8 @@ export const Constants = {
         "Reflection_MiniGame_Result",
         "Elections_Secretary",
         "Elections_Result",
+        "Elections_Chairperson",
+        "Consultation_Voting_Count",
       ],
       player_status: [
         "Alive",
