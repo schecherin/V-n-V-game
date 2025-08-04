@@ -1,5 +1,5 @@
 import React from "react";
-import { Button } from "../ui/button";
+import { Button } from "@/components/ui/button";
 import { useGameContext } from "@/app/[game_id]/layout";
 
 interface OutreachPhaseProps {

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Button } from "../ui/button";
+import { Button } from "@/components/ui/button";
 import { GamePhase, Player } from "@/types";
 import {
   recordVote,
