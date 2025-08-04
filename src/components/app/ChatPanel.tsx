@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { X, Heart, Flame, Smile, ThumbsUp } from "lucide-react";
-import Button from "@/components/ui/button";
+import { Button } from "@/components/ui/button";
 
 interface ChatPanelProps {
   isOpen: boolean;

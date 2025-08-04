@@ -1,5 +1,5 @@
 import React from "react";
-import { Users, MessageSquare, Settings, Gamepad } from "lucide-react";
+import { Users, MessageSquare } from "lucide-react";
 import { ActiveView } from "@/app/[game_id]/layout";
 import { GamePhase } from "@/types";
 
