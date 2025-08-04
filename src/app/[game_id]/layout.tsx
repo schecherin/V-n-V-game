@@ -11,8 +11,8 @@ import React, {
 } from "react";
 import MobileHeader from "@/components/app/MobileHeader";
 import SideMenu from "@/components/app/SideMenu";
-import Modal from "@/components/ui/modal";
-import { Button } from "@/components/ui/button";
+import Modal from "../../components/ui/modal";
+import { Button } from "../../components/ui/button";
 import { useParams, useSearchParams, useRouter } from "next/navigation";
 import { getPlayersByGameCode } from "@/lib/playerApi";
 import { getAssignableRoles, getGameByCode } from "@/lib/gameApi";
