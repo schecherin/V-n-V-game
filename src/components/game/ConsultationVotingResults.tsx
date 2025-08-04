@@ -6,7 +6,7 @@ import {
 } from "@/lib/gameApi";
 import { VoteAnnouncement } from "@/types";
 import { useState, useEffect } from "react";
-import Button from "../ui/Button";
+import { Button } from "../ui/button";
 
 interface ConsultationVotingResultsProps {
   onNextPhase: () => void;

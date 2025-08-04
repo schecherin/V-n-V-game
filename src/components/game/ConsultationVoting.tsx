@@ -1,5 +1,5 @@
 import { useState } from "react";
-import Button from "../ui/Button";
+import { Button } from "../ui/button";
 import { countVotes, insertVoteAnnouncement, recordVote } from "@/lib/gameApi";
 import { useGameContext } from "@/app/[game_id]/layout";
 

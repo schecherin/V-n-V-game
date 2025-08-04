@@ -25,7 +25,7 @@ type ButtonVariant = keyof typeof variantsConfig;
 type ButtonSize = keyof typeof sizesConfig;
 
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-  children: React.ReactNode;
+  children?: React.ReactNode;
   variant?: ButtonVariant;
   size?: ButtonSize;
   className?: string;
@@ -53,4 +53,4 @@ const Button: React.FC<ButtonProps> = ({
     </button>
   );
 };
-export default Button;
+export { Button };

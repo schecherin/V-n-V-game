@@ -1,5 +1,5 @@
 import { useGameContext } from "@/app/[game_id]/layout";
-import Button from "../ui/Button";
+import { Button } from "../ui/button";
 import {
   TREASURY_FREE_PLAYER_COST,
   TREASURY_HOUSE_COST,

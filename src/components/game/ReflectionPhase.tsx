@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
-import Button from "@/components/ui/Button";
-import { useRouter } from "next/navigation";
+import { Button } from "@/components/ui/button";
 import { useGameContext } from "@/app/[game_id]/layout";
 
 interface ReflectionPhaseProps {

@@ -12,7 +12,7 @@ import React, {
 import MobileHeader from "@/components/app/MobileHeader";
 import SideMenu from "@/components/app/SideMenu";
 import Modal from "@/components/ui/Modal";
-import Button from "@/components/ui/Button";
+import { Button } from "@/components/ui/button";
 import { useParams, useSearchParams, useRouter } from "next/navigation";
 import { getPlayersByGameCode } from "@/lib/playerApi";
 import { getAssignableRoles, getGameByCode } from "@/lib/gameApi";

@@ -1,5 +1,5 @@
 import React from "react";
-import Button from "@/components/ui/Button";
+import { Button } from "@/components/ui/button";
 import Switch from "../ui/Switch";
 import { GameSwitch } from "@/types";
 import { useGameContext } from "@/app/[game_id]/layout";

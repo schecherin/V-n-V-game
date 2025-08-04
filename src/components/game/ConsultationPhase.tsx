@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import Button from "../ui/Button";
+import { Button } from "../ui/button";
 import { GamePhase, TreasuryTransaction } from "@/types";
 import { useGameContext } from "@/app/[game_id]/layout";
 import TreasurerView from "./TreasurerView";

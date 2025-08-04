@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import Button from "../ui/Button";
+import { Button } from "../ui/button";
 import { Player, Role } from "@/types";
 import { MINIGAME_MAX_GUESSES } from "@/lib/constants";
 import { useGameContext } from "@/app/[game_id]/layout";
