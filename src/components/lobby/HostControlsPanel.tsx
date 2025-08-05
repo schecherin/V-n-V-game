@@ -1,6 +1,6 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
-import Switch from "../ui/switch";
+import { Switch } from "@/components/ui/switch";
 import { GameSwitch } from "@/types";
 import { useGameContext } from "@/app/[game_id]/layout";
 import { MIN_PLAYERS } from "@/lib/constants";

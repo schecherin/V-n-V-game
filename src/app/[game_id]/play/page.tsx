@@ -29,26 +29,23 @@ export default function GamePlayPage() {
 
 function GamePlayPageInner() {
   const params = useParams();
-  const searchParams = useSearchParams();
   const router = useRouter();
 
   const gameId: string = params.game_id as string;
-  const playerId: string | null = searchParams.get("playerId");
 
   // Get game data from layout context
-  const { game, players, currentPlayerIsHost } = useGameContext();
+  const { game, players, currentPlayerIsHost, playerId } = useGameContext();
 
   // Game state and hooks
-  const [currentPlayerId] = useState<string | null>(playerId);
   const gamePhase = game?.current_phase;
 
   const [roles, setRoles] = useState<Role[]>([]);
 
   // Memoize current player and host status to prevent re-calculations
   const { currentPlayer } = useMemo(() => {
-    const p = players.find((p) => p.player_id === currentPlayerId);
+    const p = players.find((p) => p.player_id === playerId);
     return { currentPlayer: p };
-  }, [players, currentPlayerId]);
+  }, [players, playerId]);
 
   useEffect(() => {
     getAssignableRoles().then(setRoles);
@@ -63,9 +60,15 @@ function GamePlayPageInner() {
   });
 
   const handleSetGamePhase = async (newPhase?: GamePhase) => {
-    if (!gamePhase) return;
+    if (!gamePhase) {
+      return;
+    }
+
     const nextPhase = newPhase ?? getNextPhase(gamePhase, game);
-    if (!currentPlayerIsHost) return;
+    if (!currentPlayerIsHost && game?.treasurer_player_id !== playerId) {
+      return;
+    }
+
     try {
       await updateGamePhase(gameId, nextPhase);
     } catch (err) {

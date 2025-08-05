@@ -48,7 +48,9 @@ const ConsultationPhase = ({ onNextPhase }: ConsultationPhaseProps) => {
   return (
     <div className="flex flex-col items-center justify-center gap-2">
       <h2>Consultation Phase</h2>
-      <TreasurerView onNextPhase={onNextPhase} />
+      {game?.current_phase === "Consultation_Discussion" && (
+        <TreasurerView onNextPhase={onNextPhase} />
+      )}
 
       {game?.current_phase === "Consultation_TreasurerActions" && (
         <>
@@ -124,9 +126,7 @@ const ConsultationPhase = ({ onNextPhase }: ConsultationPhaseProps) => {
           </Button>
         </div>
       ) : (
-        <p>
-          Time to discuss. Waiting for the treasurer to finish their actions...
-        </p>
+        <p>Time to discuss. Wait for the host to start the voting.</p>
       )}
     </div>
   );

@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { countVotes, insertVoteAnnouncement, recordVote } from "@/lib/gameApi";
 import { useGameContext } from "@/app/[game_id]/layout";
+import { updatePlayerStatus } from "@/lib/playerApi";
 
 interface ConsultationVotingProps {
   onNextPhase: () => void;
@@ -54,6 +55,7 @@ const ConsultationVoting = ({ onNextPhase }: ConsultationVotingProps) => {
       finalConvictId,
       isTruthful
     );
+    updatePlayerStatus(finalConvictId, "Imprisoned");
     onNextPhase();
   };
 
@@ -135,21 +137,31 @@ const ConsultationVoting = ({ onNextPhase }: ConsultationVotingProps) => {
               {players.find((p) => p.player_id === convictId)?.player_name}
             </h3>
             <p>This player received the most votes.</p>
-            <p>You voted for {selectedPlayer}</p>
+            <p>
+              You voted for{" "}
+              {players.find((p) => p.player_id === selectedPlayer)?.player_name}
+            </p>
 
             <Button
               disabled={votingFinalized}
-              variant="destructive"
               onClick={() => handleFinalizeVoting(convictId!, true)}
             >
               Democracy (accept result)
             </Button>
-            <Button
-              disabled={votingFinalized}
-              onClick={() => handleFinalizeVoting(selectedPlayer!, false)}
-            >
-              Tyranny (imprison {selectedPlayer})
-            </Button>
+            {selectedPlayer !== convictId && (
+              <Button
+                disabled={votingFinalized}
+                variant="destructive"
+                onClick={() => handleFinalizeVoting(selectedPlayer!, false)}
+              >
+                Tyranny (imprison{" "}
+                {
+                  players.find((p) => p.player_id === selectedPlayer)
+                    ?.player_name
+                }
+                )
+              </Button>
+            )}
           </>
         ) : (
           <p className="text-slate-600 mb-6">Waiting for vote results...</p>
