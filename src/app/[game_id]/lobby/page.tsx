@@ -59,8 +59,6 @@ function LobbyPageInner(): JSX.Element {
     { id: "tutorial", label: "Tutorial", checked: false },
   ]);
 
-  const currentUserIsHost: boolean = isCurrentUserHost(game, playerId);
-
   const handlePlayerClick = (player: Player): void => {
     console.log("Player clicked:", player);
   };
