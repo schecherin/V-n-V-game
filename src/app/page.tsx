@@ -37,9 +37,7 @@ function MainMenuInner() {
   // Custom styles for the mysterious theme
   const pageStyle: React.CSSProperties = {
     minHeight: '100vh',
-    minHeight: '100dvh', // Dynamic viewport height for mobile
     maxHeight: '100vh',
-    maxHeight: '100dvh',
     background: `
       radial-gradient(ellipse at top, #5a4029, #4E3624),
       linear-gradient(180deg, #4E3624 0%, #3d2a1b 100%)
