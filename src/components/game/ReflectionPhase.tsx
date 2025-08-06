@@ -1,19 +1,18 @@
 import React, { useState, useEffect } from "react";
-import Button from "@/components/ui/Button";
-import { useRouter } from "next/navigation";
-import { Player } from "@/types";
+import { Button } from "@/components/ui/button";
+import { useGameContext } from "@/app/[game_id]/layout";
 
 interface ReflectionPhaseProps {
-  player?: Player;
   onNextPhase: () => void;
 }
 
 const DESCRIPTION = `Tijdens de reflectiefase kunnen spelers hun rol uitvoeren aan het begin, voordat de minigame is begonnen. Dit kan alleen mits de spelers genoeg persoonlijke punten hebben. Zij krijgen allen 15 seconden de tijd om dit te doen. De spelers die geen rol hebben op dit moment, moeten op "confirm" drukken. Hierna start de minigame.`;
 
-const ReflectionPhase = ({ player, onNextPhase }: ReflectionPhaseProps) => {
+const ReflectionPhase = ({ onNextPhase }: ReflectionPhaseProps) => {
+  const { players, playerId } = useGameContext();
+  const player = players.find((p) => p.player_id === playerId);
   const [timer, setTimer] = useState(15);
   const [confirmed, setConfirmed] = useState(false);
-  const router = useRouter();
 
   useEffect(() => {
     if (timer > 0 && !confirmed) {

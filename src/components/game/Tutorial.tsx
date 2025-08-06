@@ -1,25 +1,13 @@
 import React from "react";
-import Button from "@/components/ui/Button";
-import { Player } from "@/types";
-import { isCurrentUserHost } from "@/lib/gameUtils";
+import { Button } from "@/components/ui/button";
+import { useGameContext } from "@/app/[game_id]/layout";
 
 interface TutorialProps {
-  player: Player | undefined;
-  game: any;
-  players: Player[];
   onNextPhase: () => void;
 }
 
-const Tutorial: React.FC<TutorialProps> = ({
-  player,
-  game,
-  players,
-  onNextPhase,
-}) => {
-  const currentPlayerIsHost = isCurrentUserHost(
-    game,
-    player?.player_id || null
-  );
+const Tutorial: React.FC<TutorialProps> = ({ onNextPhase }) => {
+  const { currentPlayerIsHost } = useGameContext();
 
   return (
     <div className="min-h-screen bg-cream flex flex-col items-center justify-center p-8">

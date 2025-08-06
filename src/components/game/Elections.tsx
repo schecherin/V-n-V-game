@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
-import Button from "../ui/Button";
-import { Game, GamePhase, Player } from "@/types";
+import { Button } from "@/components/ui/button";
+import { GamePhase, Player } from "@/types";
 import {
   recordVote,
   countVotes,
@@ -8,16 +8,10 @@ import {
   setSecretaryPlayerId,
   setTreasurerPlayerId,
 } from "@/lib/gameApi";
+import { useGameContext } from "@/app/[game_id]/layout";
 
 interface ConsultationElectionsProps {
-  game: Game | null;
-  players: Player[];
-  currentPlayer: Player | undefined;
-  gameId: string;
-  dayNumber: number;
-  currentPhase: GamePhase;
   onNextPhase: () => void;
-  isCurrentUserHost: boolean;
 }
 
 type ElectionRole = "chairperson" | "secretary";
@@ -35,17 +29,16 @@ interface ElectionState {
 }
 
 const ConsultationElections: React.FC<ConsultationElectionsProps> = ({
-  game,
-  players,
-  currentPlayer,
-  gameId,
-  dayNumber,
-  currentPhase,
   onNextPhase,
-  isCurrentUserHost,
 }) => {
+  const { game, players, playerId, currentPlayerIsHost, gameId } =
+    useGameContext();
+  const currentPlayer = players.find((p) => p.player_id === playerId);
+  const dayNumber = game?.current_day || 1;
+  const currentPhase = game?.current_phase || "Elections_Chairperson";
+
   const getCurrentRole = (phase: GamePhase): ElectionRole => {
-    if (phase === "Consultation_Elections_Chairperson") return "chairperson";
+    if (phase === "Elections_Chairperson") return "chairperson";
     return "secretary";
   };
 
@@ -118,7 +111,7 @@ const ConsultationElections: React.FC<ConsultationElectionsProps> = ({
         currentRole: currentRole,
         electedPlayers: newElectedPlayers,
         candidates: newCandidates,
-        electionComplete: currentPhase === "Consultation_Elections_Result",
+        electionComplete: currentPhase === "Elections_Result",
       };
     });
 
@@ -134,7 +127,6 @@ const ConsultationElections: React.FC<ConsultationElectionsProps> = ({
         const hasVoted = await countVotes(
           gameId,
           dayNumber,
-          currentPhase,
           electionState.currentRole,
           currentPlayer.player_id
         );
@@ -160,7 +152,6 @@ const ConsultationElections: React.FC<ConsultationElectionsProps> = ({
         voterId: currentPlayer.player_id,
         candidateId: selectedCandidate,
         dayNumber,
-        gamePhase: currentPhase,
         electionRole: electionState.currentRole,
       });
 
@@ -183,7 +174,6 @@ const ConsultationElections: React.FC<ConsultationElectionsProps> = ({
       const winnerId = await countVotes(
         gameId,
         dayNumber,
-        currentPhase,
         electionState.currentRole
       );
 
@@ -283,7 +273,7 @@ const ConsultationElections: React.FC<ConsultationElectionsProps> = ({
           </div>
         </div>
 
-        {isCurrentUserHost && (
+        {currentPlayerIsHost && (
           <Button onClick={onNextPhase} className="w-full">
             Continue to Next Phase
           </Button>
@@ -353,7 +343,7 @@ const ConsultationElections: React.FC<ConsultationElectionsProps> = ({
         <div className="text-green-600 font-semibold mb-4">✓ Vote recorded</div>
       )}
 
-      {isCurrentUserHost && electionState.hasVoted && (
+      {currentPlayerIsHost && electionState.hasVoted && (
         <Button onClick={handleNextRole} className="w-full">
           {electionState.currentRole === "secretary"
             ? "Complete Election"
@@ -361,7 +351,7 @@ const ConsultationElections: React.FC<ConsultationElectionsProps> = ({
         </Button>
       )}
 
-      {!isCurrentUserHost && electionState.hasVoted && (
+      {!currentPlayerIsHost && electionState.hasVoted && (
         <div className="text-slate-600 italic">
           Waiting for the host to continue...
         </div>

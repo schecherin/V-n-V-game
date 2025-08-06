@@ -59,3 +59,28 @@ export function subscribeToPlayerUpdates(
     supabase.removeChannel(channel);
   };
 }
+
+export function subscribeToPlayerActions(
+  gameCode: string,
+  onUpdate: (payload: any) => void
+) {
+  const channel = supabase
+    .channel(`player-actions-${gameCode}`)
+    .on(
+      "postgres_changes",
+      {
+        event: "*", // Listen to INSERT, UPDATE, DELETE
+        schema: "public",
+        table: "player_actions",
+        filter: `game_code=eq.${gameCode}`,
+      },
+      (payload) => {
+        onUpdate(payload);
+      }
+    )
+    .subscribe();
+
+  return () => {
+    supabase.removeChannel(channel);
+  };
+}

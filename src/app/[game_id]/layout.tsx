@@ -11,15 +11,16 @@ import React, {
 } from "react";
 import MobileHeader from "@/components/app/MobileHeader";
 import SideMenu from "@/components/app/SideMenu";
-import Modal from "@/components/ui/Modal";
-import Button from "@/components/ui/Button";
+import Modal from "@/components/ui/modal";
+import { Button } from "@/components/ui/button";
 import { useParams, useSearchParams, useRouter } from "next/navigation";
 import { getPlayersByGameCode } from "@/lib/playerApi";
 import { getAssignableRoles, getGameByCode } from "@/lib/gameApi";
-import { isCurrentUserHost } from "@/lib/gameUtils";
-import { Player, Game, Role } from "@/types";
+import { isCurrentPlayerHost } from "@/lib/gameUtils";
+import { Player, Game, Role, PlayerAction } from "@/types";
 import {
   subscribeToGameUpdates,
+  subscribeToPlayerActions,
   subscribeToPlayerUpdates,
 } from "@/lib/gameSubscriptions";
 import BottomNavBar from "@/components/app/BottomNavBar";
@@ -29,9 +30,11 @@ import PlayerListDrawer from "@/components/app/PlayerList";
 interface GameContextType {
   game: Game | null;
   players: Player[];
-  currentUserIsHost: boolean;
+  playerActions: PlayerAction[];
+  currentPlayerIsHost: boolean;
   playerId: string | null;
   gameId: string;
+  roles: Role[];
   refetchData: () => Promise<void>;
   activeMainView: ActiveView;
   setActiveMainView: (view: ActiveView) => void;
@@ -71,8 +74,10 @@ function GameLayoutInner({ children }: { children: React.ReactNode }) {
   // Game and player state
   const [game, setGame] = useState<Game | null>(null);
   const [players, setPlayers] = useState<Player[]>([]);
+  const [playerActions, setPlayerActions] = useState<PlayerAction[]>([]);
   const [roles, setRoles] = useState<Role[]>([]);
-  const [currentUserIsHost, setCurrentUserIsHost] = useState<boolean>(false);
+  const [currentPlayerIsHost, setCurrentPlayerIsHost] =
+    useState<boolean>(false);
 
   // UI state
   const [isMenuOpen, setIsMenuOpen] = useState<boolean>(false);
@@ -138,15 +143,25 @@ function GameLayoutInner({ children }: { children: React.ReactNode }) {
         });
     });
 
+    const unsubscribePlayerActions = subscribeToPlayerActions(
+      gameId,
+      (payload) => {
+        if (payload.new) {
+          setPlayerActions(payload.new);
+        }
+      }
+    );
+
     return () => {
       unsubscribeGame();
       unsubscribePlayers();
+      unsubscribePlayerActions();
     };
   }, [gameId]);
 
   // Update host status when game or playerId changes
   useEffect(() => {
-    setCurrentUserIsHost(isCurrentUserHost(game, playerId));
+    setCurrentPlayerIsHost(isCurrentPlayerHost(game, playerId));
   }, [game, playerId]);
 
   const handleOpenMenu = () => {
@@ -166,9 +181,11 @@ function GameLayoutInner({ children }: { children: React.ReactNode }) {
     () => ({
       game,
       players,
-      currentUserIsHost,
+      playerActions,
+      currentPlayerIsHost,
       playerId,
       gameId,
+      roles,
       refetchData,
       activeMainView,
       setActiveMainView,
@@ -178,9 +195,11 @@ function GameLayoutInner({ children }: { children: React.ReactNode }) {
     [
       game,
       players,
-      currentUserIsHost,
+      playerActions,
+      currentPlayerIsHost,
       playerId,
       gameId,
+      roles,
       refetchData,
       activeMainView,
       setActiveMainView,
@@ -198,7 +217,6 @@ function GameLayoutInner({ children }: { children: React.ReactNode }) {
         <SideMenu
           isOpen={isMenuOpen}
           onClose={() => setIsMenuOpen(false)}
-          player={currentPlayer}
           onLeaveGameConfirm={() => setShowLeaveConfirmModal(true)}
           onShowRoleExplanation={handleShowRoleExplanation}
         />
@@ -221,7 +239,7 @@ function GameLayoutInner({ children }: { children: React.ReactNode }) {
           gamePhase={game?.current_phase ?? "Lobby"}
           activeView={activeMainView}
           chatOpen={isChatOpen}
-          showControls={currentUserIsHost}
+          showControls={currentPlayerIsHost}
         />
         <PlayerListDrawer
           isOpen={isPlayerListOpen}

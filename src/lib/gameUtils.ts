@@ -1,4 +1,5 @@
-import { Game, GamePhase } from "@/types";
+import { Game, GamePhase, Player, Role } from "@/types";
+import { censorList } from "./utils";
 
 export interface MinigameResult {
   playerId: string;
@@ -14,12 +15,30 @@ export interface MinigameResult {
  * @param currentPlayerId The current player's ID.
  * @returns True if the current player is the host, false otherwise.
  */
-export function isCurrentUserHost(
+export function isCurrentPlayerHost(
   game: Game | null,
   currentPlayerId: string | null
 ): boolean {
   if (!game || !currentPlayerId) return false;
   return currentPlayerId === game.host_player_id;
+}
+
+/**
+ * Generate a random 5-character game code.
+ * @returns A unique game code string.
+ */
+export async function generateGameCode() {
+  const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+  let code = "";
+  for (let i = 0; i < 3; i++) {
+    code += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return code;
+}
+
+export function containsProfanity(code: string): boolean {
+  const normalizedCode = code.toLowerCase();
+  return censorList.some((profaneWord) => normalizedCode.includes(profaneWord));
 }
 
 /**
@@ -86,20 +105,21 @@ export function getNextPhase(
     Reflection_MiniGame: "Reflection_MiniGame_Result",
     Reflection_MiniGame_Result:
       game?.current_day === 1
-        ? "Consultation_Elections_Chairperson"
+        ? "Elections_Chairperson"
         : game?.include_outreach_phase
         ? "Outreach"
         : "Consultation_Discussion",
-    Consultation_Elections_Chairperson: "Consultation_Elections_Secretary",
-    Consultation_Elections_Secretary: "Consultation_Elections_Result",
-    Consultation_Elections_Result: game?.include_outreach_phase
+    Elections_Chairperson: "Elections_Secretary",
+    Elections_Secretary: "Elections_Result",
+    Elections_Result: game?.include_outreach_phase
       ? "Outreach"
       : "Consultation_Discussion",
     Outreach: "Consultation_Discussion",
-    // TODO: fix these phases
-    Consultation_Discussion: "Reflection_RoleActions",
-    Consultation_TreasurerActions: "Reflection_RoleActions",
-    Consultation_Voting_Prison: "Reflection_RoleActions",
+    Consultation_Discussion: "Consultation_TreasurerActions",
+    Consultation_TreasurerActions: "Consultation_Voting",
+    Consultation_Voting: "Consultation_Voting_Count",
+    Consultation_Voting_Count: "Consultation_Voting_Results",
+    Consultation_Voting_Results: "Reflection_RoleActions",
     Paused: "Paused", // No transition
     Finished: "Finished", // No transition
   };
@@ -107,3 +127,29 @@ export function getNextPhase(
   const nextPhase = phaseTransitions[currentPhase] || currentPhase;
   return nextPhase;
 }
+
+/**
+ * Get the vices and virtues from the players and roles.
+ * @param players The players.
+ * @param roles The roles.
+ * @returns The vices and virtues.
+ */
+export const getVicesAndVirtues = (
+  players: Player[],
+  roles: Role[]
+): { virtues: Player[]; vices: Player[] } => {
+  const virtueRoleNames = roles
+    .filter((role) => role.faction === "Virtue")
+    .map((role) => role.role_name);
+  return players.reduce(
+    (acc, player) => {
+      if (virtueRoleNames.includes(player.current_role_name ?? "")) {
+        acc.virtues.push(player);
+      } else {
+        acc.vices.push(player);
+      }
+      return acc;
+    },
+    { virtues: [] as Player[], vices: [] as Player[] }
+  );
+};

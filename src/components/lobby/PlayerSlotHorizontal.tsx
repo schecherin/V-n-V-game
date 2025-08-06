@@ -1,7 +1,6 @@
 import React from "react";
-import { CheckCircle, Clock } from "lucide-react";
+import { CheckCircle } from "lucide-react";
 import { Player } from "@/types";
-import { isCurrentUserHost } from "@/lib/gameUtils";
 
 interface PlayerSlotHorizontalProps {
   player?: Player;
