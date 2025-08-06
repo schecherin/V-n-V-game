@@ -196,6 +196,47 @@ export async function setPlayerGameCode(playerId: string, gameCode: string) {
   return data;
 }
 
+/**
+ * Resize an image to a maximum size.
+ * @param blob The image blob to resize.
+ * @param maxSize The maximum size in pixels.
+ * @returns A promise that resolves to the resized image blob.
+ */
+function resizeImage(blob: Blob, maxSize: number = 400): Promise<Blob> {
+  return new Promise((resolve) => {
+    const canvas = document.createElement("canvas");
+    const ctx = canvas.getContext("2d");
+    const img = new Image();
+
+    img.onload = () => {
+      const size = Math.min(maxSize, img.width, img.height);
+      canvas.width = size;
+      canvas.height = size;
+
+      // Draw centered crop
+      const offsetX = (img.width - size) / 2;
+      const offsetY = (img.height - size) / 2;
+
+      ctx?.drawImage(img, offsetX, offsetY, size, size, 0, 0, size, size);
+      canvas.toBlob(
+        (blob) => {
+          if (blob) resolve(blob);
+        },
+        "image/jpeg",
+        0.8
+      );
+    };
+
+    img.src = URL.createObjectURL(blob);
+  });
+}
+
+/**
+ * Upload an avatar image to the storage bucket.
+ * @param imageBlob The image blob to upload.
+ * @param gameId The game ID.
+ * @returns The public URL of the uploaded image.
+ */
 export async function uploadAvatar(
   imageBlob: Blob,
   gameId: string
@@ -204,9 +245,11 @@ export async function uploadAvatar(
   const timestamp = Date.now();
   const fileName = `${gameId}/${timestamp}.jpg`;
 
+  const resizedBlob = await resizeImage(imageBlob);
+
   const { data, error } = await supabase.storage
     .from("avatars")
-    .upload(fileName, imageBlob, {
+    .upload(fileName, resizedBlob, {
       contentType: "image/jpeg",
       upsert: false,
     });

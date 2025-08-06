@@ -1,6 +1,13 @@
 "use client";
 
 import { useState, useRef } from "react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 
 interface CameraCaptureProps {
   onCapture: (imageBlob: Blob) => void;
@@ -71,39 +78,54 @@ export default function CameraCapture({
   };
 
   return (
-    <div className="camera-capture">
-      <video
-        ref={videoRef}
-        autoPlay
-        playsInline
-        className="w-full max-w-sm rounded-lg"
-      />
-      <canvas ref={canvasRef} className="hidden" />
+    <Dialog>
+      <DialogTrigger asChild>
+        <button className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors">
+          Open Camera
+        </button>
+      </DialogTrigger>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>Take a Photo</DialogTitle>
+        </DialogHeader>
+        <div className="camera-capture">
+          <video
+            ref={videoRef}
+            autoPlay
+            playsInline
+            className="w-full rounded-lg scale-x-[-1]"
+          />
+          <canvas ref={canvasRef} className="hidden" />
 
-      <div className="flex gap-4 mt-4">
-        <button
-          onClick={startCamera}
-          disabled={!!stream}
-          className="px-4 py-2 bg-blue-500 text-white rounded"
-        >
-          Start Camera
-        </button>
-        <button
-          onClick={capturePhoto}
-          disabled={!stream}
-          className="px-4 py-2 bg-green-500 text-white rounded"
-        >
-          Take Photo
-        </button>
-        <button
-          onClick={() => {
-            stopCamera();
-          }}
-          className="px-4 py-2 bg-gray-500 text-white rounded"
-        >
-          Cancel
-        </button>
-      </div>
-    </div>
+          <div className="flex gap-4 mt-4 justify-center">
+            {!stream ? (
+              <button
+                onClick={startCamera}
+                disabled={!!stream}
+                className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
+              >
+                Start Camera
+              </button>
+            ) : (
+              <button
+                onClick={capturePhoto}
+                disabled={!stream}
+                className="w-16 h-16 bg-white rounded-full border-4 border-gray-300 hover:border-gray-400 transition-colors flex items-center justify-center shadow-lg"
+              >
+                <div className="w-12 h-12 bg-white rounded-full border-2 border-gray-400"></div>
+              </button>
+            )}
+            <button
+              onClick={() => {
+                stopCamera();
+              }}
+              className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600 transition-colors"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 }
