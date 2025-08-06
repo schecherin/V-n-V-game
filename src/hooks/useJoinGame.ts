@@ -74,18 +74,6 @@ export function useJoinGame() {
           throw new Error("Player name already taken in this game");
         }
 
-        if (avatarBlob) {
-          console.log("avatarBlob present");
-          await uploadAvatar(avatarBlob, gameCode).then((url) => {
-            if (player) {
-              console.log("updating player avatar with url", url);
-              updatePlayer(player.player_id, { avatar_url: url });
-            }
-            setAvatarUrl(url);
-          });
-        }
-        console.log("creating player with avatarUrl", avatarUrl);
-
         // Create player
         const newPlayer = await createPlayer({
           game_code: foundGame.game_code,
@@ -95,6 +83,18 @@ export function useJoinGame() {
           avatar_url: avatarUrl,
         });
         setPlayer(newPlayer);
+
+        if (avatarBlob) {
+          console.log("avatarBlob present");
+          await uploadAvatar(avatarBlob, gameCode).then((url) => {
+            if (player) {
+              console.log("updating player avatar with url", url);
+              updatePlayer(player.player_id, { avatar_url: url });
+            }
+            setAvatarUrl(url);
+            console.log("avatarUrl", avatarUrl);
+          });
+        }
 
         // Update game player count
         await updateGamePlayerCount(
