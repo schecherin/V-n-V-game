@@ -4,12 +4,10 @@ import { useState, useRef } from "react";
 
 interface CameraCaptureProps {
   onCapture: (imageBlob: Blob) => void;
-  onCancel: () => void;
 }
 
 export default function CameraCapture({
   onCapture,
-  onCancel,
 }: Readonly<CameraCaptureProps>) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -100,7 +98,6 @@ export default function CameraCapture({
         <button
           onClick={() => {
             stopCamera();
-            onCancel();
           }}
           className="px-4 py-2 bg-gray-500 text-white rounded"
         >

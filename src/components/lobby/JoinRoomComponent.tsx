@@ -2,14 +2,21 @@
 import { useState, useEffect } from "react";
 import { useJoinGame } from "@/hooks/useJoinGame";
 import { useSearchParams } from "next/navigation";
+import CameraCapture from "@/components/app/CameraCapture";
+import { uploadAvatar } from "@/lib/playerApi";
 
 interface JoinRoomComponentProps {
   onBack: () => void;
 }
 
-export default function JoinRoomComponent({ onBack }: JoinRoomComponentProps) {
+export default function JoinRoomComponent({
+  onBack,
+}: Readonly<JoinRoomComponentProps>) {
   const [gameCode, setGameCode] = useState("");
   const [playerName, setPlayerName] = useState("");
+  const [avatarBlob, setAvatarBlob] = useState<Blob | null>(null);
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   const { joinGame, loading: isLoading, error } = useJoinGame();
   const searchParams = useSearchParams();
 
@@ -21,12 +28,22 @@ export default function JoinRoomComponent({ onBack }: JoinRoomComponentProps) {
     }
   }, [searchParams]);
 
+  const handlePhotoCapture = (blob: Blob) => {
+    setAvatarBlob(blob);
+    setAvatarPreview(URL.createObjectURL(blob));
+  };
+
   const handleJoinRoom = async () => {
     if (!gameCode.trim() || !playerName.trim()) {
       alert("Please enter both game code and player name");
       return;
     }
-    await joinGame(gameCode, playerName);
+    if (avatarBlob) {
+      await uploadAvatar(avatarBlob, gameCode).then((url) => {
+        setAvatarUrl(url);
+      });
+    }
+    await joinGame(gameCode, playerName, avatarUrl);
   };
 
   return (
@@ -69,6 +86,17 @@ export default function JoinRoomComponent({ onBack }: JoinRoomComponentProps) {
             maxLength={20}
           />
         </div>
+        {!avatarPreview ? (
+          <CameraCapture onCapture={handlePhotoCapture} />
+        ) : (
+          <div>
+            <img
+              src={avatarPreview}
+              alt="Your avatar"
+              className="w-32 h-32 rounded-full mx-auto"
+            />
+          </div>
+        )}
 
         {error && (
           <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
@@ -80,7 +108,7 @@ export default function JoinRoomComponent({ onBack }: JoinRoomComponentProps) {
       <div className="space-y-3">
         <button
           onClick={handleJoinRoom}
-          disabled={isLoading}
+          disabled={isLoading || !avatarBlob || !playerName || !gameCode}
           className="w-full py-3 bg-black text-white rounded hover:bg-gray-800 transition disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {isLoading ? "Joining..." : "Join Game"}
