@@ -76,11 +76,8 @@ export function useJoinGame() {
         let finalAvatarUrl = null;
 
         if (avatarBlob) {
-          console.log("avatarBlob present");
           finalAvatarUrl = await uploadAvatar(avatarBlob, gameCode);
         }
-
-        console.log("creating player with avatarUrl", finalAvatarUrl);
 
         // Create player
         const newPlayer = await createPlayer({
