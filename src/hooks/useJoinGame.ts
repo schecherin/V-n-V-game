@@ -5,9 +5,10 @@ import {
   getPlayerByNameInGame,
   createPlayer,
   uploadAvatar,
+  updatePlayer,
 } from "@/lib/playerApi";
 import { getCurrentUser, signInAnonymously } from "@/lib/authApi";
-import { Game } from "@/types";
+import { Game, Player } from "@/types";
 
 /**
  * React hook to join an existing game as a player.
@@ -18,7 +19,8 @@ export function useJoinGame() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<any>(null);
   const router = useRouter();
-  const [playerName, setPlayerName] = useState("");
+  const [player, setPlayer] = useState<Player | null>(null);
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
 
   /**
    * Join a game by code and player name.
@@ -72,10 +74,18 @@ export function useJoinGame() {
           throw new Error("Player name already taken in this game");
         }
 
-        let avatarUrl = null;
         if (avatarBlob) {
-          avatarUrl = await uploadAvatar(avatarBlob, gameCode);
+          console.log("avatarBlob present");
+          await uploadAvatar(avatarBlob, gameCode).then((url) => {
+            if (player) {
+              console.log("updating player avatar with url", url);
+              updatePlayer(player.player_id, { avatar_url: url });
+            }
+            setAvatarUrl(url);
+          });
         }
+        console.log("creating player with avatarUrl", avatarUrl);
+
         // Create player
         const player = await createPlayer({
           game_code: foundGame.game_code,
@@ -84,6 +94,8 @@ export function useJoinGame() {
           status: "Alive",
           avatar_url: avatarUrl,
         });
+        setPlayer(player);
+
         // Update game player count
         await updateGamePlayerCount(
           foundGame.game_code,
@@ -91,7 +103,7 @@ export function useJoinGame() {
         );
         // Navigate to game lobby
         router.push(
-          `/${foundGame.game_code}/lobby?playerId=${player.player_id}`
+          `/${foundGame.game_code}/lobby?playerId=${player?.player_id}`
         );
         setLoading(false);
         return { game: foundGame, player };

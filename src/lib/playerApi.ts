@@ -283,3 +283,17 @@ export async function updatePlayerStatus(
   if (error) throw error;
   return data;
 }
+
+export async function updatePlayer(
+  playerId: string,
+  playerData: Partial<Player>
+) {
+  const { data, error } = await supabase
+    .from("players")
+    .update(playerData)
+    .eq("player_id", playerId)
+    .select()
+    .single();
+  if (error) throw error;
+  return data;
+}
