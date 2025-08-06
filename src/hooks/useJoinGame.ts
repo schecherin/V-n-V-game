@@ -1,7 +1,11 @@
 import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { getGameByCodeAndPhase, updateGamePlayerCount } from "@/lib/gameApi";
-import { getPlayerByNameInGame, createPlayer } from "@/lib/playerApi";
+import {
+  getPlayerByNameInGame,
+  createPlayer,
+  uploadAvatar,
+} from "@/lib/playerApi";
 import { getCurrentUser, signInAnonymously } from "@/lib/authApi";
 import { Game } from "@/types";
 
@@ -14,6 +18,17 @@ export function useJoinGame() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<any>(null);
   const router = useRouter();
+  const [step, setStep] = useState<"name" | "photo" | "joining">("name");
+  const [playerName, setPlayerName] = useState("");
+  const [avatarBlob, setAvatarBlob] = useState<Blob | null>(null);
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+
+  const handlePhotoCapture = (blob: Blob) => {
+    setAvatarBlob(blob);
+    setAvatarPreview(URL.createObjectURL(blob));
+    setStep("joining");
+  };
 
   /**
    * Join a game by code and player name.
@@ -65,6 +80,11 @@ export function useJoinGame() {
         );
         if (existingPlayer) {
           throw new Error("Player name already taken in this game");
+        }
+        if (avatarBlob) {
+          await uploadAvatar(avatarBlob, foundGame.game_code).then(
+            setAvatarUrl
+          );
         }
         // Create player
         const player = await createPlayer({

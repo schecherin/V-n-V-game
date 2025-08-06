@@ -195,3 +195,28 @@ export async function setPlayerGameCode(playerId: string, gameCode: string) {
   if (error) throw error;
   return data;
 }
+
+export async function uploadAvatar(
+  imageBlob: Blob,
+  gameId: string
+): Promise<string> {
+  // Generate unique filename
+  const timestamp = Date.now();
+  const fileName = `${gameId}/${timestamp}.jpg`;
+
+  const { data, error } = await supabase.storage
+    .from("avatars")
+    .upload(fileName, imageBlob, {
+      contentType: "image/jpeg",
+      upsert: false,
+    });
+
+  if (error) throw error;
+
+  // Get public URL
+  const {
+    data: { publicUrl },
+  } = supabase.storage.from("avatars").getPublicUrl(fileName);
+
+  return publicUrl;
+}
