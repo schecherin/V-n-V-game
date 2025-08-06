@@ -2,6 +2,9 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useCreateGame } from "@/hooks/useCreateGame";
+import CameraCapture from "@/components/app/CameraCapture";
+import { uploadAvatar } from "@/lib/playerApi";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 
 interface CreateRoomComponentProps {
   onBack: () => void;
@@ -13,7 +16,15 @@ export default function CreateRoomComponent({
   const router = useRouter();
   const [playerName, setPlayerName] = useState("");
   const [maxPlayers, setMaxPlayers] = useState(10);
+  const [avatarBlob, setAvatarBlob] = useState<Blob | null>(null);
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   const { create, loading: isLoading, error } = useCreateGame();
+
+  const handlePhotoCapture = (blob: Blob) => {
+    setAvatarBlob(blob);
+    setAvatarPreview(URL.createObjectURL(blob));
+  };
 
   const handleCreateRoom = async () => {
     if (!playerName.trim()) {
@@ -21,7 +32,12 @@ export default function CreateRoomComponent({
       alert("Please enter your name");
       return;
     }
-    await create(playerName, maxPlayers);
+    if (avatarBlob) {
+      await uploadAvatar(avatarBlob, "temp").then((url) => {
+        setAvatarUrl(url);
+      });
+    }
+    await create(playerName, maxPlayers, avatarUrl);
   };
 
   return (
@@ -58,6 +74,17 @@ export default function CreateRoomComponent({
           </select>
         </div>
 
+        {!avatarPreview ? (
+          <CameraCapture onCapture={handlePhotoCapture} />
+        ) : (
+          <div className="flex justify-center">
+            <Avatar className="w-32 h-32">
+              <AvatarImage src={avatarPreview} alt="Your avatar" />
+              <AvatarFallback>Avatar</AvatarFallback>
+            </Avatar>
+          </div>
+        )}
+
         {error && (
           <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
             {error}
@@ -68,7 +95,7 @@ export default function CreateRoomComponent({
       <div className="space-y-3">
         <button
           onClick={handleCreateRoom}
-          disabled={isLoading}
+          disabled={isLoading || !avatarBlob || !playerName}
           className="w-full py-3 bg-black text-white rounded hover:bg-gray-800 transition disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {isLoading ? "Creating..." : "Create Game"}

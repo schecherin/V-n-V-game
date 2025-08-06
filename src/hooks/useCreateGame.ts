@@ -23,7 +23,11 @@ export function useCreateGame() {
    * @returns The created game and player objects.
    */
   const create = useCallback(
-    async (playerName: string, maxPlayers: number) => {
+    async (
+      playerName: string,
+      maxPlayers: number,
+      avatarUrl: string | null
+    ) => {
       setLoading(true);
       setError("");
       try {
@@ -52,6 +56,7 @@ export function useCreateGame() {
           player_name: playerName.trim(),
           status: "Alive",
           personal_points: 0.0,
+          avatar_url: avatarUrl,
         });
         setPlayer(player);
 

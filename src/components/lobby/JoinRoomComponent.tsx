@@ -4,6 +4,7 @@ import { useJoinGame } from "@/hooks/useJoinGame";
 import { useSearchParams } from "next/navigation";
 import CameraCapture from "@/components/app/CameraCapture";
 import { uploadAvatar } from "@/lib/playerApi";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 
 interface JoinRoomComponentProps {
   onBack: () => void;
@@ -89,12 +90,11 @@ export default function JoinRoomComponent({
         {!avatarPreview ? (
           <CameraCapture onCapture={handlePhotoCapture} />
         ) : (
-          <div>
-            <img
-              src={avatarPreview}
-              alt="Your avatar"
-              className="w-32 h-32 rounded-full mx-auto"
-            />
+          <div className="flex justify-center">
+            <Avatar className="w-32 h-32">
+              <AvatarImage src={avatarPreview} alt="Your avatar" />
+              <AvatarFallback>Avatar</AvatarFallback>
+            </Avatar>
           </div>
         )}
 
