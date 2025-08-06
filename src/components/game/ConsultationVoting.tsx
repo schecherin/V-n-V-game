@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { countVotes, insertVoteAnnouncement, recordVote } from "@/lib/gameApi";
 import { useGameContext } from "@/app/[game_id]/layout";
 import { updatePlayerStatus } from "@/lib/playerApi";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 
 interface ConsultationVotingProps {
   onNextPhase: () => void;

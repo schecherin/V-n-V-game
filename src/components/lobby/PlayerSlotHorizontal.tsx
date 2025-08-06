@@ -1,6 +1,7 @@
 import React from "react";
 import { CheckCircle } from "lucide-react";
 import { Player } from "@/types";
+import { PlayerAvatar } from "@/components/ui/player-avatar";
 
 interface PlayerSlotHorizontalProps {
   player?: Player;
@@ -32,11 +33,8 @@ const PlayerSlotHorizontal: React.FC<PlayerSlotHorizontalProps> = ({
       className={`flex-shrink-0 w-24 flex flex-col items-center p-2 mx-1.5 bg-cream-light rounded-lg border-2 ${currentBorderColor} shadow-md`}
     >
       <div className="relative mb-1.5">
-        <div
-          className={`w-14 h-14 rounded-full border-2 border-gold/50 flex items-center justify-center ${avatarBgColor} ${avatarTextColor} text-xl font-semibold overflow-hidden`}
-          aria-label={`Avatar for ${player.player_name}`}
-        >
-          {player.player_name.charAt(0)}
+        <div className="w-14 h-14 border-2 border-gold/50 rounded-full overflow-hidden">
+          <PlayerAvatar player={player} size="lg" showName={false} />
         </div>
 
         {!isHost && (

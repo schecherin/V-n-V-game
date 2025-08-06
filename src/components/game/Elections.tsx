@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { GamePhase, Player } from "@/types";
+import { PlayerAvatar } from "@/components/ui/player-avatar";
 import {
   recordVote,
   countVotes,
@@ -249,8 +250,14 @@ const ConsultationElections: React.FC<ConsultationElectionsProps> = ({
             <span className="text-lg font-semibold text-slate-700">
               Chairperson (Host)
             </span>
-            <div className="text-xl font-bold text-blue-600 mt-2">
-              {electionState.electedPlayers.chairperson?.player_name}
+            <div className="flex items-center justify-center mt-2">
+              {electionState.electedPlayers.chairperson && (
+                <PlayerAvatar
+                  player={electionState.electedPlayers.chairperson}
+                  size="md"
+                  nameClassName="text-xl font-bold text-blue-600"
+                />
+              )}
             </div>
           </div>
 
@@ -258,8 +265,14 @@ const ConsultationElections: React.FC<ConsultationElectionsProps> = ({
             <span className="text-lg font-semibold text-slate-700">
               Secretary
             </span>
-            <div className="text-xl font-bold text-green-600 mt-2">
-              {electionState.electedPlayers.secretary?.player_name}
+            <div className="flex items-center justify-center mt-2">
+              {electionState.electedPlayers.secretary && (
+                <PlayerAvatar
+                  player={electionState.electedPlayers.secretary}
+                  size="md"
+                  nameClassName="text-xl font-bold text-green-600"
+                />
+              )}
             </div>
           </div>
 
@@ -267,8 +280,14 @@ const ConsultationElections: React.FC<ConsultationElectionsProps> = ({
             <span className="text-lg font-semibold text-slate-700">
               Treasurer
             </span>
-            <div className="text-xl font-bold text-purple-600 mt-2">
-              {electionState.electedPlayers.treasurer?.player_name}
+            <div className="flex items-center justify-center mt-2">
+              {electionState.electedPlayers.treasurer && (
+                <PlayerAvatar
+                  player={electionState.electedPlayers.treasurer}
+                  size="md"
+                  nameClassName="text-xl font-bold text-purple-600"
+                />
+              )}
             </div>
           </div>
         </div>
@@ -286,9 +305,14 @@ const ConsultationElections: React.FC<ConsultationElectionsProps> = ({
     <div className="bg-white rounded-xl shadow-2xl p-8 max-w-2xl mx-auto text-center border border-slate-300">
       {electionState.electedPlayers.chairperson && (
         <div className="border-2 rounded-lg p-4 mb-4">
-          <h2 className="text-xl text-slate-900">
-            Chairperson: {electionState.electedPlayers.chairperson.player_name}
-          </h2>
+          <div className="flex items-center justify-center">
+            <PlayerAvatar
+              player={electionState.electedPlayers.chairperson}
+              size="md"
+              nameClassName="text-xl text-slate-900"
+            />
+            <span className="text-xl text-slate-900 ml-2">Chairperson</span>
+          </div>
         </div>
       )}
 
@@ -322,9 +346,11 @@ const ConsultationElections: React.FC<ConsultationElectionsProps> = ({
                 <div className="w-8 h-8 bg-amber-500 text-white rounded-full flex items-center justify-center font-bold">
                   {index + 1}
                 </div>
-                <span className="font-semibold text-slate-900">
-                  {candidate.player_name}
-                </span>
+                <PlayerAvatar
+                  player={candidate}
+                  size="md"
+                  nameClassName="font-semibold text-slate-900"
+                />
               </div>
             </div>
           </button>

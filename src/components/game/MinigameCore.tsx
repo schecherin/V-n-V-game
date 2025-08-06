@@ -5,6 +5,7 @@ import { useGameContext } from "@/app/[game_id]/layout";
 import { Button } from "@/components/ui/button";
 import { Player, Role } from "@/types";
 import { MINIGAME_MAX_GUESSES } from "@/lib/constants";
+import { PlayerAvatar } from "@/components/ui/player-avatar";
 
 interface MinigameCoreProps {
   onGuess: (targetPlayerId: string, guessedRole: string) => void; // Callback when a guess is made
@@ -143,18 +144,7 @@ export default function MinigameCore({
                     }
                   `}
                 >
-                  <img
-                    src={`https://placehold.co/40x40/777/FFF?text=${player.player_name.charAt(
-                      0
-                    )}`}
-                    alt={player.player_name}
-                    className="w-8 h-8 rounded-full mr-3 border border-slate-400 object-cover"
-                    onError={(e) =>
-                      (e.currentTarget.src = `https://placehold.co/40x40/777/FFF?text=${player.player_name.charAt(
-                        0
-                      )}`)
-                    }
-                  />
+                  <PlayerAvatar player={player} size="md" className="mr-3" />
                   <span className="flex-grow">{player.player_name}</span>
                   {guessesMade[player.player_id] && (
                     <span className="text-xs text-slate-400">

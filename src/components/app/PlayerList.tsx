@@ -8,6 +8,7 @@ import {
 } from "../ui/drawer";
 import { Player } from "@/types";
 import { useEffect, useState } from "react";
+import { PlayerAvatar } from "@/components/ui/player-avatar";
 
 interface PlayerListDrawerProps {
   isOpen: boolean;
@@ -68,8 +69,8 @@ const PlayerListDrawer = ({ isOpen, onClose }: PlayerListDrawerProps) => {
                 }`}
               >
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <span className="font-medium">{player.player_name}</span>
+                  <div className="flex items-center gap-3">
+                    <PlayerAvatar player={player} size="md" />
                     {player.player_id === playerId && (
                       <span className="text-xs text-blue-600 bg-blue-100 px-1 rounded">
                         You
