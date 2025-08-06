@@ -2,8 +2,8 @@ import { Database, Tables, Enums } from "./database.types";
 
 // ENUMS
 export type GamePhase = Enums<"game_phase">;
-export type PlayerState = Enums<"player_status">;
-export type Team = Enums<"role_faction">;
+export type PlayerStatus = Enums<"player_status">;
+export type Faction = Enums<"role_faction">;
 export type RoleTier = Enums<"role_tier">;
 export type AbilityEffectType = Enums<"ability_effect_type">;
 export type AbilityTargetType = Enums<"ability_target_type">;
@@ -24,7 +24,7 @@ export type PlayerProtection = Tables<"player_protections">;
 export type ReflectionPhaseGuess = Tables<"reflection_phase_guesses">;
 export type RoleConversion = Tables<"role_conversions">;
 export type RoleInheritanceChoice = Tables<"role_inheritance_choices">;
-export type SecretaryVoteAnnouncement = Tables<"secretary_vote_announcements">;
+export type VoteAnnouncement = Tables<"vote_announcements">;
 export type TreasuryTransaction = Tables<"treasury_transactions">;
 export type VengeanceGuess = Tables<"vengeance_guesses">;
 

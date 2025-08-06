@@ -1,13 +1,6 @@
 import React from "react";
-import {
-  X,
-  Palette,
-  ShieldQuestion,
-  Link2 as LinkIcon,
-  LogOut,
-  Info,
-} from "lucide-react";
-import Button from "@/components/ui/Button";
+import { X, LogOut, Info } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { useGameContext } from "@/app/[game_id]/layout";
 
 interface SideMenuProps {

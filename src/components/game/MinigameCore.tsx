@@ -1,10 +1,10 @@
 "use client";
 
-import React, { useState } from "react";
-import Button from "../ui/Button";
+import React, { useState, useEffect } from "react";
+import { useGameContext } from "@/app/[game_id]/layout";
+import { Button } from "@/components/ui/button";
 import { Player, Role } from "@/types";
 import { MINIGAME_MAX_GUESSES } from "@/lib/constants";
-import { useGameContext } from "@/app/[game_id]/layout";
 
 interface MinigameCoreProps {
   onGuess: (targetPlayerId: string, guessedRole: string) => void; // Callback when a guess is made
@@ -21,7 +21,7 @@ export default function MinigameCore({
   const currentPlayerId = playerId || "";
   const [selectedPlayer, setSelectedPlayer] = useState<Player | null>(null);
   const [guessedRole, setGuessedRole] = useState<string>("");
-  const [guessesMade, setGuessesMade] = useState<Record<string, string>>({}); // { playerId: guessedRole }
+  const [guessesMade, setGuessesMade] = useState<Record<string, string>>({});
   const [maxGuesses] = useState<number>(MINIGAME_MAX_GUESSES);
   const [feedback, setFeedback] = useState<string>(""); // Feedback on guess
   const [loadingNextPhase, setLoadingNextPhase] = useState(false);

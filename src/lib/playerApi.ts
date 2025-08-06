@@ -1,5 +1,5 @@
 import { supabase } from "@/lib/supabase/client";
-import { Game, Player, PlayerData } from "@/types";
+import { Game, Player, PlayerData, PlayerStatus } from "@/types";
 
 /**
  * Fetch a player by their unique playerId.
@@ -219,4 +219,24 @@ export async function uploadAvatar(
   } = supabase.storage.from("avatars").getPublicUrl(fileName);
 
   return publicUrl;
+}
+
+/**
+ * Update a player's status.
+ * @param playerId The player's ID.
+ * @param status The new status.
+ * @returns The updated player data.
+ */
+export async function updatePlayerStatus(
+  playerId: string,
+  status: PlayerStatus
+) {
+  const { data, error } = await supabase
+    .from("players")
+    .update({ status: status })
+    .eq("player_id", playerId)
+    .select()
+    .single();
+  if (error) throw error;
+  return data;
 }

@@ -1,7 +1,8 @@
 import { useState } from "react";
-import Button from "../ui/Button";
-import { recordVote } from "@/lib/gameApi";
+import { Button } from "@/components/ui/button";
+import { countVotes, insertVoteAnnouncement, recordVote } from "@/lib/gameApi";
 import { useGameContext } from "@/app/[game_id]/layout";
+import { updatePlayerStatus } from "@/lib/playerApi";
 
 interface ConsultationVotingProps {
   onNextPhase: () => void;
@@ -13,7 +14,9 @@ const ConsultationVoting = ({ onNextPhase }: ConsultationVotingProps) => {
 
   const [hasVoted, setHasVoted] = useState(false);
   const [votingComplete, setVotingComplete] = useState(false);
+  const [votingFinalized, setVotingFinalized] = useState(false);
   const [selectedPlayer, setSelectedPlayer] = useState<string | null>(null);
+  const [convictId, setConvictId] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
   const handleVote = () => {
@@ -24,8 +27,8 @@ const ConsultationVoting = ({ onNextPhase }: ConsultationVotingProps) => {
       voterId: player.player_id,
       candidateId: selectedPlayer,
       dayNumber: game.current_day,
-      gamePhase: game.current_phase,
       electionRole: "prison",
+      isChairmanDoubleVote: currentPlayerIsHost,
     });
     setHasVoted(true);
     setLoading(false);
@@ -34,66 +37,137 @@ const ConsultationVoting = ({ onNextPhase }: ConsultationVotingProps) => {
   const completeVoting = () => {
     setVotingComplete(true);
     onNextPhase();
+    countVotes(game!.game_code, game!.current_day, "prison").then((convict) => {
+      setConvictId(convict);
+    });
   };
 
-  return (
-    <div className="bg-white rounded-xl shadow-2xl p-8 max-w-2xl mx-auto text-center border border-slate-300">
-      <h2 className="text-2xl font-bold mb-6 text-slate-900">Voting</h2>
+  const handleFinalizeVoting = (
+    finalConvictId: string,
+    isTruthful: boolean
+  ) => {
+    setVotingFinalized(true);
+    insertVoteAnnouncement(
+      game!.game_code,
+      game!.current_day,
+      playerId!,
+      game!.secretary_player_id!,
+      finalConvictId,
+      isTruthful
+    );
+    updatePlayerStatus(finalConvictId, "Imprisoned");
+    onNextPhase();
+  };
 
-      <p className="text-slate-600 mb-6">
-        Vote for the player you want to be imprisoned.
-      </p>
+  if (game?.current_phase === "Consultation_Voting") {
+    return (
+      <div className="bg-white rounded-xl shadow-2xl p-8 max-w-2xl mx-auto text-center border border-slate-300">
+        <h2 className="text-2xl font-bold mb-6 text-slate-900">Voting</h2>
 
-      <div className="space-y-4 mb-8">
-        {players.map((player, index) => (
-          <button
-            key={player.player_id}
-            className={`w-full text-left p-4 rounded-lg border-2 transition-all ${
-              selectedPlayer === player.player_id
-                ? "border-blue-500 bg-blue-50"
-                : "border-slate-200 hover:border-slate-300"
-            }`}
-            onClick={() => !hasVoted && setSelectedPlayer(player.player_id)}
-            disabled={hasVoted}
-          >
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-3">
-                <div className="w-8 h-8 bg-amber-500 text-white rounded-full flex items-center justify-center font-bold">
-                  {index + 1}
+        <p className="text-slate-600 mb-6">
+          Vote for the player you want to be imprisoned.
+        </p>
+
+        <div className="space-y-4 mb-8">
+          {players.map((player, index) => (
+            <button
+              key={player.player_id}
+              className={`w-full text-left p-4 rounded-lg border-2 transition-all ${
+                selectedPlayer === player.player_id
+                  ? "border-blue-500 bg-blue-50"
+                  : "border-slate-200 hover:border-slate-300"
+              }`}
+              onClick={() => !hasVoted && setSelectedPlayer(player.player_id)}
+              disabled={hasVoted}
+            >
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-3">
+                  <div className="w-8 h-8 bg-amber-500 text-white rounded-full flex items-center justify-center font-bold">
+                    {index + 1}
+                  </div>
+                  <span className="font-semibold text-slate-900">
+                    {player.player_name}
+                  </span>
                 </div>
-                <span className="font-semibold text-slate-900">
-                  {player.player_name}
-                </span>
               </div>
-            </div>
-          </button>
-        ))}
-      </div>
-
-      {!hasVoted ? (
-        <Button
-          onClick={handleVote}
-          disabled={!selectedPlayer}
-          className="w-full mb-4"
-        >
-          {loading ? "Recording Vote..." : "Submit Vote"}
-        </Button>
-      ) : (
-        <div className="text-green-600 font-semibold mb-4">✓ Vote recorded</div>
-      )}
-
-      {currentPlayerIsHost && hasVoted && (
-        <Button onClick={completeVoting} className="w-full">
-          Complete Voting
-        </Button>
-      )}
-
-      {!currentPlayerIsHost && hasVoted && (
-        <div className="text-slate-600 italic">
-          Waiting for the host to continue...
+            </button>
+          ))}
         </div>
-      )}
-    </div>
-  );
+
+        {!hasVoted ? (
+          <Button
+            onClick={handleVote}
+            disabled={!selectedPlayer}
+            className="w-full mb-4"
+          >
+            {loading ? "Recording Vote..." : "Submit Vote"}
+          </Button>
+        ) : (
+          <div className="text-green-600 font-semibold mb-4">
+            ✓ Vote recorded
+          </div>
+        )}
+
+        {currentPlayerIsHost && hasVoted && (
+          <Button
+            disabled={votingComplete}
+            onClick={completeVoting}
+            className="w-full"
+          >
+            {votingComplete ? "✓ Loading..." : "Complete Voting"}
+          </Button>
+        )}
+
+        {!currentPlayerIsHost && hasVoted && (
+          <div className="text-slate-600 italic">
+            Waiting for the host to continue...
+          </div>
+        )}
+      </div>
+    );
+  } else {
+    return (
+      <div className="bg-white rounded-xl shadow-2xl p-8 max-w-2xl mx-auto text-center border border-slate-300">
+        <h2 className="text-2xl font-bold mb-6 text-slate-900">
+          Voting is closed.
+        </h2>
+        {currentPlayerIsHost ? (
+          <>
+            <h3>
+              {players.find((p) => p.player_id === convictId)?.player_name}
+            </h3>
+            <p>This player received the most votes.</p>
+            <p>
+              You voted for{" "}
+              {players.find((p) => p.player_id === selectedPlayer)?.player_name}
+            </p>
+
+            <Button
+              disabled={votingFinalized}
+              onClick={() => handleFinalizeVoting(convictId!, true)}
+            >
+              Democracy (accept result)
+            </Button>
+            {selectedPlayer !== convictId && (
+              <Button
+                disabled={votingFinalized}
+                variant="destructive"
+                onClick={() => handleFinalizeVoting(selectedPlayer!, false)}
+              >
+                Tyranny (imprison{" "}
+                {
+                  players.find((p) => p.player_id === selectedPlayer)
+                    ?.player_name
+                }
+                )
+              </Button>
+            )}
+          </>
+        ) : (
+          <p className="text-slate-600 mb-6">Waiting for vote results...</p>
+        )}
+      </div>
+    );
+  }
 };
 export default ConsultationVoting;

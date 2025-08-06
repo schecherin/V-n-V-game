@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import Button from "../ui/Button";
+import { Button } from "@/components/ui/button";
 import { GamePhase, Player } from "@/types";
 import {
   recordVote,
@@ -127,7 +127,6 @@ const ConsultationElections: React.FC<ConsultationElectionsProps> = ({
         const hasVoted = await countVotes(
           gameId,
           dayNumber,
-          currentPhase,
           electionState.currentRole,
           currentPlayer.player_id
         );
@@ -153,7 +152,6 @@ const ConsultationElections: React.FC<ConsultationElectionsProps> = ({
         voterId: currentPlayer.player_id,
         candidateId: selectedCandidate,
         dayNumber,
-        gamePhase: currentPhase,
         electionRole: electionState.currentRole,
       });
 
@@ -176,7 +174,6 @@ const ConsultationElections: React.FC<ConsultationElectionsProps> = ({
       const winnerId = await countVotes(
         gameId,
         dayNumber,
-        currentPhase,
         electionState.currentRole
       );
 

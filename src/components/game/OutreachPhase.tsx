@@ -1,5 +1,5 @@
 import React from "react";
-import Button from "../ui/Button";
+import { Button } from "@/components/ui/button";
 import { useGameContext } from "@/app/[game_id]/layout";
 
 interface OutreachPhaseProps {
@@ -7,8 +7,7 @@ interface OutreachPhaseProps {
 }
 
 const OutreachPhase = ({ onNextPhase }: Readonly<OutreachPhaseProps>) => {
-  const { players, playerId, currentPlayerIsHost } = useGameContext();
-  const player = players.find((p) => p.player_id === playerId);
+  const { currentPlayerIsHost } = useGameContext();
 
   return (
     <div className="flex flex-col items-center justify-center gap-2">

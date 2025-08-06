@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
-import Button from "@/components/ui/Button";
-import { useRouter } from "next/navigation";
+import { Button } from "@/components/ui/button";
 import { useGameContext } from "@/app/[game_id]/layout";
 
 interface ReflectionPhaseProps {
@@ -14,7 +13,6 @@ const ReflectionPhase = ({ onNextPhase }: ReflectionPhaseProps) => {
   const player = players.find((p) => p.player_id === playerId);
   const [timer, setTimer] = useState(15);
   const [confirmed, setConfirmed] = useState(false);
-  const router = useRouter();
 
   useEffect(() => {
     if (timer > 0 && !confirmed) {
