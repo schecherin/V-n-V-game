@@ -20,7 +20,6 @@ export function useJoinGame() {
   const [error, setError] = useState<any>(null);
   const router = useRouter();
   const [player, setPlayer] = useState<Player | null>(null);
-  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
 
   /**
    * Join a game by code and player name.
@@ -74,27 +73,24 @@ export function useJoinGame() {
           throw new Error("Player name already taken in this game");
         }
 
+        let finalAvatarUrl = null;
+
+        if (avatarBlob) {
+          console.log("avatarBlob present");
+          finalAvatarUrl = await uploadAvatar(avatarBlob, gameCode);
+        }
+
+        console.log("creating player with avatarUrl", finalAvatarUrl);
+
         // Create player
         const newPlayer = await createPlayer({
           game_code: foundGame.game_code,
           user_id: user?.id,
           player_name: trimmedPlayerName,
           status: "Alive",
-          avatar_url: avatarUrl,
+          avatar_url: finalAvatarUrl,
         });
         setPlayer(newPlayer);
-
-        if (avatarBlob) {
-          console.log("avatarBlob present");
-          await uploadAvatar(avatarBlob, gameCode).then((url) => {
-            if (player) {
-              console.log("updating player avatar with url", url);
-              updatePlayer(player.player_id, { avatar_url: url });
-            }
-            setAvatarUrl(url);
-            console.log("avatarUrl", avatarUrl);
-          });
-        }
 
         // Update game player count
         await updateGamePlayerCount(
