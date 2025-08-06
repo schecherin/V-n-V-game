@@ -39,13 +39,7 @@ export default function JoinRoomComponent({
       alert("Please enter both game code and player name");
       return;
     }
-    if (avatarBlob) {
-      await uploadAvatar(avatarBlob, gameCode).then((url) => {
-        setAvatarUrl(url);
-      });
-    }
-    console.log("avatarUrl", avatarUrl);
-    await joinGame(gameCode, playerName, avatarUrl);
+    await joinGame(gameCode, playerName, avatarBlob);
   };
 
   return (

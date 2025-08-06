@@ -27,7 +27,7 @@ export function useJoinGame() {
    * @returns The joined game and player objects.
    */
   const joinGame = useCallback(
-    async (gameCode: string, playerName: string, avatarUrl: string | null) => {
+    async (gameCode: string, playerName: string, avatarBlob: Blob | null) => {
       setLoading(true);
       setError(null);
       try {
@@ -70,6 +70,11 @@ export function useJoinGame() {
         );
         if (existingPlayer) {
           throw new Error("Player name already taken in this game");
+        }
+
+        let avatarUrl = null;
+        if (avatarBlob) {
+          avatarUrl = await uploadAvatar(avatarBlob, gameCode);
         }
         // Create player
         const player = await createPlayer({
