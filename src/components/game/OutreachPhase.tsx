@@ -1,22 +1,18 @@
 import React from "react";
-import Button from "../ui/Button";
-import { Player } from "@/types";
+import { Button } from "@/components/ui/button";
+import { useGameContext } from "@/app/[game_id]/layout";
 
 interface OutreachPhaseProps {
-  player?: Player;
   onNextPhase: () => void;
-  isCurrentUserHost: boolean;
 }
 
-const OutreachPhase = ({
-  player,
-  onNextPhase,
-  isCurrentUserHost,
-}: Readonly<OutreachPhaseProps>) => {
+const OutreachPhase = ({ onNextPhase }: Readonly<OutreachPhaseProps>) => {
+  const { currentPlayerIsHost } = useGameContext();
+
   return (
     <div className="flex flex-col items-center justify-center gap-2">
       <h2>Outreach Phase</h2>
-      {isCurrentUserHost ? (
+      {currentPlayerIsHost ? (
         <Button onClick={onNextPhase}>Go to next phase</Button>
       ) : (
         <div className="text-brown-medium italic text-lg">

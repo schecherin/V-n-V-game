@@ -1,20 +1,11 @@
 import React from "react";
-import {
-  X,
-  Palette,
-  ShieldQuestion,
-  Link2 as LinkIcon,
-  LogOut,
-  Info,
-} from "lucide-react";
-import Button from "@/components/ui/Button";
-import { Player } from "@/types";
+import { X, LogOut, Info } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { useGameContext } from "@/app/[game_id]/layout";
 
 interface SideMenuProps {
   isOpen: boolean;
   onClose: () => void;
-  player: Player | undefined;
   onLeaveGameConfirm: () => void;
   onShowRoleExplanation: () => void;
 }
@@ -22,11 +13,11 @@ interface SideMenuProps {
 const SideMenu: React.FC<SideMenuProps> = ({
   isOpen,
   onClose,
-  player,
   onLeaveGameConfirm,
   onShowRoleExplanation,
 }) => {
-  const { game } = useGameContext();
+  const { game, players, playerId } = useGameContext();
+  const player = players.find((p) => p.player_id === playerId);
   const animationClasses = isOpen
     ? "translate-x-0 opacity-100"
     : "translate-x-full opacity-0";

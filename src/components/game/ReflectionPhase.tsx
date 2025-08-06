@@ -1,12 +1,11 @@
+import React, { useState, useEffect } from "react";
+import { Button } from "@/components/ui/button";
+import { useGameContext } from "@/app/[game_id]/layout";
 import { GamePhase, Player, Game } from "@/types";
 import { supabase } from "@/lib/supabase/client";
-import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { useGameContext } from "@/app/[game_id]/layout";
-import Button from "../ui/Button";
 
 interface ReflectionPhaseProps {
-  player?: Player;
   onNextPhase: () => void;
 }
 

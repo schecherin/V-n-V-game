@@ -1,5 +1,14 @@
 import { supabase } from "@/lib/supabase/client";
-import { Game, GameData, GamePhase } from "@/types";
+import {
+  AbilityEffectType,
+  ElectionRole,
+  Game,
+  GameData,
+  GamePhase,
+  TreasuryActionType,
+  RoleTier,
+} from "@/types";
+import { Database } from "@/database.types";
 import { playerHasRole } from "./playerApi";
 import {
   updatePlayerMinigamePointsAndRank,
@@ -79,19 +88,6 @@ export async function joinGame(gameCode: string, name: string) {
   if (playerError) throw playerError;
 
   return player;
-}
-
-/**
- * Generate a random 5-character game code.
- * @returns A unique game code string.
- */
-export async function generateGameCode() {
-  const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-  let code = "";
-  for (let i = 0; i < 4; i++) {
-    code += chars.charAt(Math.floor(Math.random() * chars.length));
-  }
-  return code;
 }
 
 /**
@@ -387,15 +383,15 @@ export async function recordVote({
   voterId,
   candidateId,
   dayNumber,
-  gamePhase,
   electionRole,
+  isChairmanDoubleVote,
 }: {
   gameId: string;
   voterId: string;
   candidateId: string;
   dayNumber: number;
-  gamePhase: GamePhase;
-  electionRole: "chairperson" | "secretary" | "treasurer";
+  electionRole: ElectionRole;
+  isChairmanDoubleVote?: boolean;
 }) {
   const { data, error } = await supabase
     .from("game_votes")
@@ -404,8 +400,8 @@ export async function recordVote({
       voter_player_id: voterId,
       voted_player_id: candidateId,
       day_number: dayNumber,
-      voting_phase: gamePhase,
       election_target_role_name: electionRole,
+      is_chairman_double_vote: isChairmanDoubleVote,
     })
     .select()
     .single();
@@ -417,7 +413,6 @@ export async function recordVote({
  * Get the player ID with the most votes for a specific role in an election.
  * @param gameId The game ID.
  * @param dayNumber The day number.
- * @param gamePhase The game phase.
  * @param electionRole The election role.
  * @param voterId Optional voter ID to check if they've voted.
  * @returns The player ID with the most votes, or null if no votes exist.
@@ -425,8 +420,7 @@ export async function recordVote({
 export async function countVotes(
   gameId: string,
   dayNumber: number,
-  gamePhase: GamePhase,
-  electionRole: "chairperson" | "secretary" | "treasurer",
+  electionRole: ElectionRole,
   voterId?: string
 ): Promise<string | null> {
   let query = supabase
@@ -434,7 +428,6 @@ export async function countVotes(
     .select("voted_player_id")
     .eq("game_code", gameId)
     .eq("day_number", dayNumber)
-    .eq("voting_phase", gamePhase)
     .eq("election_target_role_name", electionRole);
 
   // If voterId is provided, filter by voterId, for checking if they've voted
@@ -538,4 +531,209 @@ export async function setGameDay(gameId: string, dayNumber: number) {
     .update({ current_day: dayNumber })
     .eq("game_code", gameId);
   if (error) throw error;
+}
+
+export async function setTreasurerAction(
+  gameId: string,
+  action: TreasuryActionType,
+  dayNumber: number,
+  treasurerPlayerId: string,
+  pointsSpent: number,
+  targetPlayerId?: string,
+  details?: string
+) {
+  const { error } = await supabase.from("treasury_transactions").insert({
+    game_code: gameId,
+    action_type: action,
+    day_number: dayNumber,
+    treasurer_player_id: treasurerPlayerId,
+    points_spent: pointsSpent,
+    target_player_id: targetPlayerId,
+    details: details,
+  });
+  if (error) throw error;
+}
+
+export async function confirmTreasuryAction(transactionId: string) {
+  const { error } = await supabase
+    .from("treasury_transactions")
+    .update({ secretary_confirmed: true })
+    .eq("id", transactionId);
+  if (error) throw error;
+}
+
+export async function updateGameGroupPointsPool(
+  gameId: string,
+  points: number
+) {
+  const { error } = await supabase
+    .from("games")
+    .update({ group_points_pool: points })
+    .eq("game_code", gameId);
+  if (error) throw error;
+}
+
+/**
+ * Update multiple game properties at once.
+ * Use this for less common updates or when updating multiple properties atomically.
+ * For common operations, prefer the specific functions like updateGamePhase(), setHostPlayerId(), etc.
+ *
+ * @param gameCode The code of the game to update.
+ * @param updates Object containing the properties to update.
+ * @returns The updated Game object.
+ */
+export async function updateGameProperties(
+  gameCode: string,
+  updates: Partial<Database["public"]["Tables"]["games"]["Update"]>
+) {
+  const { data, error } = await supabase
+    .from("games")
+    .update(updates)
+    .eq("game_code", gameCode)
+    .select()
+    .single();
+
+  if (error) throw error;
+  return data as Game;
+}
+
+/**
+ * Get the treasurer actions for a game.
+ * @param gameId The game ID.
+ * @param dayNumber The day number.
+ * @returns The treasurer actions.
+ */
+export async function getGameTreasurerActions(
+  gameId: string,
+  dayNumber: number
+) {
+  const { data, error } = await supabase
+    .from("treasury_transactions")
+    .select("*")
+    .eq("game_code", gameId)
+    .eq("day_number", dayNumber);
+  if (error) throw error;
+  return data;
+}
+
+/**
+ * Insert a vote announcement into the vote_announcements table.
+ * @param gameId The game ID.
+ * @param dayNumber The day number.
+ * @param hostId The host player ID.
+ * @param secretaryId The secretary player ID.
+ * @param imprisonedPlayerId The imprisoned player ID.
+ * @param isTruthful Whether the host is truthful
+ */
+export async function insertVoteAnnouncement(
+  gameId: string,
+  dayNumber: number,
+  hostId: string,
+  secretaryId: string,
+  imprisonedPlayerId: string,
+  isTruthful: boolean
+) {
+  const { error } = await supabase.from("vote_announcements").insert({
+    game_code: gameId,
+    day_number: dayNumber,
+    host_player_id: hostId,
+    imprisoned_player_id: imprisonedPlayerId,
+    secretary_player_id: secretaryId,
+    host_is_truthful: isTruthful,
+  });
+  if (error) throw error;
+}
+
+/**
+ * Assess a vote announcement.
+ * @param gameId The game ID.
+ * @param dayNumber The day number.
+ * @param secretaryConfirmed Whether the secretary has confirmed the announcement.
+ */
+export async function assessVoteAnnouncement(
+  gameId: string,
+  dayNumber: number,
+  secretaryConfirmed: boolean
+) {
+  const { error } = await supabase
+    .from("vote_announcements")
+    .update({ secretary_confirmed: secretaryConfirmed })
+    .eq("game_code", gameId)
+    .eq("day_number", dayNumber);
+  if (error) throw error;
+}
+
+/**
+ * Get a vote announcement.
+ * @param gameId The game ID.
+ * @param dayNumber The day number.
+ * @returns The vote announcement.
+ */
+export async function getVoteAnnouncement(gameId: string, dayNumber: number) {
+  const { data, error } = await supabase
+    .from("vote_announcements")
+    .select("*")
+    .eq("game_code", gameId)
+    .eq("day_number", dayNumber)
+    .single();
+  if (error) throw error;
+  return data;
+}
+
+export async function insertPlayerAction(
+  gameId: string,
+  dayNumber: number,
+  playerId: string,
+  roleName: string,
+  action: AbilityEffectType,
+  pointsSpent: number,
+  options: {
+    targetPlayerId?: string;
+    secondaryTargetPlayerId?: string;
+    targetTier?: RoleTier;
+    actionSuccessful?: boolean;
+    details?: any;
+  } = {}
+) {
+  const { error } = await supabase.from("player_actions").insert({
+    game_code: gameId,
+    day_number: dayNumber,
+    acting_player_id: playerId,
+    acting_role_name: roleName,
+    action_type: action,
+    points_spent: pointsSpent,
+    target_player_id: options.targetPlayerId,
+    secondary_target_id: options.secondaryTargetPlayerId,
+    target_tier: options.targetTier,
+    action_successful: options.actionSuccessful,
+    action_details: options.details,
+  });
+
+  if (error) throw error;
+}
+
+/**
+ * Get the votes on the imprisoned player.
+ * @param gameId The game ID.
+ * @param dayNumber The day number.
+ * @param imprisonedPlayerId The imprisoned player ID.
+ * @returns The voter player IDs as a string array.
+ */
+export async function getVotesOnImprisonedPlayer(
+  gameId: string,
+  dayNumber: number,
+  imprisonedPlayerId: string
+): Promise<string[]> {
+  const { data, error } = await supabase
+    .from("game_votes")
+    .select("voter_player_id")
+    .eq("game_code", gameId)
+    .eq("day_number", dayNumber)
+    .eq("voted_player_id", imprisonedPlayerId)
+    .eq("election_target_role_name", "prison");
+
+  if (error) throw error;
+
+  // Map the results to extract just the voter_player_id strings
+  return data?.map((vote) => vote.voter_player_id) || [];
 }

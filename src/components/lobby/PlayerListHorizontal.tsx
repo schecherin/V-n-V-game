@@ -11,7 +11,7 @@ interface PlayerListHorizontalProps {
 const PlayerListHorizontal: React.FC<PlayerListHorizontalProps> = ({
   onPlayerClick,
 }) => {
-  const { players, currentUserIsHost, playerId } = useGameContext();
+  const { players, currentPlayerIsHost, playerId } = useGameContext();
   const handleInvite = async () => {
     // TODO: Implement invite functionality
   };
@@ -31,7 +31,7 @@ const PlayerListHorizontal: React.FC<PlayerListHorizontalProps> = ({
             <PlayerSlotHorizontal
               player={p}
               isCurrentUser={p.player_id === playerId}
-              isHost={currentUserIsHost}
+              isHost={currentPlayerIsHost}
             />
           </button>
         ))}

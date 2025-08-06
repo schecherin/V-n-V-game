@@ -1,3 +1,7 @@
 export const COUNTDOWN_SECONDS = 300;
 export const MIN_PLAYERS = 3;
 export const MINIGAME_MAX_GUESSES = 10;
+export const TREASURY_HOUSE_COST = 1000;
+export const TREASURY_FREE_PLAYER_COST = 900;
+export const TREASURY_RESUSCITATE_COST = 500;
+export const TREASURY_REVEAL_COST = 250;

@@ -13,8 +13,6 @@ import {
   updateGamePhase,
 } from "@/lib/gameApi";
 import { Player, GameSwitch } from "@/types";
-import PlayerList from "@/components/app/PlayerList";
-import { MIN_PLAYERS } from "@/lib/constants";
 
 export default function LobbyPage(): JSX.Element {
   return (
@@ -31,7 +29,7 @@ function LobbyPageInner(): JSX.Element {
   const playerId = searchParams.get("playerId");
 
   // Get game data from layout context
-  const { game, players, currentUserIsHost, activeMainView } = useGameContext();
+  const { game, currentPlayerIsHost } = useGameContext();
 
   const [roomName, setRoomName] = useState<string>(initialRoomName);
   const [shouldRedirect, setShouldRedirect] = useState<boolean>(false);
@@ -96,10 +94,9 @@ function LobbyPageInner(): JSX.Element {
         {/* pb-16 makes space for the footer */}
         <PlayerListHorizontal onPlayerClick={handlePlayerClick} />
         <RoomInfoPanel roomName={roomName} />
-        {currentUserIsHost && (
+        {currentPlayerIsHost && (
           <HostControlsPanel
             onStartGame={handleStartGame}
-            canStartGame={currentUserIsHost && players.length >= MIN_PLAYERS}
             gameSwitches={gameSwitches}
             onGameSwitchChange={handleGameSwitchChange}
           />
