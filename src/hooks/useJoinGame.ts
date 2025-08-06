@@ -87,14 +87,14 @@ export function useJoinGame() {
         console.log("creating player with avatarUrl", avatarUrl);
 
         // Create player
-        const player = await createPlayer({
+        const newPlayer = await createPlayer({
           game_code: foundGame.game_code,
           user_id: user?.id,
           player_name: trimmedPlayerName,
           status: "Alive",
           avatar_url: avatarUrl,
         });
-        setPlayer(player);
+        setPlayer(newPlayer);
 
         // Update game player count
         await updateGamePlayerCount(
