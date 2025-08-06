@@ -1,9 +1,7 @@
 "use client";
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import { useCreateGame } from "@/hooks/useCreateGame";
 import CameraCapture from "@/components/app/CameraCapture";
-import { uploadAvatar } from "@/lib/playerApi";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 
 interface CreateRoomComponentProps {
@@ -12,12 +10,10 @@ interface CreateRoomComponentProps {
 
 export default function CreateRoomComponent({
   onBack,
-}: CreateRoomComponentProps) {
-  const router = useRouter();
+}: Readonly<CreateRoomComponentProps>) {
   const [playerName, setPlayerName] = useState("");
   const [maxPlayers, setMaxPlayers] = useState(10);
   const [avatarBlob, setAvatarBlob] = useState<Blob | null>(null);
-  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   const { create, loading: isLoading, error } = useCreateGame();
 
@@ -32,12 +28,8 @@ export default function CreateRoomComponent({
       alert("Please enter your name");
       return;
     }
-    if (avatarBlob) {
-      await uploadAvatar(avatarBlob, "temp").then((url) => {
-        setAvatarUrl(url);
-      });
-    }
-    await create(playerName, maxPlayers, avatarUrl);
+
+    await create(playerName, maxPlayers, avatarBlob);
   };
 
   return (
@@ -49,8 +41,14 @@ export default function CreateRoomComponent({
 
       <div className="space-y-4">
         <div>
-          <label className="block text-sm font-medium mb-2">Your Name</label>
+          <label
+            htmlFor="playerName"
+            className="block text-sm font-medium mb-2"
+          >
+            Your Name
+          </label>
           <input
+            id="playerName"
             type="text"
             value={playerName}
             onChange={(e) => setPlayerName(e.target.value)}
@@ -61,8 +59,14 @@ export default function CreateRoomComponent({
         </div>
 
         <div>
-          <label className="block text-sm font-medium mb-2">Max Players</label>
+          <label
+            htmlFor="maxPlayers"
+            className="block text-sm font-medium mb-2"
+          >
+            Max Players
+          </label>
           <select
+            id="maxPlayers"
             value={maxPlayers}
             onChange={(e) => setMaxPlayers(parseInt(e.target.value))}
             className="w-full border rounded px-3 py-2"
@@ -74,6 +78,7 @@ export default function CreateRoomComponent({
           </select>
         </div>
 
+        <div className="text-sm font-medium mb-2">Avatar</div>
         {!avatarPreview ? (
           <CameraCapture onCapture={handlePhotoCapture} />
         ) : (

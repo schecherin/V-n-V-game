@@ -1,7 +1,7 @@
 import { useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { checkGameCodeUnique, createGame } from "@/lib/gameApi";
-import { createPlayer, setPlayerGameCode } from "@/lib/playerApi";
+import { createPlayer, setPlayerGameCode, uploadAvatar } from "@/lib/playerApi";
 import { signInAnonymously } from "@/lib/authApi";
 import { generateGameCode, containsProfanity } from "@/lib/gameUtils";
 
@@ -23,11 +23,7 @@ export function useCreateGame() {
    * @returns The created game and player objects.
    */
   const create = useCallback(
-    async (
-      playerName: string,
-      maxPlayers: number,
-      avatarUrl: string | null
-    ) => {
+    async (playerName: string, maxPlayers: number, avatarBlob: Blob | null) => {
       setLoading(true);
       setError("");
       try {
@@ -49,6 +45,12 @@ export function useCreateGame() {
             gameCode = await generateGameCode();
           }
         }
+
+        let avatarUrl = null;
+        if (avatarBlob) {
+          avatarUrl = await uploadAvatar(avatarBlob, gameCode);
+        }
+        console.log("avatarUrl", avatarUrl);
 
         // Create host player
         const player = await createPlayer({

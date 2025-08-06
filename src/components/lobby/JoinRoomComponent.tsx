@@ -44,6 +44,7 @@ export default function JoinRoomComponent({
         setAvatarUrl(url);
       });
     }
+    console.log("avatarUrl", avatarUrl);
     await joinGame(gameCode, playerName, avatarUrl);
   };
 
