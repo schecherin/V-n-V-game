@@ -58,6 +58,19 @@ export async function getPlayerByNameInGame(
   return null;
 }
 
+export async function getPlayerByUserIdInGame(gameId: string, userId: string) {
+  const { data, error } = await supabase
+    .from("players")
+    .select("*")
+    .eq("game_code", gameId)
+    .eq("user_id", userId)
+    .single();
+  if (data) return data;
+  if (error && error.code === "PGRST116") return null; // Not found
+  if (error) throw error;
+  return null;
+}
+
 /**
  * Create a new player with the provided data.
  * @param playerData The data for the new player.
