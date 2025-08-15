@@ -1,5 +1,3 @@
-import { supabase } from "@/lib/supabase/client";
-
 export interface MinigameResult {
   playerId: string;
   playerName: string;
@@ -8,57 +6,73 @@ export interface MinigameResult {
   totalPoints: number;
 }
 
+import {
+  calculateAndAssignMinigameResults,
+  areMinigameResultsCalculated,
+} from "./gameApi";
+import { getPlayerById } from "./playerApi";
+
 export async function calculateMinigameResults(
   gameCode: string,
   dayNumber: number,
   isHost: boolean = false
 ): Promise<MinigameResult[]> {
   try {
-    const { data: { session } } = await supabase.auth.getSession();
-    
-    const headers: any = {};
-    if (isHost && session) {
-      headers.Authorization = `Bearer ${session.access_token}`;
-    }
-
-    const { data, error } = await supabase.functions.invoke('calculate-minigame-results', {
-      body: {
+    if (isHost) {
+      // Use the existing function from gameApi.ts
+      const results = await calculateAndAssignMinigameResults(
         gameCode,
         dayNumber,
-        isHost
-      },
-      headers
-    });
+        true // Pass isHost flag
+      );
 
-    if (error) throw error;
-    if (!data.success) throw new Error(data.error || 'Failed to calculate results');
-    
-    return data.results;
+      // Convert to the expected format
+      return results.map((result) => ({
+        playerId: result.playerId,
+        playerName: result.playerName,
+        rank: result.rank,
+        points: result.points,
+        totalPoints: result.totalPoints,
+      }));
+    } else {
+      throw new Error("Only host can calculate minigame results");
+    }
   } catch (error) {
-    console.error('Failed to calculate minigame results:', error);
+    console.error("Failed to calculate minigame results:", error);
     throw error;
   }
-
 }
+
 export async function fetchMinigameResults(
   gameCode: string,
   dayNumber: number,
   playerId: string
-): Promise<{ results: MinigameResult[], calculated: boolean }> {
-  const { data, error } = await supabase.functions.invoke('calculate-minigame-results', {
-    body: {
-      gameCode,
-      dayNumber,
-      action: 'fetch',
-      playerId 
+): Promise<{ results: MinigameResult[]; calculated: boolean }> {
+  try {
+    const calculated = await areMinigameResultsCalculated(gameCode, playerId);
+
+    if (calculated) {
+      const player = await getPlayerById(playerId);
+      const result: MinigameResult = {
+        playerId: player.player_id,
+        playerName: player.player_name,
+        rank: player.last_mini_game_rank || 0,
+        points: 0, // We don't store points earned separately
+        totalPoints: player.personal_points,
+      };
+
+      return {
+        results: [result],
+        calculated: true,
+      };
+    } else {
+      return {
+        results: [],
+        calculated: false,
+      };
     }
-  });
-
-  if (error) throw error;
-  
-  return {
-    results: data.results || [],
-    calculated: data.calculated || false
-  };
-
+  } catch (error) {
+    console.error("Failed to fetch minigame results:", error);
+    throw error;
+  }
 }
