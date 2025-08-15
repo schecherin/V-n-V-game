@@ -99,12 +99,13 @@ export async function assignRoleNameToPlayer(
 ) {
   // If original_role_name is null, set both current_role_name and original_role_name
   if (setOriginal) {
-    const { error } = await supabase
+    const { data, error } = await supabase
       .from("players")
       .update({ current_role_name: roleName, original_role_name: roleName })
-      .eq("player_id", playerId);
+      .eq("player_id", playerId)
+      .select();
     if (error) throw error;
-    return true;
+    return data;
   } else {
     // Otherwise, only update current_role_name
     const { error } = await supabase

@@ -13,6 +13,7 @@ import { playerHasRole } from "./playerApi";
 import {
   updatePlayerMinigamePointsAndRank,
   getPlayersByGameCode,
+  assignRoleNameToPlayer,
 } from "@/lib/playerApi";
 import {
   countCorrectGuesses,
@@ -736,4 +737,157 @@ export async function getVotesOnImprisonedPlayer(
 
   // Map the results to extract just the voter_player_id strings
   return data?.map((vote) => vote.voter_player_id) || [];
+}
+
+// Shuffle array utility
+const shuffleArray = <T>(array: T[]): T[] => {
+  const newArray = [...array];
+  for (let i = newArray.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
+  }
+  return newArray;
+};
+
+// Tier priority mapping
+const tierOrder: Record<string, number> = {
+  S: 1,
+  A: 2,
+  B: 3,
+  C: 4,
+  D: 5,
+};
+
+/**
+ * Assign roles to players in a game.
+ * @param gameId The game ID.
+ * @param hostPlayerId The host player ID.
+ * @returns Object with success status and assignments.
+ */
+export async function assignRolesToPlayers(
+  gameId: string,
+  hostPlayerId: string
+): Promise<{
+  success: boolean;
+  error?: string;
+  assignments?: any[];
+  totalAssigned?: number;
+}> {
+  try {
+    // Verify this game exists and the host is legitimate
+    const game = await getGameByCode(gameId);
+
+    if (game.host_player_id !== hostPlayerId) {
+      return {
+        success: false,
+        error: "Only the host can assign roles",
+      };
+    }
+
+    // Fetch all players in the game
+    const allPlayersInGame = await getPlayersByGameCode(gameId);
+
+    const alivePlayers = allPlayersInGame.filter((p) => p.status === "Alive");
+    alivePlayers.map((p) => ({
+      id: p.player_id,
+      name: p.player_name,
+      status: p.status,
+    }));
+
+    if (alivePlayers.length === 0) {
+      return {
+        success: false,
+        error: "No players found in the game",
+      };
+    }
+
+    // Fetch all randomly assignable roles
+    const allRoles = await getAssignableRoles();
+
+    // Sort and separate roles
+    const sortedRoles = allRoles.sort(
+      (a, b) => tierOrder[a.tier] - tierOrder[b.tier]
+    );
+
+    const uniqueRoles = sortedRoles.filter(
+      (r) =>
+        r.role_name !== "Vice worshipper" && r.role_name !== "Virtue seeker"
+    );
+    const worshipperRoles = sortedRoles.filter(
+      (r) =>
+        r.role_name === "Vice worshipper" || r.role_name === "Virtue seeker"
+    );
+
+    if (worshipperRoles.length === 0) {
+      return {
+        success: false,
+        error: "Missing worshipper roles in database",
+      };
+    }
+
+    // Shuffle players and assign roles
+    const shuffledPlayers = shuffleArray(alivePlayers);
+
+    const availableUniqueRoles = [...uniqueRoles];
+
+    const assignments: Array<{
+      player_id: string;
+      player_name: string;
+      assigned_role: string;
+    }> = [];
+
+    // Update each player individually
+    let successCount = 0;
+    let errorCount = 0;
+
+    for (let i = 0; i < shuffledPlayers.length; i++) {
+      const player = shuffledPlayers[i];
+      console.log("player", player);
+      console.log("availableUniqueRoles", availableUniqueRoles);
+
+      let assignedRoleName: string;
+
+      if (availableUniqueRoles.length > 0) {
+        const roleToAssign = availableUniqueRoles.shift()!;
+        assignedRoleName = roleToAssign.role_name;
+      } else {
+        assignedRoleName =
+          worshipperRoles[i % worshipperRoles.length].role_name;
+      }
+
+      try {
+        await assignRoleNameToPlayer(player.player_id, assignedRoleName, true);
+        successCount++;
+        assignments.push({
+          player_id: player.player_id,
+          player_name: player.player_name,
+          assigned_role: assignedRoleName,
+        });
+      } catch (error) {
+        console.error(`Failed to update player ${player.player_name}:`, error);
+        errorCount++;
+      }
+      console.log(`assigned ${assignedRoleName} to ${player.player_name}`);
+      console.log("availableUniqueRoles", availableUniqueRoles);
+    }
+
+    if (errorCount > 0) {
+      return {
+        success: false,
+        error: `Failed to assign roles to ${errorCount} players`,
+      };
+    }
+
+    return {
+      success: true,
+      assignments,
+      totalAssigned: successCount,
+    };
+  } catch (error) {
+    console.error(`Role assignment error:`, error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Internal server error",
+    };
+  }
 }

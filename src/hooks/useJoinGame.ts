@@ -74,18 +74,13 @@ export function useJoinGame() {
         }
         // Create player
         let player;
-        try {
-          player = await getPlayerByUserIdInGame(foundGame.game_code, user?.id);
-        } catch (err: any) {
-          if (err?.code === "PGRST116") {
-            player = await createPlayer({
-              game_code: foundGame.game_code,
-              user_id: user?.id,
-              player_name: trimmedPlayerName,
-              status: "Alive",
-            });
-          }
-        }
+        player = await getPlayerByUserIdInGame(foundGame.game_code, user?.id);
+        player ??= await createPlayer({
+          game_code: foundGame.game_code,
+          user_id: user?.id,
+          player_name: trimmedPlayerName,
+          status: "Alive",
+        });
         // Update game player count
         await updateGamePlayerCount(
           foundGame.game_code,
