@@ -9,6 +9,7 @@ import { useGameContext } from "@/app/[game_id]/layout";
 
 import {
   setGameIncludeOutreachPhase,
+  setGameMaxPointsPerDayM,
   setGameTutorialStatus,
   updateGamePhase,
 } from "@/lib/gameApi";
@@ -29,7 +30,7 @@ function LobbyPageInner(): JSX.Element {
   const playerId = searchParams.get("playerId");
 
   // Get game data from layout context
-  const { game, currentPlayerIsHost } = useGameContext();
+  const { game, currentPlayerIsHost, players } = useGameContext();
 
   const [roomName, setRoomName] = useState<string>(initialRoomName);
   const [shouldRedirect, setShouldRedirect] = useState<boolean>(false);
@@ -79,6 +80,7 @@ function LobbyPageInner(): JSX.Element {
         outreachSwitch?.checked || false
       );
       await setGameTutorialStatus(gameId, tutorialSwitch?.checked || false);
+      await setGameMaxPointsPerDayM(gameId, players.length);
 
       // Set the game phase to RoleReveal
       await updateGamePhase(gameId, "RoleReveal");

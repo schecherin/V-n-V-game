@@ -3,7 +3,7 @@ import { getPlayerById } from "@/lib/playerApi";
 import {
   calculateMinigameResults,
   type MinigameResult,
-} from "@/lib/minigameAPI";
+} from "@/lib/minigameApi";
 import { insertReflectionPhaseGuess } from "@/lib/gameApi";
 import { useGameContext } from "@/app/[game_id]/layout";
 
@@ -42,7 +42,7 @@ export function useMinigame({ gamePhase }: UseMinigameProps) {
         console.log("Guest waiting for results...");
 
         let attempts = 0;
-        const maxAttempts = 30; // 30 seconds max
+        const maxAttempts = 20; // 20 seconds max
 
         while (attempts < maxAttempts) {
           // Fetch own player data directly from database

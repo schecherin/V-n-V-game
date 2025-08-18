@@ -1,7 +1,11 @@
 import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { getGameByCodeAndPhase, updateGamePlayerCount } from "@/lib/gameApi";
-import { getPlayerByNameInGame, createPlayer } from "@/lib/playerApi";
+import {
+  getPlayerByNameInGame,
+  createPlayer,
+  getPlayerByUserIdInGame,
+} from "@/lib/playerApi";
 import { getCurrentUser, signInAnonymously } from "@/lib/authApi";
 import { Game } from "@/types";
 
@@ -11,6 +15,7 @@ import { Game } from "@/types";
  */
 export function useJoinGame() {
   const [game, setGame] = useState<Game | null>(null);
+  const [existingUser, setExistingUser] = useState<boolean>(true);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<any>(null);
   const router = useRouter();
@@ -31,6 +36,7 @@ export function useJoinGame() {
         try {
           user = await getCurrentUser();
         } catch {
+          setExistingUser(false);
           await signInAnonymously();
           user = await getCurrentUser();
         }
@@ -67,7 +73,9 @@ export function useJoinGame() {
           throw new Error("Player name already taken in this game");
         }
         // Create player
-        const player = await createPlayer({
+        let player;
+        player = await getPlayerByUserIdInGame(foundGame.game_code, user?.id);
+        player ??= await createPlayer({
           game_code: foundGame.game_code,
           user_id: user?.id,
           player_name: trimmedPlayerName,
@@ -80,7 +88,7 @@ export function useJoinGame() {
         );
         // Navigate to game lobby
         router.push(
-          `/${foundGame.game_code}/lobby?playerId=${player.player_id}`
+          `/${foundGame.game_code}/lobby?playerId=${player?.player_id}`
         );
         setLoading(false);
         return { game: foundGame, player };
