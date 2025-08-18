@@ -1,0 +1,21 @@
+{
+  "name": "Vice and Virtue",
+  "short_name": "V&V",
+  "description": "An multiplayer game where players navigate the delicate balance between vice and virtue",
+  "version": "0.1.0",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#4E3624",
+  "theme_color": "#e3b510",
+  "orientation": "portrait-primary",
+  "scope": "/",
+  "lang": "en",
+  "categories": ["games", "entertainment", "multiplayer"],
+  "icons": [
+    {
+      "src": "/favicon.ico",
+      "sizes": "16x16 32x32",
+      "type": "image/x-icon"
+    }
+  ]
+}
