@@ -7,6 +7,7 @@ import {
 import { PlayerAction, VoteAnnouncement } from "@/types";
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
+import { useRoleActions } from "@/hooks/useRoleActions";
 
 interface ConsultationVotingResultsProps {
   onNextPhase: () => void;
@@ -20,6 +21,7 @@ export default function ConsultationVotingResults({
   const [voteAnnouncement, setVoteAnnouncement] =
     useState<VoteAnnouncement | null>(null);
   const [truthfulnessAction, setTruthfulnessAction] = useState<boolean>(false);
+  const { handleRoleAction } = useRoleActions();
 
   useEffect(() => {
     if (game) {
@@ -33,17 +35,10 @@ export default function ConsultationVotingResults({
 
   const handleReveal = () => {
     setTruthfulnessAction(true);
-    insertPlayerAction(
-      game!.game_code,
-      game!.current_day,
-      playerId!,
-      "Truthfulness",
-      "RevealAllVotesOnImprisoned",
-      0,
-      {
-        actionSuccessful: true,
-      }
-    );
+    handleRoleAction({
+      actionType: "RevealAllVotesOnImprisoned",
+      targetPlayerId: voteAnnouncement!.imprisoned_player_id!,
+    });
   };
 
   const revealAllVotesOnImprisoned = async () => {
