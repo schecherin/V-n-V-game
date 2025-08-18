@@ -88,6 +88,74 @@ export function rankAndAssignPoints(
 }
 
 /**
+ * Sort, rank, and assign points using the game's formula with ties handling.
+ * @param results Array of results with playerId, playerName, correctGuesses, currentPoints
+ * @param M The max points per day
+ * @returns Array of results with rank and points assigned
+ */
+export function rankAndAssignPointsWithTies(
+  results: Array<{
+    playerId: string;
+    playerName: string;
+    correctGuesses: number;
+    currentPoints: number;
+  }>,
+  M: number
+): Array<{
+  playerId: string;
+  playerName: string;
+  correctGuesses: number;
+  currentPoints: number;
+  rank: number;
+  points: number;
+}> {
+  // Sort descending by correctGuesses
+  results.sort((a, b) => b.correctGuesses - a.correctGuesses);
+  const finalResults: Array<{
+    playerId: string;
+    playerName: string;
+    correctGuesses: number;
+    currentPoints: number;
+    rank: number;
+    points: number;
+  }> = [];
+
+  let currentRank = 1;
+  let points = M;
+
+  let i = 0;
+  while (i < results.length) {
+    const currentCorrectGuesses = results[i].correctGuesses;
+    const tiedPlayers: typeof results = [];
+
+    while (
+      i < results.length &&
+      results[i].correctGuesses === currentCorrectGuesses
+    ) {
+      tiedPlayers.push(results[i]);
+      i++;
+    }
+
+    const calculatedPoints = Math.max(Math.ceil(0.25 * M), Math.round(points));
+
+    // Assign the same rank and points to all tied players
+    tiedPlayers.forEach((player) => {
+      finalResults.push({
+        ...player,
+        rank: currentRank,
+        points: calculatedPoints,
+      });
+    });
+
+    currentRank += tiedPlayers.length;
+
+    points *= 0.93;
+  }
+
+  return finalResults;
+}
+
+/**
  * Get the next game phase based on the current phase and game state.
  * @param currentPhase The current game phase.
  * @param game The game object.

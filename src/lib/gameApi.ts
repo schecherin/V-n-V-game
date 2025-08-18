@@ -13,10 +13,11 @@ import { playerHasRole } from "./playerApi";
 import {
   updatePlayerMinigamePointsAndRank,
   getPlayersByGameCode,
+  assignRoleNameToPlayer,
 } from "@/lib/playerApi";
 import {
   countCorrectGuesses,
-  rankAndAssignPoints,
+  rankAndAssignPointsWithTies,
   MinigameResult,
 } from "./gameUtils";
 
@@ -63,11 +64,10 @@ export async function getGameByCode(gameCode: string) {
 export async function joinGame(gameCode: string, name: string) {
   const {
     data: { user },
-    error,
   } = await supabase.auth.getUser();
   if (!user) throw new Error("Not authenticated");
 
-  const { data: game, error: roomError } = await supabase
+  const { error: roomError } = await supabase
     .from("games")
     .select("game_code")
     .eq("game_code", gameCode)
@@ -96,7 +96,7 @@ export async function joinGame(gameCode: string, name: string) {
  * @returns True if unique, false otherwise.
  */
 export async function checkGameCodeUnique(gameCode: string) {
-  const { data: existingGame, error: checkError } = await supabase
+  const { error: checkError } = await supabase
     .from("games")
     .select("game_code")
     .eq("game_code", gameCode)
@@ -256,6 +256,19 @@ export async function setGameIncludeOutreachPhase(
   if (error) throw error;
 }
 
+export async function setGameMaxPointsPerDayM(
+  gameId: string,
+  numberOfPlayers: number
+) {
+  const maxPointsPerDayM = 1000.0 / numberOfPlayers;
+  const { data, error } = await supabase
+    .from("games")
+    .update({ max_points_per_day_m: maxPointsPerDayM })
+    .eq("game_code", gameId);
+  if (error) throw error;
+  return data;
+}
+
 /**
  * Insert a guess into the reflection_phase_guesses table.
  * Sets is_correct based on whether the guessed player has the guessed role.
@@ -329,48 +342,67 @@ export async function getMaxPoints(gameId: string) {
     .eq("game_code", gameId)
     .single();
   if (error) throw error;
-  return data;
+  return data.max_points_per_day_m;
 }
 
 /**
  * Calculate minigame results, assign points and rank, and update the database.
  * @param gameId The game code.
- * @returns Array of results for each player: { playerId, playerName, correctGuesses, rank, points }
+ * @param dayNumber The day number.
+ * @param isHost Whether the caller is the authenticated host.
+ * @returns Array of results for each player: { playerId, playerName, correctGuesses, rank, points, totalPoints }
  */
 export async function calculateAndAssignMinigameResults(
   gameId: string,
-  dayNumber: number
-): Promise<MinigameResult[]> {
-  // 1. Fetch all players
-  const players = await getPlayersByGameCode(gameId);
-  // 2. Fetch all guesses for the game and day
+  dayNumber: number,
+  isHost: boolean = false
+): Promise<(MinigameResult & { totalPoints: number })[]> {
+  // 1. Fetch all alive players
+  const allPlayers = await getPlayersByGameCode(gameId);
+  const players = allPlayers.filter((p) => p.status === "Alive");
+
+  // 2. Fetch the game's max_points_per_day_m
+  const maxPointsPerDayM = await getMaxPoints(gameId);
+  console.log("maxPointsPerDayM", maxPointsPerDayM);
+
+  // 3. Fetch all guesses for the game and day
   const guesses = await getReflectionPhaseGuesses(gameId, dayNumber);
+  console.log("guesses", guesses);
 
-  // 3. Count correct guesses for each player
-  const correctGuessCount = countCorrectGuesses(
-    guesses,
-    players as { player_id: string }[]
-  );
+  // 4. Count correct guesses for each player
+  const correctGuessCount = countCorrectGuesses(guesses, players);
+  console.log("correctGuessCount", correctGuessCount);
 
-  // 4. Build results array
-  const baseResults = (players as any[]).map((player) => ({
+  // 5. Build results array with player info
+  const baseResults = players.map((player) => ({
     playerId: player.player_id,
     playerName: player.player_name,
     correctGuesses: correctGuessCount[player.player_id] || 0,
+    currentPoints: player.personal_points || 0,
   }));
+  console.log("baseResults", baseResults);
 
-  // 5. Rank and assign points
-  const results = rankAndAssignPoints(
-    baseResults,
-    (await getMaxPoints(gameId)).max_points_per_day_m
-  );
+  // 6. Rank and assign points using the game formula
+  const results = rankAndAssignPointsWithTies(baseResults, maxPointsPerDayM);
+  console.log("results", results);
 
-  // 6. Update each player's points and rank in the database
-  for (const r of results) {
-    await updatePlayerMinigamePointsAndRank(r.playerId, r.points, r.rank);
+  // 7. Update each player's points and rank in the database ONLY if authenticated host
+  if (isHost) {
+    const updatePromises = results.map(async (r) => {
+      await updatePlayerMinigamePointsAndRank(r.playerId, r.points, r.rank);
+    });
+    await Promise.all(updatePromises);
   }
 
-  return results;
+  // Return results with totalPoints
+  return results.map((r) => ({
+    playerId: r.playerId,
+    playerName: r.playerName,
+    correctGuesses: r.correctGuesses,
+    rank: r.rank,
+    points: r.points,
+    totalPoints: r.currentPoints + r.points,
+  }));
 }
 
 /**
@@ -736,4 +768,189 @@ export async function getVotesOnImprisonedPlayer(
 
   // Map the results to extract just the voter_player_id strings
   return data?.map((vote) => vote.voter_player_id) || [];
+}
+
+// Shuffle array utility
+const shuffleArray = <T>(array: T[]): T[] => {
+  const newArray = [...array];
+  for (let i = newArray.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
+  }
+  return newArray;
+};
+
+// Tier priority mapping
+const tierOrder: Record<string, number> = {
+  S: 1,
+  A: 2,
+  B: 3,
+  C: 4,
+  D: 5,
+};
+
+/**
+ * Check if minigame results are calculated for a player.
+ * @param gameId The game ID.
+ * @param playerId The player ID to check.
+ * @returns True if results are calculated, false otherwise.
+ */
+export async function areMinigameResultsCalculated(
+  gameId: string,
+  playerId: string
+): Promise<boolean> {
+  try {
+    const { data: player, error } = await supabase
+      .from("players")
+      .select("last_mini_game_rank")
+      .eq("player_id", playerId)
+      .eq("game_code", gameId)
+      .single();
+
+    if (error || !player) {
+      return false;
+    }
+
+    return (
+      player.last_mini_game_rank !== null && player.last_mini_game_rank > 0
+    );
+  } catch (error) {
+    console.error("Error checking if minigame results are calculated:", error);
+    return false;
+  }
+}
+
+/**
+ * Assign roles to players in a game.
+ * @param gameId The game ID.
+ * @param hostPlayerId The host player ID.
+ * @returns Object with success status and assignments.
+ */
+export async function assignRolesToPlayers(
+  gameId: string,
+  hostPlayerId: string
+): Promise<{
+  success: boolean;
+  error?: string;
+  assignments?: any[];
+  totalAssigned?: number;
+}> {
+  try {
+    // Verify this game exists and the host is legitimate
+    const game = await getGameByCode(gameId);
+
+    if (game.host_player_id !== hostPlayerId) {
+      return {
+        success: false,
+        error: "Only the host can assign roles",
+      };
+    }
+
+    // Fetch all players in the game
+    const allPlayersInGame = await getPlayersByGameCode(gameId);
+
+    const alivePlayers = allPlayersInGame
+      .filter((p) => p.status === "Alive")
+      .map((p) => ({
+        id: p.player_id,
+        name: p.player_name,
+        status: p.status,
+      }));
+
+    if (alivePlayers.length === 0) {
+      return {
+        success: false,
+        error: "No players found in the game",
+      };
+    }
+
+    // Fetch all randomly assignable roles
+    const allRoles = await getAssignableRoles();
+
+    // Sort and separate roles
+    const sortedRoles = allRoles.toSorted(
+      (a, b) => tierOrder[a.tier] - tierOrder[b.tier]
+    );
+
+    const uniqueRoles = sortedRoles.filter(
+      (r) =>
+        r.role_name !== "Vice worshipper" && r.role_name !== "Virtue seeker"
+    );
+    const worshipperRoles = sortedRoles.filter(
+      (r) =>
+        r.role_name === "Vice worshipper" || r.role_name === "Virtue seeker"
+    );
+
+    if (worshipperRoles.length === 0) {
+      return {
+        success: false,
+        error: "Missing worshipper roles in database",
+      };
+    }
+
+    // Shuffle players and assign roles
+    const shuffledPlayers = shuffleArray(alivePlayers);
+
+    const availableUniqueRoles = [...uniqueRoles];
+
+    const assignments: Array<{
+      player_id: string;
+      player_name: string;
+      assigned_role: string;
+    }> = [];
+
+    // Update each player individually
+    let successCount = 0;
+    let errorCount = 0;
+
+    for (let i = 0; i < shuffledPlayers.length; i++) {
+      const player = shuffledPlayers[i];
+      console.log("player", player);
+      console.log("availableUniqueRoles", availableUniqueRoles);
+
+      let assignedRoleName: string;
+
+      if (availableUniqueRoles.length > 0) {
+        const roleToAssign = availableUniqueRoles.shift()!;
+        assignedRoleName = roleToAssign.role_name;
+      } else {
+        assignedRoleName =
+          worshipperRoles[i % worshipperRoles.length].role_name;
+      }
+
+      try {
+        await assignRoleNameToPlayer(player.id, assignedRoleName, true);
+        successCount++;
+        assignments.push({
+          player_id: player.id,
+          player_name: player.name,
+          assigned_role: assignedRoleName,
+        });
+      } catch (error) {
+        console.error(`Failed to update player ${player.name}:`, error);
+        errorCount++;
+      }
+      console.log(`assigned ${assignedRoleName} to ${player.name}`);
+      console.log("availableUniqueRoles", availableUniqueRoles);
+    }
+
+    if (errorCount > 0) {
+      return {
+        success: false,
+        error: `Failed to assign roles to ${errorCount} players`,
+      };
+    }
+
+    return {
+      success: true,
+      assignments,
+      totalAssigned: successCount,
+    };
+  } catch (error) {
+    console.error(`Role assignment error:`, error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Internal server error",
+    };
+  }
 }

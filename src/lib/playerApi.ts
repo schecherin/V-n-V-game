@@ -58,6 +58,19 @@ export async function getPlayerByNameInGame(
   return null;
 }
 
+export async function getPlayerByUserIdInGame(gameId: string, userId: string) {
+  const { data, error } = await supabase
+    .from("players")
+    .select("*")
+    .eq("game_code", gameId)
+    .eq("user_id", userId)
+    .single();
+  if (data) return data;
+  if (error && error.code === "PGRST116") return null; // Not found
+  if (error) throw error;
+  return null;
+}
+
 /**
  * Create a new player with the provided data.
  * @param playerData The data for the new player.
@@ -86,12 +99,13 @@ export async function assignRoleNameToPlayer(
 ) {
   // If original_role_name is null, set both current_role_name and original_role_name
   if (setOriginal) {
-    const { error } = await supabase
+    const { data, error } = await supabase
       .from("players")
       .update({ current_role_name: roleName, original_role_name: roleName })
-      .eq("player_id", playerId);
+      .eq("player_id", playerId)
+      .select();
     if (error) throw error;
-    return true;
+    return data;
   } else {
     // Otherwise, only update current_role_name
     const { error } = await supabase

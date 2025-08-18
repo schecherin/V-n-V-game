@@ -1,12 +1,9 @@
 import { useGameContext } from "@/app/[game_id]/layout";
-import {
-  getVoteAnnouncement,
-  getVotesOnImprisonedPlayer,
-  insertPlayerAction,
-} from "@/lib/gameApi";
-import { PlayerAction, VoteAnnouncement } from "@/types";
+import { getVoteAnnouncement, getVotesOnImprisonedPlayer } from "@/lib/gameApi";
+import { VoteAnnouncement } from "@/types";
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
+import { useRoleActions } from "@/hooks/useRoleActions";
 
 interface ConsultationVotingResultsProps {
   onNextPhase: () => void;
@@ -20,6 +17,7 @@ export default function ConsultationVotingResults({
   const [voteAnnouncement, setVoteAnnouncement] =
     useState<VoteAnnouncement | null>(null);
   const [truthfulnessAction, setTruthfulnessAction] = useState<boolean>(false);
+  const { handleRoleAction } = useRoleActions();
 
   useEffect(() => {
     if (game) {
@@ -33,17 +31,10 @@ export default function ConsultationVotingResults({
 
   const handleReveal = () => {
     setTruthfulnessAction(true);
-    insertPlayerAction(
-      game!.game_code,
-      game!.current_day,
-      playerId!,
-      "Truthfulness",
-      "RevealAllVotesOnImprisoned",
-      0,
-      {
-        actionSuccessful: true,
-      }
-    );
+    handleRoleAction({
+      actionType: "RevealAllVotesOnImprisoned",
+      targetPlayerId: voteAnnouncement!.imprisoned_player_id!,
+    });
   };
 
   const revealAllVotesOnImprisoned = async () => {
