@@ -1,6 +1,4 @@
 import { supabase } from "@/lib/supabase/client";
-import { getPlayerById, fetchPlayerPoints } from "@/lib/playerApi";
-import { getGameByCode } from "@/lib/gameApi";
 
 export type RoleTier = "S" | "A" | "B" | "C" | "D";
 export interface RoleActionResult {

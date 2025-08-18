@@ -1,10 +1,6 @@
 import { useGameContext } from "@/app/[game_id]/layout";
-import {
-  getVoteAnnouncement,
-  getVotesOnImprisonedPlayer,
-  insertPlayerAction,
-} from "@/lib/gameApi";
-import { PlayerAction, VoteAnnouncement } from "@/types";
+import { getVoteAnnouncement, getVotesOnImprisonedPlayer } from "@/lib/gameApi";
+import { VoteAnnouncement } from "@/types";
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { useRoleActions } from "@/hooks/useRoleActions";

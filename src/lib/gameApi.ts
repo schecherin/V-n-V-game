@@ -64,11 +64,10 @@ export async function getGameByCode(gameCode: string) {
 export async function joinGame(gameCode: string, name: string) {
   const {
     data: { user },
-    error,
   } = await supabase.auth.getUser();
   if (!user) throw new Error("Not authenticated");
 
-  const { data: game, error: roomError } = await supabase
+  const { error: roomError } = await supabase
     .from("games")
     .select("game_code")
     .eq("game_code", gameCode)
@@ -97,7 +96,7 @@ export async function joinGame(gameCode: string, name: string) {
  * @returns True if unique, false otherwise.
  */
 export async function checkGameCodeUnique(gameCode: string) {
-  const { data: existingGame, error: checkError } = await supabase
+  const { error: checkError } = await supabase
     .from("games")
     .select("game_code")
     .eq("game_code", gameCode)
@@ -850,12 +849,13 @@ export async function assignRolesToPlayers(
     // Fetch all players in the game
     const allPlayersInGame = await getPlayersByGameCode(gameId);
 
-    const alivePlayers = allPlayersInGame.filter((p) => p.status === "Alive");
-    alivePlayers.map((p) => ({
-      id: p.player_id,
-      name: p.player_name,
-      status: p.status,
-    }));
+    const alivePlayers = allPlayersInGame
+      .filter((p) => p.status === "Alive")
+      .map((p) => ({
+        id: p.player_id,
+        name: p.player_name,
+        status: p.status,
+      }));
 
     if (alivePlayers.length === 0) {
       return {
@@ -868,7 +868,7 @@ export async function assignRolesToPlayers(
     const allRoles = await getAssignableRoles();
 
     // Sort and separate roles
-    const sortedRoles = allRoles.sort(
+    const sortedRoles = allRoles.toSorted(
       (a, b) => tierOrder[a.tier] - tierOrder[b.tier]
     );
 
@@ -919,18 +919,18 @@ export async function assignRolesToPlayers(
       }
 
       try {
-        await assignRoleNameToPlayer(player.player_id, assignedRoleName, true);
+        await assignRoleNameToPlayer(player.id, assignedRoleName, true);
         successCount++;
         assignments.push({
-          player_id: player.player_id,
-          player_name: player.player_name,
+          player_id: player.id,
+          player_name: player.name,
           assigned_role: assignedRoleName,
         });
       } catch (error) {
-        console.error(`Failed to update player ${player.player_name}:`, error);
+        console.error(`Failed to update player ${player.name}:`, error);
         errorCount++;
       }
-      console.log(`assigned ${assignedRoleName} to ${player.player_name}`);
+      console.log(`assigned ${assignedRoleName} to ${player.name}`);
       console.log("availableUniqueRoles", availableUniqueRoles);
     }
 

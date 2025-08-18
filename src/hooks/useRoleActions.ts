@@ -24,7 +24,7 @@ export interface RoleAction {
 }
 
 export function useRoleActions() {
-  const { gameId, game, currentPlayerIsHost, playerId } = useGameContext();
+  const { gameId, game, playerId } = useGameContext();
   const handleRoleAction = async (roleAction: RoleAction) => {
     const { actionType, targetPlayerId, secondaryTargetId, targetTier } =
       roleAction;
