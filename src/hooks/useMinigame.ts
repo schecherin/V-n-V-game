@@ -3,7 +3,7 @@ import { getPlayerById } from "@/lib/playerApi";
 import {
   calculateMinigameResults,
   type MinigameResult,
-} from "@/lib/minigameApii";
+} from "@/lib/minigameApi";
 import { insertReflectionPhaseGuess } from "@/lib/gameApi";
 import { useGameContext } from "@/app/[game_id]/layout";
 
