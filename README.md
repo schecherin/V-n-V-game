@@ -1,8 +1,53 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Vice and Virtue
 
-## Getting Started
+A social deduction game where players take on different roles, each with unique abilities and objectives.
 
-First, set up your environment variables by creating a `.env.local` file with the following variables:
+## Features
+
+- **Multiplayer Support**: Real-time gameplay with friends
+- **Role-Based Gameplay**: Multiple character roles with unique abilities
+- **Progressive Web App**: Installable on mobile and desktop devices
+- **Responsive Design**: Optimized for both mobile and desktop play
+- **Dark Theme**: Immersive visual design with mysterious aesthetics
+
+## Technology Stack
+
+- **Frontend**: Next.js 15, React 19, TypeScript
+- **Styling**: Tailwind CSS 4
+- **Backend**: Supabase (Database, Authentication, Real-time)
+- **UI Components**: Radix UI, Framer Motion
+- **Deployment**: Vercel
+
+## Prerequisites
+
+- Node.js 18+
+- npm, yarn, pnpm, or bun
+- Supabase account (for backend services)
+
+## 🔧 Getting Started
+
+### 1. Clone the Repository
+
+```bash
+git clone schecherin/V-n-V-game
+cd V-n-V-game
+```
+
+### 2. Install Dependencies
+
+```bash
+npm install
+# or
+yarn install
+# or
+pnpm install
+# or
+bun install
+```
+
+### 3. Environment Setup
+
+Create a `.env.local` file in the root directory:
 
 ```bash
 # Supabase Configuration
@@ -10,7 +55,17 @@ NEXT_PUBLIC_SUPABASE_URL=your_supabase_project_url
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
 ```
 
-Then, run the development server:
+### 4. Database Setup
+
+Run the Supabase schema setup:
+
+```bash
+# set Supabase env variable
+export SUPABASE_ACCESS_TOKEN=your_supabase_access_token
+npm run types
+```
+
+### 5. Start Development Server
 
 ```bash
 npm run dev
@@ -22,23 +77,20 @@ pnpm dev
 bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000) to view the game.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### Game Setup
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+1. **Create or Join a Room**: Host a new game or join an existing one using a room code
+2. **Role Assignment**: Players are randomly assigned roles (Virtue Seeker, Vice Worshipper, etc.)
+3. **Game Phases**: The game progresses through multiple phases:
+   - **Consultation Phase**: Players discuss and vote on actions
+   - **Outreach Phase**: Use role abilities to influence the game
+   - **Reflection Phase**: Review outcomes and plan next moves
 
-## Learn More
+## PWA Features
 
-To learn more about Next.js, take a look at the following resources:
+Vice and Virtue is a Progressive Web App that can be installed on:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- **Mobile Devices**: iOS Safari, Android Chrome
+- **Desktop**: Chrome, Edge, Firefox
