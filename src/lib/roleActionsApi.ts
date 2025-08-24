@@ -13,7 +13,31 @@ export interface PlayerVote {
   voter_name: string;
 }
 
-export async function executeMurder(
+export async function fetchAllRoleActions(gameCode: string, dayNumber: number) {
+  const { data: roleActions, error: roleActionsError } = await supabase
+    .from("player_actions")
+    .select("*")
+    .eq("game_code", gameCode)
+    .eq("day_number", dayNumber);
+  if (roleActionsError) throw roleActionsError;
+  return roleActions;
+}
+
+export async function fetchSuccessfulRoleActions(
+  gameCode: string,
+  dayNumber: number
+) {
+  const { data: roleActions, error: roleActionsError } = await supabase
+    .from("player_actions")
+    .select("*")
+    .eq("game_code", gameCode)
+    .eq("day_number", dayNumber)
+    .eq("action_successful", true);
+  if (roleActionsError) throw roleActionsError;
+  return roleActions;
+}
+
+export async function setupMurder(
   gameCode: string,
   actorPlayerId: string,
   targetPlayerId: string,
@@ -28,6 +52,51 @@ export async function executeMurder(
       message: `Insufficient points. Need ${requiredPoints}, have ${actorPoints}`,
     };
   }
+  // Validate target exists and is alive
+  const { data: targetPlayer } = await supabase
+    .from("players")
+    .select("player_id, status")
+    .eq("player_id", targetPlayerId)
+    .eq("game_code", gameCode)
+    .single();
+  if (!targetPlayer || targetPlayer.status !== "Alive") {
+    return {
+      success: false,
+      message: "Invalid target or target is not alive",
+    };
+  }
+  // Deduct points
+  const { error: pointsError } = await supabase
+    .from("players")
+    .update({
+      personal_points: actorPoints - requiredPoints,
+    })
+    .eq("player_id", actorPlayerId);
+  if (pointsError) throw pointsError;
+  // Log action
+  const { error: actionError } = await supabase.from("player_actions").insert({
+    game_code: gameCode,
+    day_number: dayNumber,
+    acting_player_id: actorPlayerId,
+    acting_role_name: "Murder",
+    action_type: "Kill",
+    target_player_id: targetPlayerId,
+    points_spent: requiredPoints,
+    action_successful: false,
+  });
+  if (actionError) throw actionError;
+  return {
+    success: true,
+    message: "Murder executed successfully",
+  };
+}
+
+export async function executeMurder(
+  gameCode: string,
+  actionId: string,
+  targetPlayerId: string,
+  dayNumber: number
+) {
   // Validate target exists and is alive
   const { data: targetPlayer } = await supabase
     .from("players")
@@ -64,31 +133,20 @@ export async function executeMurder(
     })
     .eq("player_id", targetPlayerId);
   if (murderError) throw murderError;
-  // Deduct points
-  const { error: pointsError } = await supabase
-    .from("players")
-    .update({
-      personal_points: actorPoints - requiredPoints,
-    })
-    .eq("player_id", actorPlayerId);
-  if (pointsError) throw pointsError;
   // Log action
-  const { error: actionError } = await supabase.from("player_actions").insert({
-    game_code: gameCode,
-    day_number: dayNumber,
-    acting_player_id: actorPlayerId,
-    acting_role_name: "Murder",
-    action_type: "Kill",
-    target_player_id: targetPlayerId,
-    points_spent: requiredPoints,
-    action_successful: true,
-  });
+  const { error: actionError } = await supabase
+    .from("player_actions")
+    .update({
+      action_successful: true,
+    })
+    .eq("action_id", actionId);
   if (actionError) throw actionError;
   return {
     success: true,
     message: "Murder executed successfully",
   };
 }
+
 export async function murderSelectSuccessor(
   gameCode: string,
   murderPlayerId: string,
@@ -195,7 +253,7 @@ export async function empathyViewVotes(
     },
   };
 }
-export async function executeIntoxication(
+export async function setupIntoxication(
   gameCode: string,
   actorPlayerId: string,
   targetPlayerId: string,
@@ -223,6 +281,38 @@ export async function executeIntoxication(
       message: "Invalid target or target is not alive",
     };
   }
+  // Deduct points
+  const { error: pointsError } = await supabase
+    .from("players")
+    .update({
+      personal_points: actorPoints - requiredPoints,
+    })
+    .eq("player_id", actorPlayerId);
+  if (pointsError) throw pointsError;
+  // Log action
+  const { error: actionError } = await supabase.from("player_actions").insert({
+    game_code: gameCode,
+    day_number: dayNumber,
+    acting_player_id: actorPlayerId,
+    acting_role_name: "Intoxication",
+    action_type: "Hospitalize",
+    target_player_id: targetPlayerId,
+    points_spent: requiredPoints,
+    action_successful: false,
+  });
+  if (actionError) throw actionError;
+  return {
+    success: true,
+    message: "Intoxication setup successfully",
+  };
+}
+export async function executeIntoxication(
+  gameCode: string,
+  actionId: string,
+  actorPlayerId: string,
+  targetPlayerId: string,
+  dayNumber: number
+) {
   // Check if target is protected
   const { data: protection } = await supabase
     .from("player_protections")
@@ -260,25 +350,14 @@ export async function executeIntoxication(
     })
     .eq("player_id", targetPlayerId);
   if (statusError) throw statusError;
-  // Deduct points
-  const { error: pointsError } = await supabase
-    .from("players")
-    .update({
-      personal_points: actorPoints - requiredPoints,
-    })
-    .eq("player_id", actorPlayerId);
-  if (pointsError) throw pointsError;
+
   // Log action
-  const { error: actionError } = await supabase.from("player_actions").insert({
-    game_code: gameCode,
-    day_number: dayNumber,
-    acting_player_id: actorPlayerId,
-    acting_role_name: "Intoxication",
-    action_type: "Hospitalize",
-    target_player_id: targetPlayerId,
-    points_spent: requiredPoints,
-    action_successful: true,
-  });
+  const { error: actionError } = await supabase
+    .from("player_actions")
+    .update({
+      action_successful: true,
+    })
+    .eq("action_id", actionId);
   if (actionError) throw actionError;
   return {
     success: true,
