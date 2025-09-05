@@ -1121,7 +1121,6 @@ export type Database = {
       role_tier: "S" | "A" | "B" | "C" | "D" | "OfficialTier"
       treasury_action_type:
         | "BuildHouseOfWorship"
-        | "ResuscitatePlayer"
         | "FreePlayerFromPrison"
         | "RevealFactionCount"
     }
@@ -1323,7 +1322,6 @@ export const Constants = {
       role_tier: ["S", "A", "B", "C", "D", "OfficialTier"],
       treasury_action_type: [
         "BuildHouseOfWorship",
-        "ResuscitatePlayer",
         "FreePlayerFromPrison",
         "RevealFactionCount",
       ],

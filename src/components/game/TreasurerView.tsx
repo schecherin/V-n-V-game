@@ -3,7 +3,6 @@ import { Button } from "@/components/ui/button";
 import {
   TREASURY_FREE_PLAYER_COST,
   TREASURY_HOUSE_COST,
-  TREASURY_RESUSCITATE_COST,
   TREASURY_REVEAL_COST,
 } from "@/lib/constants";
 import { TreasuryActionType } from "@/types";
@@ -32,19 +31,13 @@ const TreasurerView = ({ onNextPhase }: TreasurerViewProps) => {
   const [houseOfWorshipPurchases, setHouseOfWorshipPurchases] =
     useState<number>(0);
   const [freePlayerPurchases, setFreePlayerPurchases] = useState<string[]>([]);
-  const [resuscitatePlayerPurchases, setResuscitatePlayerPurchases] = useState<
-    string[]
-  >([]);
   const [revealFactionCountPurchase, setRevealFactionCountPurchase] =
     useState<boolean>(false);
   const [pointsToSpend, setPointsToSpend] = useState<number>(
-    game?.group_points_pool || 0
+    game?.group_points_pool || 0,
   );
 
   const [selectedImprisonedPlayer, setSelectedImprisonedPlayer] = useState<
-    string | undefined
-  >(undefined);
-  const [selectedHospitalizedPlayer, setSelectedHospitalizedPlayer] = useState<
     string | undefined
   >(undefined);
 
@@ -53,21 +46,17 @@ const TreasurerView = ({ onNextPhase }: TreasurerViewProps) => {
   const actionCost = {
     BuildHouseOfWorship: TREASURY_HOUSE_COST,
     FreePlayerFromPrison: TREASURY_FREE_PLAYER_COST,
-    ResuscitatePlayer: TREASURY_RESUSCITATE_COST,
     RevealFactionCount: TREASURY_REVEAL_COST,
   };
 
   const playersInPrison = players.filter(
-    (player) => player.status === "Imprisoned"
-  );
-  const playersInHospital = players.filter(
-    (player) => player.status === "Hospitalized"
+    (player) => player.status === "Imprisoned",
   );
 
   const handleTreasuryAction = (
     action: TreasuryActionType,
     targetPlayerId?: string,
-    details?: string
+    details?: string,
   ) => {
     if (!game?.game_code || !playerId) return;
 
@@ -78,7 +67,7 @@ const TreasurerView = ({ onNextPhase }: TreasurerViewProps) => {
       playerId,
       actionCost[action],
       targetPlayerId,
-      details
+      details,
     );
   };
 
@@ -95,10 +84,6 @@ const TreasurerView = ({ onNextPhase }: TreasurerViewProps) => {
       handleTreasuryAction("FreePlayerFromPrison", imprisonedPlayerId);
       updatePlayerStatus(imprisonedPlayerId, "Alive");
     }
-    for (const hospitalizedPlayerId of resuscitatePlayerPurchases) {
-      handleTreasuryAction("ResuscitatePlayer", hospitalizedPlayerId);
-      updatePlayerStatus(hospitalizedPlayerId, "Alive");
-    }
     if (revealFactionCountPurchase) {
       handleTreasuryAction("RevealFactionCount");
     }
@@ -110,10 +95,8 @@ const TreasurerView = ({ onNextPhase }: TreasurerViewProps) => {
     setPointsToSpend(game?.group_points_pool || 0);
     setHouseOfWorshipPurchases(0);
     setFreePlayerPurchases([]);
-    setResuscitatePlayerPurchases([]);
     setRevealFactionCountPurchase(false);
     setSelectedImprisonedPlayer(undefined);
-    setSelectedHospitalizedPlayer(undefined);
 
     onNextPhase();
   };
@@ -220,10 +203,10 @@ const TreasurerView = ({ onNextPhase }: TreasurerViewProps) => {
                     className="size-8"
                     onClick={() => {
                       setFreePlayerPurchases(
-                        freePlayerPurchases.filter((id) => id !== playerId)
+                        freePlayerPurchases.filter((id) => id !== playerId),
                       );
                       setPointsToSpend(
-                        pointsToSpend + TREASURY_FREE_PLAYER_COST
+                        pointsToSpend + TREASURY_FREE_PLAYER_COST,
                       );
                     }}
                   >
