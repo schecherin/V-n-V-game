@@ -7,7 +7,7 @@ export type Json =
   | Json[]
 
 export type Database = {
-  // Allows to automatically instanciate createClient with right options
+  // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
     PostgrestVersion: "12.2.3 (519615d)"
@@ -205,6 +205,7 @@ export type Database = {
         Row: {
           created_at: string | null
           current_day: number
+          current_m_value: number | null
           current_phase: Database["public"]["Enums"]["game_phase"]
           current_player_count: number
           game_code: string
@@ -222,16 +223,17 @@ export type Database = {
         }
         Insert: {
           created_at?: string | null
-          current_day?: number
+          current_day: number
+          current_m_value?: number | null
           current_phase?: Database["public"]["Enums"]["game_phase"]
-          current_player_count?: number
+          current_player_count: number
           game_code: string
           group_points_pool?: number
           host_player_id?: string | null
           houses_of_worship?: number
           include_outreach_phase?: boolean
           last_phase_change_at?: string | null
-          max_players?: number
+          max_players: number
           max_points_per_day_m?: number
           secretary_player_id?: string | null
           treasurer_player_id?: string | null
@@ -241,6 +243,7 @@ export type Database = {
         Update: {
           created_at?: string | null
           current_day?: number
+          current_m_value?: number | null
           current_phase?: Database["public"]["Enums"]["game_phase"]
           current_player_count?: number
           game_code?: string
@@ -493,9 +496,9 @@ export type Database = {
       players: {
         Row: {
           acted_today: boolean | null
+          avatar_url: string | null
           conversion_history: Json | null
           current_role_name: string | null
-          current_y_value: number | null
           effective_identity_player_id: string | null
           game_code: string | null
           joined_at: string | null
@@ -510,9 +513,9 @@ export type Database = {
         }
         Insert: {
           acted_today?: boolean | null
+          avatar_url?: string | null
           conversion_history?: Json | null
           current_role_name?: string | null
-          current_y_value?: number | null
           effective_identity_player_id?: string | null
           game_code?: string | null
           joined_at?: string | null
@@ -527,9 +530,9 @@ export type Database = {
         }
         Update: {
           acted_today?: boolean | null
+          avatar_url?: string | null
           conversion_history?: Json | null
           current_role_name?: string | null
-          current_y_value?: number | null
           effective_identity_player_id?: string | null
           game_code?: string | null
           joined_at?: string | null
@@ -1091,7 +1094,7 @@ export type Database = {
       election_role_name: "chairperson" | "secretary" | "treasurer" | "prison"
       game_phase:
         | "Lobby"
-        | "Reflection_RoleActions"
+        | "Reflection_RoleActions_Selection"
         | "Reflection_MiniGame"
         | "Outreach"
         | "Consultation_Discussion"
@@ -1107,6 +1110,7 @@ export type Database = {
         | "Elections_Result"
         | "Elections_Chairperson"
         | "Consultation_Voting_Count"
+        | "Reflection_RoleActions_Execution"
       player_status:
         | "Alive"
         | "Dead"
@@ -1290,7 +1294,7 @@ export const Constants = {
       election_role_name: ["chairperson", "secretary", "treasurer", "prison"],
       game_phase: [
         "Lobby",
-        "Reflection_RoleActions",
+        "Reflection_RoleActions_Selection",
         "Reflection_MiniGame",
         "Outreach",
         "Consultation_Discussion",
@@ -1306,6 +1310,7 @@ export const Constants = {
         "Elections_Result",
         "Elections_Chairperson",
         "Consultation_Voting_Count",
+        "Reflection_RoleActions_Execution",
       ],
       player_status: [
         "Alive",

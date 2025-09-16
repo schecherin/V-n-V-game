@@ -169,14 +169,15 @@ export function getNextPhase(
     Lobby: "Lobby",
     RoleReveal: game?.tutorial ? "Tutorial" : "Reflection_MiniGame",
     Tutorial: "Reflection_MiniGame",
-    Reflection_RoleActions: "Reflection_MiniGame",
+    Reflection_RoleActions_Selection: "Reflection_MiniGame",
     Reflection_MiniGame: "Reflection_MiniGame_Result",
     Reflection_MiniGame_Result:
       game?.current_day === 1
         ? "Elections_Chairperson"
-        : game?.include_outreach_phase
-        ? "Outreach"
-        : "Consultation_Discussion",
+        : "Reflection_RoleActions_Execution",
+    Reflection_RoleActions_Execution: game?.include_outreach_phase
+      ? "Outreach"
+      : "Consultation_Discussion",
     Elections_Chairperson: "Elections_Secretary",
     Elections_Secretary: "Elections_Result",
     Elections_Result: game?.include_outreach_phase
@@ -187,7 +188,7 @@ export function getNextPhase(
     Consultation_TreasurerActions: "Consultation_Voting",
     Consultation_Voting: "Consultation_Voting_Count",
     Consultation_Voting_Count: "Consultation_Voting_Results",
-    Consultation_Voting_Results: "Reflection_RoleActions",
+    Consultation_Voting_Results: "Reflection_RoleActions_Selection",
     Paused: "Paused", // No transition
     Finished: "Finished", // No transition
   };

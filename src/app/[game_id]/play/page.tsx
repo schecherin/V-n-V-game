@@ -18,6 +18,8 @@ import MinigameResults from "@/components/game/MinigameResults";
 import ConsultationElections from "@/components/game/Elections";
 import ConsultationVoting from "@/components/game/ConsultationVoting";
 import ConsultationVotingResults from "@/components/game/ConsultationVotingResults";
+import ReflectionPhaseReveal from "@/components/game/ReflectionPhaseReveal";
+import { useRoleActions } from "@/hooks/useRoleActions";
 
 export default function GamePlayPage() {
   return (
@@ -30,6 +32,7 @@ export default function GamePlayPage() {
 function GamePlayPageInner() {
   const params = useParams();
   const router = useRouter();
+  const { consolidateRoleActions } = useRoleActions();
 
   const gameId: string = params.game_id as string;
 
@@ -99,7 +102,7 @@ function GamePlayPageInner() {
         );
       case "Tutorial":
         return <Tutorial onNextPhase={() => handleSetGamePhase()} />;
-      case "Reflection_RoleActions":
+      case "Reflection_RoleActions_Selection":
         return <ReflectionPhase onNextPhase={() => handleSetGamePhase()} />;
       case "Reflection_MiniGame":
         return (
@@ -126,6 +129,13 @@ function GamePlayPageInner() {
               handleSetGamePhase();
             }}
           />
+        );
+      case "Reflection_RoleActions_Execution":
+        if (currentPlayerIsHost) {
+          consolidateRoleActions();
+        }
+        return (
+          <ReflectionPhaseReveal onNextPhase={() => handleSetGamePhase()} />
         );
       case "Outreach":
         return <OutreachPhase onNextPhase={() => handleSetGamePhase()} />;

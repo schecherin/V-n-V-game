@@ -13,6 +13,8 @@ import {
   executeVengeanceGuess,
   executeTruthfulnessReveal,
   RoleTier,
+  setupMurder,
+  setupIntoxication,
 } from "@/lib/roleActionsApi";
 import { supabase } from "@/lib/supabase/client";
 
@@ -25,14 +27,14 @@ export interface RoleAction {
 
 export function useRoleActions() {
   const { gameId, game, playerId } = useGameContext();
-  const handleRoleAction = async (roleAction: RoleAction) => {
+  const doRoleAction = async (roleAction: RoleAction) => {
     const { actionType, targetPlayerId, secondaryTargetId, targetTier } =
       roleAction;
     if (!game) {
       throw new Error("Game not found");
     }
     // PHASE VALIDATION: Ensure we're in the correct phase
-    if (game.current_phase !== "Reflection_RoleActions") {
+    if (game.current_phase !== "Reflection_RoleActions_Selection") {
       throw new Error(
         "Actions can only be performed during Reflection Role Actions phase"
       );
@@ -62,8 +64,8 @@ export function useRoleActions() {
     switch (actorPlayer.current_role_name) {
       case "Murder":
         if (actionType === "Kill") {
-          result = await executeMurder(
-            gameId,
+          result = await setupMurder(
+            game.game_code,
             actorPlayer.player_id,
             targetPlayerId,
             game.current_day,
@@ -95,12 +97,12 @@ export function useRoleActions() {
         break;
       case "Intoxication":
         if (actionType === "Hospitalize") {
-          result = await executeIntoxication(
-            gameId,
+          result = await setupIntoxication(
+            game.game_code,
             actorPlayer.player_id,
             targetPlayerId,
             game.current_day,
-            yValue,
+            game.max_points_per_day_m,
             actorPlayer.personal_points
           );
         } else {
@@ -229,7 +231,45 @@ export function useRoleActions() {
         console.error("Failed to update acted_today flag:", updateError);
       }
     }
+    return result;
   };
 
-  return { handleRoleAction };
+  const consolidateRoleActions = async () => {
+    if (!game) {
+      throw new Error("Game not found");
+    }
+    const { data: roleActions, error: roleActionsError } = await supabase
+      .from("player_actions")
+      .select("*")
+      .eq("game_code", game.game_code)
+      .eq("day_number", game.current_day);
+    if (roleActionsError) {
+      throw new Error("Failed to get role actions");
+    }
+    for (const roleAction of roleActions) {
+      switch (roleAction.action_type) {
+        case "Kill":
+          await executeMurder(
+            game.game_code,
+            roleAction.acting_player_id,
+            roleAction.target_player_id ?? "",
+            game.current_day
+          );
+          break;
+        case "Hospitalize":
+          await executeIntoxication(
+            gameId,
+            roleAction.action_id,
+            roleAction.acting_player_id,
+            roleAction.target_player_id ?? "",
+            game.current_day
+          );
+          break;
+        default:
+          break;
+      }
+    }
+  };
+
+  return { doRoleAction, consolidateRoleActions };
 }
