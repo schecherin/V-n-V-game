@@ -24,7 +24,7 @@ const ConsultationPhase = ({ onNextPhase }: ConsultationPhaseProps) => {
     TreasuryTransaction[]
   >([]);
   const [factionCounts, setFactionCounts] = useState<Record<string, number>>(
-    {}
+    {},
   );
 
   useEffect(() => {
@@ -70,21 +70,10 @@ const ConsultationPhase = ({ onNextPhase }: ConsultationPhaseProps) => {
                             {
                               players.find(
                                 (player) =>
-                                  player.player_id === action.target_player_id
+                                  player.player_id === action.target_player_id,
                               )?.player_name
                             }{" "}
                             Freed from Prison
-                          </h3>
-                        )}
-                        {action.action_type === "ResuscitatePlayer" && (
-                          <h3>
-                            {
-                              players.find(
-                                (player) =>
-                                  player.player_id === action.target_player_id
-                              )?.player_name
-                            }{" "}
-                            Resuscitated
                           </h3>
                         )}
                         {action.action_type === "RevealFactionCount" && (
@@ -121,7 +110,9 @@ const ConsultationPhase = ({ onNextPhase }: ConsultationPhaseProps) => {
           >
             Start Voting
           </Button>
-          <Button onClick={() => onNextPhase("Reflection_RoleActions")}>
+          <Button
+            onClick={() => onNextPhase("Reflection_RoleActions_Selection")}
+          >
             Skip Voting, and go to next phase
           </Button>
         </div>

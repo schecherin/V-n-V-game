@@ -17,21 +17,21 @@ export default function ConsultationVotingResults({
   const [voteAnnouncement, setVoteAnnouncement] =
     useState<VoteAnnouncement | null>(null);
   const [truthfulnessAction, setTruthfulnessAction] = useState<boolean>(false);
-  const { handleRoleAction } = useRoleActions();
+  const { doRoleAction } = useRoleActions();
 
   useEffect(() => {
     if (game) {
       getVoteAnnouncement(game.game_code, game.current_day).then(
         (voteAnnouncement) => {
           setVoteAnnouncement(voteAnnouncement);
-        }
+        },
       );
     }
   }, [game]);
 
   const handleReveal = () => {
     setTruthfulnessAction(true);
-    handleRoleAction({
+    doRoleAction({
       actionType: "RevealAllVotesOnImprisoned",
       targetPlayerId: voteAnnouncement!.imprisoned_player_id!,
     });
@@ -41,7 +41,7 @@ export default function ConsultationVotingResults({
     const votes = await getVotesOnImprisonedPlayer(
       game!.game_code,
       game!.current_day,
-      voteAnnouncement!.imprisoned_player_id!
+      voteAnnouncement!.imprisoned_player_id!,
     );
     return votes;
   };
@@ -51,7 +51,7 @@ export default function ConsultationVotingResults({
       <h2>
         {
           players.find(
-            (p) => p.player_id === voteAnnouncement?.imprisoned_player_id
+            (p) => p.player_id === voteAnnouncement?.imprisoned_player_id,
           )?.player_name
         }
       </h2>
@@ -71,7 +71,7 @@ export default function ConsultationVotingResults({
       {playerActions.some(
         (a) =>
           a.action_type === "RevealAllVotesOnImprisoned" &&
-          a.day_number === game?.current_day
+          a.day_number === game?.current_day,
       ) && (
         <div>
           <p>Vote results revealed</p>
